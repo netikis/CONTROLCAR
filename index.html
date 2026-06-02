@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARANÁ PEÇAS - CONTROLE DE veículos</title>
+    <style>
+        /* =========================================
+           ESTILOS DE TELA (VISUALIZAÇÃO NO SISTEMA)
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        /* Título Principal */
+        h1.main-title {
+            text-align: center;
+            color: #ffffff;
+            text-transform: uppercase;
+            font-size: 1.6rem;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* Container do Formulário (Coluna Única) */
+        .screen-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Estilização dos Quadros de Preenchimento */
+        .quadro {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.03);
+        }
+
+        /* QUADRO AZUL (Dados do Cliente e Responsável) */
+        .quadro-azul { border: 2px solid #0056b3; border-left: 6px solid #0056b3; }
+        .quadro-azul h2 { color: #007bff; }
+
+        /* QUADRO VERMELHO (Dados do Veículo e Placa) */
+        .quadro-vermelho { border: 2px solid #ff0000; border-left: 6px solid #ff0000; }
+        .quadro-vermelho h2 { color: #ff3333; }
+
+        /* QUADRO BRANCO (Vistoria de Chegada e Serviços) */
+        .quadro-branco { border: 2px solid #ffffff; border-left: 6px solid #ffffff; }
+        .quadro-branco h2 { color: #ffffff; }
+
+        .quadro h2 {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+
+        .form-group label {
+            display: block;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        /* Inputs Fundo Branco e Texto Preto */
+        .form-group input, 
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 14px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            color: #000000;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Grupo de Data (Dia, Mês, Ano na mesma linha) */
+        .date-group { display: flex; gap: 10px; }
+        .date-group input, .date-group select { text-align: center; }
+
+        /* =========================================
+           MINI PLACA MERCOSUL EM CSS (INTEGRADA)
+           ========================================= */
+        .mini-plate-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 12px;
+            background: #111;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .mercosul-plate-mini {
+            width: 200px;
+            height: 66px;
+            background-color: #f5f5f5;
+            border: 2px solid #000000;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .plate-header-mini {
+            background-color: #003399;
+            height: 16px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6px;
+        }
+
+        .brasil-text-mini {
+            color: #ffffff;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.55rem;
+            letter-spacing: 1px;
+        }
+
+        .plate-body-mini {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100% - 16px);
+        }
+
+        .plate-location-mini {
+            font-weight: bold;
+            color: #333333;
+            font-size: 0.4rem;
+            text-transform: uppercase;
+            margin-bottom: 1px;
+        }
+
+        .plate-number-mini {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 900;
+            color: #000000;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        /* Botões de Ação */
+        .button-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-pdf { background-color: #ff0000; color: #ffffff; }
+        .btn-pdf:hover { background-color: #cc0000; }
+
+        .btn-backup { background-color: #ffffff; color: #000000; border: 2px solid #0056b3; }
+        .btn-backup:hover { background-color: #e6e6e6; }
+
+        /* Container de impressão oculto na tela normal */
+        .mirror-print-section { display: none; }
+
+        /* =========================================
+           REGRAS DE IMPRESSÃO (ESPELHO PDF SOFISTICADO)
+           ========================================= */
+        @media print {
+            body {
+                background: #f4f6f9 !important;
+                color: #000000 !important;
+                padding: 0;
+                margin: 0;
+            }
+            .screen-container, h1.main-title, .button-zone, .mini-plate-wrapper {
+                display: none !important;
+            }
+            .mirror-print-section {
+                display: block !important;
+                width: 100%;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 30px;
+                background: #ffffff;
+            }
+            
+            /* Cabeçalho do PDF */
+            .print-header {
+                text-align: center;
+                background: #111;
+                color: #fff;
+                padding: 20px;
+                border-radius: 8px 8px 0 0;
+                margin-bottom: 25px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .print-header h1 { 
+                font-size: 1.8rem; 
+                text-transform: uppercase; 
+                margin-bottom: 5px;
+                color: #ffffff;
+            }
+            .print-header p { 
+                font-size: 1rem; 
+                font-weight: bold; 
+                color: #a0b0c0; 
+                letter-spacing: 2px;
+            }
+
+            /* Blocos de Informação no PDF */
+            .print-block {
+                margin-bottom: 25px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            }
+
+            .block-title {
+                padding: 10px 15px;
+                font-weight: bold;
+                font-size: 1rem;
+                text-transform: uppercase;
+                color: #ffffff;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* Cores dos Blocos */
+            .bg-blue { background-color: #0056b3 !important; }
+            .bg-red { background-color: #cc0000 !important; }
+            .bg-dark { background-color: #333333 !important; }
+
+            .block-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+                padding: 15px 20px;
+                background: #ffffff;
+            }
+
+            .print-field {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .print-label {
+                font-size: 0.75rem;
+                color: #666666;
+                text-transform: uppercase;
+                font-weight: bold;
+                margin-bottom: 3px;
+            }
+
+            .print-value {
+                font-size: 1.1rem;
+                color: #111111;
+                font-weight: 500;
+                border-bottom: 1px solid #eeeeee;
+                padding-bottom: 5px;
+                min-height: 28px;
+            }
+
+            .full-width { grid-column: span 2; }
+            
+            /* Assinaturas */
+            .print-signatures {
+                margin-top: 50px;
+                display: flex;
+                justify-content: space-around;
+                padding: 0 20px;
+            }
+            .sig-box {
+                width: 40%;
+                text-align: center;
+                border-top: 1px solid #000000;
+                padding-top: 8px;
+                font-size: 0.9rem;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TÍTULO PRINCIPAL -->
+    <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
+
+    <div class="screen-container">
+        <form id="vehicleForm">
+            
+            <!-- QUADRO AZUL: CLIENTE / RESPONSÁVEL -->
+            <div class="quadro quadro-azul">
+                <h2>Dados do Cliente & Oficina</h2>
+                <div class="form-group">
+                    <label>Nome do Cliente:</label>
+                    <input type="text" id="in_cliente" placeholder="Ex: Carlos Souza" required>
+                </div>
+                <div class="form-group">
+                    <label>Responsável pelo conserto:</label>
+                    <input type="text" id="in_responsavel" placeholder="Quem vai executar o serviço?" required>
+                </div>
+            </div>
+
+            <!-- QUADRO VERMELHO: VEÍCULO / PLACA -->
+            <div class="quadro quadro-vermelho">
+                <h2>Especificações do Veículo</h2>
+                <div class="form-group">
+                    <label>Carro (Modelo / Marca):</label>
+                    <input type="text" id="in_carro" placeholder="Ex: Chevrolet Onix" required>
+                </div>
+                <div class="form-group">
+                    <label>Cidade / UF (Para a Placa):</label>
+                    <input type="text" id="in_cidade" placeholder="Ex: Ibaiti / PR" oninput="updatePlate()">
+                </div>
+                <div class="form-group">
+                    <label>Placa (Mercosul):</label>
+                    <input type="text" id="in_placa" placeholder="ABC1D23" maxlength="7" style="text-transform: uppercase;" oninput="updatePlate()" required>
+                    
+                    <div class="mini-plate-wrapper">
+                        <div class="mercosul-plate-mini">
+                            <div class="plate-header-mini">
+                                <span style="color:#fff; font-size:0.4rem;">★★★★★</span>
+                                <span class="brasil-text-mini">BRASIL</span>
+                                <div style="width:10px; height:7px; background:#009c3b; border:0.5px solid #fff;"></div>
+                            </div>
+                            <div class="plate-body-mini">
+                                <div class="plate-location-mini" id="plate_loc_mini">CIDADE / UF</div>
+                                <div class="plate-number-mini" id="plate_num_mini">PLACA</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Data de Entrada:</label>
+                    <div class="date-group">
+                        <input type="text" id="in_dia" placeholder="Dia" maxlength="2" oninput="updatePlate()">
+                        <select id="in_mes" onchange="updatePlate()">
+                            <option value="">Mês</option>
+                            <option value="01">Janeiro</option>
+                            <option value="02">Fevereiro</option>
+                            <option value="03">Março</option>
+                            <option value="04">Abril</option>
+                            <option value="05">Maio</option>
+                            <option value="06">Junho</option>
+                            <option value="07">Julho</option>
+                            <option value="08">Agosto</option>
+                            <option value="09">Setembro</option>
+                            <option value="10">Outubro</option>
+                            <option value="11">Novembro</option>
+                            <option value="12">Dezembro</option>
+                        </select>
+                        <input type="text" id="in_ano" placeholder="Ano" maxlength="4" oninput="updatePlate()">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Chassi:</label>
+                    <input type="text" id="in_chassi" placeholder="Número do Chassi">
+                </div>
+                <div class="form-group">
+                    <label>Cor:</label>
+                    <input type="text" id="in_cor" placeholder="Ex: Vermelho Metálico">
+                </div>
+                <div class="form-group">
+                    <label>Quilometragem (Km):</label>
+                    <input type="number" id="in_km" placeholder="Ex: 85000">
+                </div>
+            </div>
+
+            <!-- QUADRO BRANCO: VISTORIA / SERVIÇOS / MÍDIA -->
+            <div class="quadro quadro-branco">
+                <h2>Quadro de Chegada & Serviços</h2>
+                <div class="form-group">
+                    <label>Como o carro veio? (Checklist de Chegada):</label>
+                    <textarea id="in_estado" rows="3" placeholder="Especifique arranhões, peças soltas, nível de combustível..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Serviços Realizados (Ou a realizar):</label>
+                    <textarea id="in_servicos" rows="4" placeholder="Descreva os serviços executados, peças trocadas, etc..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Foto do Veículo (Uso no Celular):</label>
+                    <input type="file" id="in_foto" accept="image/*" capture="environment">
+                </div>
+            </div>
+
+            <!-- ZONA DE BOTÕES -->
+            <div class="button-zone">
+                <button type="button" class="btn btn-pdf" onclick="gerarEspelhoPDF()">Salvar Espelho Colorido (PDF)</button>
+                <button type="button" class="btn btn-backup" onclick="gerarBackupLocal()">Backup Desktop (.CSV)</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- =========================================
+         ESTRUTURA DO ESPELHO DE IMPRESSÃO (PDF SOFISTICADO)
+         ========================================= -->
+    <div class="mirror-print-section">
+        <div class="print-header">
+            <h1>PARANÁ PEÇAS</h1>
+            <p>ESPELHO DE ENTRADA E SERVIÇOS</p>
+        </div>
+
+        <!-- Bloco Azul: Cliente -->
+        <div class="print-block">
+            <div class="block-title bg-blue">Dados do Cliente & Oficina</div>
+            <div class="block-grid">
+                <div class="print-field full-width">
+                    <span class="print-label">Nome do Cliente</span>
+                    <span class="print-value" id="p_cliente">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Responsável pelo conserto</span>
+                    <span class="print-value" id="p_responsavel">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Data de Entrada</span>
+                    <span class="print-value" id="p_data">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloco Vermelho: Veículo -->
+        <div class="print-block">
+            <div class="block-title bg-red">Especificações do Veículo</div>
+            <div class="block-grid">
+                <div class="print-field">
+                    <span class="print-label">Veículo / Modelo</span>
+                    <span class="print-value" id="p_carro">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Placa</span>
+                    <span class="print-value" id="p_placa" style="font-weight: 700; letter-spacing: 2px;">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Cidade / UF</span>
+                    <span class="print-value" id="p_cidade">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Quilometragem</span>
+                    <span class="print-value" id="p_km">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Cor do Veículo</span>
+                    <span class="print-value" id="p_cor">--</span>
+                </div>
+                <div class="print-field">
+                    <span class="print-label">Chassi</span>
+                    <span class="print-value" id="p_chassi">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloco Escuro: Avaliação e Serviços -->
+        <div class="print-block">
+            <div class="block-title bg-dark">Quadro de Chegada & Serviços Realizados</div>
+            <div class="block-grid">
+                <div class="print-field full-width">
+                    <span class="print-label">Estado de Chegada / Observações</span>
+                    <span class="print-value" id="p_estado" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.4;">--</span>
+                </div>
+                <div class="print-field full-width" style="margin-top: 10px;">
+                    <span class="print-label">Serviços Realizados</span>
+                    <span class="print-value" id="p_servicos" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.4; color: #0056b3; font-weight: bold;">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assinaturas -->
+        <div class="print-signatures">
+            <div class="sig-box">Assinatura do Responsável</div>
+            <div class="sig-box">Assinatura do Cliente</div>
+        </div>
+    </div>
+
+    <!-- LÓGICA DE FUNCIONAMENTO (JAVASCRIPT) -->
+    <script>
+        // Auto-preenche a data de hoje ao abrir
+        window.onload = function() {
+            const hoje = new Date();
+            document.getElementById('in_dia').value = String(hoje.getDate()).padStart(2, '0');
+            document.getElementById('in_mes').value = String(hoje.getMonth() + 1).padStart(2, '0');
+            document.getElementById('in_ano').value = hoje.getFullYear();
+            updatePlate();
+        };
+
+        // Atualiza a placa em tempo real na tela
+        function updatePlate() {
+            let cidade = document.getElementById('in_cidade').value;
+            let placa = document.getElementById('in_placa').value;
+
+            document.getElementById('plate_loc_mini').innerText = cidade.toUpperCase() || "CIDADE / UF";
+            document.getElementById('plate_num_mini').innerText = placa.toUpperCase() || "PLACA";
+        }
+
+        // DISPARO DO PDF (ESPELHO COLORIDO E SOFISTICADO)
+        function gerarEspelhoPDF() {
+            const form = document.getElementById('vehicleForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Transferindo os dados da tela para o PDF Espelho
+            document.getElementById('p_cliente').innerText = document.getElementById('in_cliente').value;
+            document.getElementById('p_responsavel').innerText = document.getElementById('in_responsavel').value;
+            document.getElementById('p_carro').innerText = document.getElementById('in_carro').value;
+            document.getElementById('p_chassi').innerText = document.getElementById('in_chassi').value || 'Não Informado';
+            document.getElementById('p_cor').innerText = document.getElementById('in_cor').value || 'Não Informado';
+            document.getElementById('p_km').innerText = document.getElementById('in_km').value ? document.getElementById('in_km').value + ' Km' : 'Não Informado';
+            
+            // Textos longos
+            document.getElementById('p_estado').innerText = document.getElementById('in_estado').value || 'Sem avarias ou observações de chegada registradas.';
+            document.getElementById('p_servicos').innerText = document.getElementById('in_servicos').value || 'Nenhum serviço detalhado até o momento.';
+            
+            // Placa e Data
+            let cidade = document.getElementById('in_cidade').value || 'Não Informada';
+            let placa = document.getElementById('in_placa').value.toUpperCase() || '---';
+            let dia = document.getElementById('in_dia').value;
+            let mes = document.getElementById('in_mes').value;
+            let ano = document.getElementById('in_ano').value;
+
+            document.getElementById('p_placa').innerText = placa;
+            document.getElementById('p_cidade').innerText = cidade.toUpperCase();
+            document.getElementById('p_data').innerText = `${dia}/${mes}/${ano}`;
+
+            // Chama a janela de impressão/PDF do navegador
+            window.print();
+        }
+
+        // Gerador de Backup Local em formato CSV
+        function gerarBackupLocal() {
+            const dados = {
+                Data: `${document.getElementById('in_dia').value}/${document.getElementById('in_mes').value}/${document.getElementById('in_ano').value}`,
+                Cliente: document.getElementById('in_cliente').value,
+                Responsavel: document.getElementById('in_responsavel').value,
+                Carro: document.getElementById('in_carro').value,
+                Placa: document.getElementById('in_placa').value.toUpperCase(),
+                Cidade_UF: document.getElementById('in_cidade').value,
+                Km: document.getElementById('in_km').value,
+                Chassi: document.getElementById('in_chassi').value,
+                Estado_Chegada: document.getElementById('in_estado').value,
+                Servicos_Realizados: document.getElementById('in_servicos').value
+            };
+
+            if(!dados.Placa) {
+                alert("Por favor, informe a placa do veículo antes de gerar o backup.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Chave,Valor\n";
+            for (let chave in dados) {
+                // Trata aspas e quebras de linha para o CSV não quebrar
+                let valorTratado = dados[chave].replace(/"/g, '""');
+                csvContent += `${chave},"${valorTratado}"\n`;
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `ESPELHO_${dados.Placa}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
