@@ -2,9 +2,25 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Paraná Peças">
+    <meta name="description" content="Controle de veículos, clientes e atendimentos — Paraná Peças">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <title>PARANÁ PEÇAS - CONTROLE DE veículos</title>
     <style>
+        :root {
+            --app-max: 600px;
+            --safe-t: env(safe-area-inset-top, 0px);
+            --safe-r: env(safe-area-inset-right, 0px);
+            --safe-b: env(safe-area-inset-bottom, 0px);
+            --safe-l: env(safe-area-inset-left, 0px);
+        }
         * {
             box-sizing: border-box;
             margin: 0;
@@ -18,36 +34,90 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding: 15px;
+            min-height: 100dvh;
+            padding: calc(12px + var(--safe-t)) calc(12px + var(--safe-r)) calc(12px + var(--safe-b)) calc(12px + var(--safe-l));
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+        .app-header {
+            width: 100%;
+            max-width: var(--app-max);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            margin-bottom: 10px;
+        }
+        .app-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35);
+            object-fit: cover;
         }
         h1.main-title {
             text-align: center;
             color: #ffffff;
             text-transform: uppercase;
-            font-size: 1.6rem;
-            margin-top: 10px;
-            margin-bottom: 15px;
+            font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+            margin: 0;
             letter-spacing: 1px;
             width: 100%;
-            max-width: 600px;
+            max-width: var(--app-max);
+            line-height: 1.25;
         }
+        .pwa-install-bar {
+            width: 100%;
+            max-width: var(--app-max);
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, #0d2137, #1a1a2e);
+            border: 1px solid #007bff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pwa-install-bar[hidden] { display: none !important; }
+        .pwa-install-bar .pwa-icon { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
+        .pwa-install-bar .pwa-texto { flex: 1; min-width: 140px; font-size: 0.8rem; color: #ccc; }
+        .pwa-install-bar .pwa-texto strong { color: #fff; display: block; margin-bottom: 2px; }
+        .pwa-install-bar .pwa-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+        .pwa-install-bar .btn-instalar { width: auto; padding: 10px 16px; font-size: 0.8rem; flex: none; }
+        .pwa-ios-hint {
+            width: 100%;
+            max-width: var(--app-max);
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            background: #222;
+            border: 1px dashed #555;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: #aaa;
+            line-height: 1.4;
+            display: none;
+        }
+        .pwa-ios-hint.visivel { display: block; }
         .nav-tabs {
             display: flex;
             gap: 8px;
             width: 100%;
-            max-width: 600px;
-            margin-bottom: 20px;
+            max-width: var(--app-max);
+            margin-bottom: 16px;
         }
         .nav-tab {
             flex: 1;
-            padding: 12px 8px;
+            padding: 12px 6px;
+            min-height: 44px;
             border: 2px solid #555;
             background: #111;
             color: #aaa;
             border-radius: 6px;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: clamp(0.62rem, 2.8vw, 0.75rem);
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -56,7 +126,7 @@
             border-color: #007bff;
             color: #fff;
         }
-        .panel { display: none; width: 100%; max-width: 600px; }
+        .panel { display: none; width: 100%; max-width: var(--app-max); }
         .panel.active { display: block; }
         .screen-container {
             width: 100%;
@@ -67,7 +137,7 @@
         .quadro {
             background: #0a0a0a;
             border-radius: 8px;
-            padding: 20px;
+            padding: clamp(14px, 4vw, 20px);
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.03);
         }
         .quadro-azul { border: 2px solid #0056b3; border-left: 6px solid #0056b3; }
@@ -102,7 +172,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             color: #000000;
-            font-size: 1rem;
+            font-size: 16px;
             transition: all 0.2s;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
@@ -154,6 +224,15 @@
         .cliente-item strong { color: #fff; font-size: 0.95rem; }
         .cliente-item small { color: #888; display: block; margin-top: 2px; }
         .cliente-item .badge { background: #007bff; color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
+        .cliente-item-acoes { display: flex; align-items: center; gap: 8px; }
+        .btn-excluir-cliente {
+            padding: 6px 10px; background: #dc3545; color: #fff; border: none;
+            border-radius: 5px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .btn-excluir-cliente:hover { background: #b02a37; }
+        .btn-excluir-geral { background-color: #dc3545; color: #fff; }
+        .btn-excluir-geral:hover { background-color: #b02a37; }
         .cliente-vazio { color: #666; text-align: center; padding: 20px; font-size: 0.9rem; }
         .alerta-cliente {
             background: #3d1a00;
@@ -198,8 +277,8 @@
             margin-top: 10px; margin-bottom: 30px;
         }
         .btn {
-            width: 100%; padding: 14px; border: none; border-radius: 6px;
-            font-size: 1rem; font-weight: bold; text-transform: uppercase;
+            width: 100%; padding: 14px; min-height: 48px; border: none; border-radius: 6px;
+            font-size: clamp(0.85rem, 3.5vw, 1rem); font-weight: bold; text-transform: uppercase;
             cursor: pointer; transition: background 0.2s;
         }
         .btn-enviar { background-color: #007bff; color: #ffffff; }
@@ -212,10 +291,115 @@
         .btn-backup:hover { background-color: #e6e6e6; }
         .btn-pasta { background-color: #6f42c1; color: #ffffff; }
         .btn-pasta:hover { background-color: #5a32a3; }
+        .btn-laranja { background-color: #fd7e14; color: #fff; }
+        .btn-laranja:hover { background-color: #e96b00; }
+        .btn-outline {
+            background: transparent; color: #fff; border: 2px solid #555;
+            padding: 8px 10px; font-size: 0.75rem;
+        }
+        .btn-outline:hover { border-color: #007bff; color: #007bff; }
+        .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .btn-sm {
+            flex: 1; min-width: 72px; padding: 8px 6px; border: none; border-radius: 5px;
+            font-size: 0.7rem; font-weight: bold; text-transform: uppercase; cursor: pointer;
+        }
+        .btn-sm-ver { background: #17a2b8; color: #fff; }
+        .btn-sm-edit { background: #ffc107; color: #000; }
+        .btn-sm-print { background: #dc3545; color: #fff; }
+        .btn-sm-novo { background: #28a745; color: #fff; }
+        .historico-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px; margin-bottom: 15px;
+        }
+        .historico-header h2 { margin-bottom: 0; }
+        .veiculo-grupo {
+            background: #1a1a1a; border: 1px solid #444; border-radius: 8px;
+            margin-bottom: 12px; overflow: hidden;
+        }
+        .veiculo-grupo-cabecalho {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 14px; background: #252525; cursor: pointer;
+        }
+        .veiculo-grupo-cabecalho strong { color: #fff; font-size: 1rem; letter-spacing: 2px; }
+        .veiculo-grupo-cabecalho span { color: #aaa; font-size: 0.8rem; }
+        .atendimentos-lista { display: none; padding: 8px 12px 12px; flex-direction: column; gap: 8px; }
+        .veiculo-grupo.aberto .atendimentos-lista { display: flex; }
+        .atendimento-item {
+            background: #111; border: 1px solid #333; border-radius: 6px; padding: 12px;
+        }
+        .atendimento-item .data-linha {
+            color: #5dd879; font-weight: bold; font-size: 0.85rem; margin-bottom: 6px;
+        }
+        .atendimento-item .resumo {
+            color: #bbb; font-size: 0.8rem; line-height: 1.35;
+            max-height: 60px; overflow: hidden; text-overflow: ellipsis;
+        }
+        .modo-form-banner {
+            background: #1a3a5c; border: 1px solid #007bff; color: #9ec5fe;
+            padding: 10px 14px; border-radius: 6px; font-size: 0.85rem;
+            margin-bottom: 15px; display: none;
+        }
+        .modo-form-banner.visivel { display: block; }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            z-index: 1000; align-items: center; justify-content: center; padding: 15px;
+        }
+        .modal-overlay.aberto { display: flex; }
+        .modal-box {
+            background: #111; border: 2px solid #007bff; border-radius: 10px;
+            max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px;
+        }
+        .modal-box h3 { color: #007bff; margin-bottom: 15px; text-transform: uppercase; }
+        .modal-campo { margin-bottom: 12px; }
+        .modal-campo label { color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .modal-campo p { color: #fff; font-size: 0.95rem; white-space: pre-wrap; line-height: 1.4; }
+        .modal-foto { max-width: 100%; border-radius: 6px; margin-top: 8px; }
+        .modal-acoes { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+        .pasta-config {
+            width: 100%; max-width: var(--app-max); margin-bottom: 15px;
+            background: #1a1a2e; border: 1px solid #444; border-radius: 8px;
+            padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+        }
+        .pasta-config p { flex: 1; min-width: 180px; color: #aaa; font-size: 0.8rem; line-height: 1.4; }
+        .pasta-config p strong { color: #5dd879; }
+        .pasta-config p.aviso { color: #ffcc80; }
+        .btn-pasta-config {
+            padding: 10px 14px; background: #333; color: #fff; border: 1px solid #555;
+            border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; cursor: pointer;
+        }
+        .btn-pasta-config:hover { background: #444; border-color: #6f42c1; }
+        @media (max-width: 400px) {
+            .cliente-item { flex-direction: column; align-items: stretch; gap: 10px; }
+            .cliente-item-acoes { justify-content: space-between; flex-wrap: wrap; }
+            .date-group { flex-wrap: wrap; }
+            .date-group input, .date-group select { min-width: 0; flex: 1 1 30%; }
+            .mercosul-plate-mini { width: min(200px, 100%); }
+            .pasta-config { flex-direction: column; align-items: stretch; }
+            .btn-pasta-config { width: 100%; }
+            .historico-header h2 { font-size: 0.95rem; }
+            .veiculo-grupo-cabecalho { flex-wrap: wrap; gap: 6px; }
+        }
+        @media (min-width: 401px) and (max-width: 767px) {
+            .app-logo { width: 64px; height: 64px; }
+        }
+        @media (min-width: 768px) {
+            body { padding-top: calc(20px + var(--safe-t)); }
+            .app-logo { width: 80px; height: 80px; }
+            .cliente-lista { max-height: 320px; }
+        }
+        @media (max-height: 480px) and (orientation: landscape) {
+            .app-logo { width: 48px; height: 48px; }
+            .app-header { flex-direction: row; justify-content: center; }
+            h1.main-title { text-align: left; font-size: 1rem; }
+            .cliente-lista { max-height: 120px; }
+        }
+        @media (display-mode: standalone) {
+            body { padding-top: calc(8px + var(--safe-t)); }
+        }
         .mirror-print-section { display: none; }
         @media print {
             body { background: #f4f6f9 !important; color: #000000 !important; padding: 0; margin: 0; }
-            .nav-tabs, .panel, h1.main-title, .button-zone, .mini-plate-wrapper { display: none !important; }
+            .nav-tabs, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config { display: none !important; }
             .mirror-print-section {
                 display: block !important; width: 100%; max-width: 800px;
                 margin: 0 auto; padding: 30px; background: #ffffff;
@@ -227,6 +411,7 @@
             }
             .print-header h1 { font-size: 1.8rem; text-transform: uppercase; margin-bottom: 5px; color: #ffffff; }
             .print-header p { font-size: 1rem; font-weight: bold; color: #a0b0c0; letter-spacing: 2px; }
+            .print-registro { font-size: 0.85rem; color: #ccc; margin-top: 8px; }
             .print-block { margin-bottom: 25px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
             .block-title { padding: 10px 15px; font-weight: bold; font-size: 1rem; text-transform: uppercase; color: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .bg-blue { background-color: #0056b3 !important; }
@@ -244,10 +429,32 @@
     </style>
 </head>
 <body>
-    <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
+    <header class="app-header">
+        <img src="icons/icon-192.png" alt="Paraná Peças" class="app-logo" width="192" height="192">
+        <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
+    </header>
+    <div id="pwa_install_bar" class="pwa-install-bar" hidden>
+        <img src="icons/icon-192.png" alt="" class="pwa-icon" width="48" height="48">
+        <div class="pwa-texto">
+            <strong>Instalar aplicativo</strong>
+            Atalho na tela do celular com ícone da empresa
+        </div>
+        <div class="pwa-acoes">
+            <button type="button" class="btn btn-verde btn-instalar" id="btn_instalar_app">Instalar</button>
+            <button type="button" class="btn btn-outline btn-instalar" id="btn_fechar_install">Depois</button>
+        </div>
+    </div>
+    <p id="pwa_ios_hint" class="pwa-ios-hint">
+        <strong>iPhone:</strong> toque em Compartilhar → <strong>Adicionar à Tela de Início</strong> para instalar o app com o ícone da Paraná Peças.
+    </p>
     <div class="nav-tabs">
         <button type="button" class="nav-tab active" data-panel="panelClientes">1. Clientes</button>
-        <button type="button" class="nav-tab" data-panel="panelVeiculo">2. Veículo</button>
+        <button type="button" class="nav-tab" data-panel="panelHistorico">2. Histórico</button>
+        <button type="button" class="nav-tab" data-panel="panelVeiculo">3. Atendimento</button>
+    </div>
+    <div class="pasta-config">
+        <p id="pasta_status_texto">Pasta no PC: não configurada</p>
+        <button type="button" class="btn-pasta-config" id="btn_config_pasta">Escolher pasta no PC</button>
     </div>
     <!-- PAINEL CLIENTES -->
     <div id="panelClientes" class="panel active">
@@ -268,19 +475,40 @@
             </div>
             <div class="quadro quadro-azul">
                 <h2>Clientes Cadastrados</h2>
-                <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">Toque no cliente para selecionar e cadastrar o veículo dele.</p>
+                <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">Toque no cliente para ver histórico, editar ou registrar novo atendimento.</p>
                 <div id="lista_clientes" class="cliente-lista">
                     <div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- PAINEL VEÍCULO -->
+    <!-- PAINEL HISTÓRICO DO CLIENTE -->
+    <div id="panelHistorico" class="panel">
+        <div class="screen-container">
+            <div class="quadro quadro-azul">
+                <div class="historico-header">
+                    <h2 id="historico_titulo_cliente">Histórico do Cliente</h2>
+                </div>
+                <p id="historico_sem_cliente" style="color:#888;">Selecione um cliente na aba Clientes.</p>
+                <div id="historico_conteudo" style="display:none;">
+                    <div class="btn-row" style="margin-bottom:15px;">
+                        <button type="button" class="btn btn-verde" id="btn_novo_atendimento" style="flex:1;">+ Novo Atendimento</button>
+                        <button type="button" class="btn btn-pasta" id="btn_exportar_pasta_hist" style="flex:1;">Exportar Pasta</button>
+                        <button type="button" class="btn btn-excluir-geral" id="btn_excluir_cliente_hist" style="flex:1;">Excluir Cliente</button>
+                    </div>
+                    <div id="lista_veiculos_historico"></div>
+                    <p id="historico_vazio" class="cliente-vazio" style="display:none;">Nenhum veículo registrado para este cliente.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- PAINEL VEÍCULO / ATENDIMENTO -->
     <div id="panelVeiculo" class="panel">
         <div class="screen-container">
             <div id="alerta_sem_cliente" class="alerta-cliente visivel">
-                Selecione um cliente na aba <strong>Clientes</strong> antes de preencher o veículo.
+                Selecione um cliente na aba <strong>Clientes</strong> antes de preencher o atendimento.
             </div>
+            <div id="modo_form_banner" class="modo-form-banner"></div>
             <form id="vehicleForm">
                 <div class="quadro quadro-azul">
                     <h2>Cliente Selecionado</h2>
@@ -378,7 +606,8 @@
                     </div>
                 </div>
                 <div class="button-zone">
-                    <button type="submit" class="btn btn-enviar">Salvar Veículo do Cliente</button>
+                    <button type="submit" class="btn btn-enviar" id="btn_salvar_atendimento">Salvar Atendimento</button>
+                    <button type="button" class="btn btn-outline" id="btn_cancelar_edicao" style="display:none;">Cancelar Edição</button>
                     <button type="button" class="btn btn-pasta" id="btn_exportar_pasta">Exportar Pasta do Cliente</button>
                     <button type="button" class="btn btn-pdf" id="btn_pdf">Salvar Espelho Colorido (PDF)</button>
                     <button type="button" class="btn btn-backup" id="btn_backup">Backup Desktop (.CSV)</button>
@@ -390,6 +619,7 @@
         <div class="print-header">
             <h1>PARANÁ PEÇAS</h1>
             <p>ESPELHO DE ENTRADA E SERVIÇOS</p>
+            <p class="print-registro" id="p_registro_atendimento"></p>
         </div>
         <div class="print-block">
             <div class="block-title bg-blue">Dados do Cliente & Oficina</div>
@@ -459,10 +689,24 @@
             <div class="sig-box">Assinatura do Cliente</div>
         </div>
     </div>
+    <div id="modal_visualizar" class="modal-overlay">
+        <div class="modal-box">
+            <h3 id="modal_titulo">Atendimento</h3>
+            <div id="modal_corpo"></div>
+            <div class="modal-acoes">
+                <button type="button" class="btn btn-sm-print btn-sm" id="modal_btn_imprimir">Reimprimir PDF</button>
+                <button type="button" class="btn btn-sm-edit btn-sm" id="modal_btn_editar">Editar</button>
+                <button type="button" class="btn btn-outline btn-sm" id="modal_btn_fechar">Fechar</button>
+            </div>
+        </div>
+    </div>
     <script>
         const STORAGE_KEY = 'parana_pecas_dados';
+        const PASTA_IDB = 'parana_pecas_pasta_v1';
         let fotoAtualBase64 = null;
         let clienteSelecionadoId = null;
+        let atendimentoEditandoId = null;
+        let modalAtendimentoAtual = null;
         function gerarId() {
             return 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
         }
@@ -470,12 +714,214 @@
             return nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'CLIENTE';
         }
+        function fotoAtendimento(a) {
+            return a.foto || a.fotoUrl || null;
+        }
+        function nomeBaseArquivo(atendimento) {
+            const data = (atendimento.dataEntrada || 'sem-data').replace(/\//g, '-');
+            return `${atendimento.placa}_${data}_${(atendimento.id || 'x').slice(-6)}`;
+        }
+        function clienteParaExportJson(cliente) {
+            const c = JSON.parse(JSON.stringify(cliente));
+            (c.veiculos || []).forEach(vg => (vg.atendimentos || []).forEach(a => {
+                if (a.foto) {
+                    a.fotoArquivo = nomeBaseArquivo(a) + '_foto.jpg';
+                    delete a.foto;
+                }
+            }));
+            return c;
+        }
+        window.exportarClienteSemFotosBase64 = clienteParaExportJson;
+        function abrirDbPasta() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(PASTA_IDB, 1);
+                req.onupgradeneeded = () => req.result.createObjectStore('handles');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function salvarHandlePastaRaiz(handle) {
+            const db = await abrirDbPasta();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('handles', 'readwrite');
+                tx.objectStore('handles').put(handle, 'root');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        async function carregarHandlePastaRaiz() {
+            try {
+                const db = await abrirDbPasta();
+                return await new Promise((resolve, reject) => {
+                    const tx = db.transaction('handles', 'readonly');
+                    const req = tx.objectStore('handles').get('root');
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => reject(req.error);
+                });
+            } catch {
+                return null;
+            }
+        }
+        async function solicitarPermissaoPasta(handle) {
+            if (!handle) return false;
+            let perm = await handle.queryPermission({ mode: 'readwrite' });
+            if (perm !== 'granted') perm = await handle.requestPermission({ mode: 'readwrite' });
+            return perm === 'granted';
+        }
+        async function obterPastaRaiz(perguntarSeNecessario) {
+            let handle = await carregarHandlePastaRaiz();
+            if (handle && await solicitarPermissaoPasta(handle)) return handle;
+            if (!perguntarSeNecessario || !('showDirectoryPicker' in window)) return null;
+            try {
+                handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                await salvarHandlePastaRaiz(handle);
+                await atualizarStatusPastaUI();
+                return handle;
+            } catch (err) {
+                if (err.name !== 'AbortError') console.error(err);
+                return null;
+            }
+        }
+        async function configurarPastaRaiz() {
+            if (!('showDirectoryPicker' in window)) {
+                alert('Para salvar direto na pasta, use Chrome ou Edge no computador.');
+                return;
+            }
+            try {
+                const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                await salvarHandlePastaRaiz(handle);
+                await atualizarStatusPastaUI();
+                alert(`Pasta configurada: "${handle.name}"\n\nAo salvar, os arquivos vão para:\n${handle.name}/NOME_DO_CLIENTE/`);
+            } catch (err) {
+                if (err.name !== 'AbortError') alert('Não foi possível configurar a pasta.');
+            }
+        }
+        async function atualizarStatusPastaUI() {
+            const el = document.getElementById('pasta_status_texto');
+            if (!el) return;
+            if (!('showDirectoryPicker' in window)) {
+                el.className = 'aviso';
+                el.innerHTML = '<strong>Pasta PC:</strong> disponível só no Chrome/Edge (computador). Nuvem continua ativa.';
+                return;
+            }
+            const handle = await carregarHandlePastaRaiz();
+            if (handle) {
+                el.className = '';
+                el.innerHTML = `<strong>Pasta PC:</strong> ${escapeHtml(handle.name)} — ao salvar, cria a subpasta do cliente automaticamente.`;
+            } else {
+                el.className = 'aviso';
+                el.innerHTML = '<strong>Pasta PC:</strong> clique em "Escolher pasta no PC" (só na 1ª vez). Depois salva direto na pasta do cliente.';
+            }
+        }
+        async function escreverTextoNoArquivo(dirHandle, nome, conteudo) {
+            const fh = await dirHandle.getFileHandle(nome, { create: true });
+            const w = await fh.createWritable();
+            await w.write(conteudo);
+            await w.close();
+        }
+        async function salvarAtendimentoArquivoNaPasta(pastaClienteHandle, atendimento) {
+            const base = nomeBaseArquivo(atendimento);
+            const dadosExport = { ...atendimento };
+            if (dadosExport.foto) {
+                const nomeFoto = base + '_foto.jpg';
+                dadosExport.fotoArquivo = nomeFoto;
+                const fh = await pastaClienteHandle.getFileHandle(nomeFoto, { create: true });
+                const w = await fh.createWritable();
+                await w.write(base64ParaBlob(dadosExport.foto));
+                await w.close();
+                delete dadosExport.foto;
+            }
+            await escreverTextoNoArquivo(pastaClienteHandle, base + '.json', JSON.stringify(dadosExport, null, 2));
+            const csv = 'Chave,Valor\n' + Object.entries(dadosExport)
+                .map(([k, v]) => `${k},"${String(v ?? '').replace(/"/g, '""')}"`).join('\n');
+            await escreverTextoNoArquivo(pastaClienteHandle, base + '.csv', csv);
+        }
+        async function sincronizarPastaCliente(pastaClienteHandle, cliente) {
+            await escreverTextoNoArquivo(
+                pastaClienteHandle,
+                'dados_cliente.json',
+                JSON.stringify(clienteParaExportJson(cliente), null, 2)
+            );
+        }
+        async function obterPastaClienteNoPC(cliente, perguntarPasta) {
+            const root = await obterPastaRaiz(perguntarPasta);
+            if (!root) return null;
+            const nomePasta = slugNome(cliente.nome);
+            const pastaCliente = await root.getDirectoryHandle(nomePasta, { create: true });
+            return { root, pastaCliente, caminho: `${root.name}/${nomePasta}` };
+        }
+        async function salvarAtendimentoNaPastaPC(cliente, atendimento) {
+            if (!('showDirectoryPicker' in window)) {
+                return { ok: false, motivo: 'Pasta PC: use Chrome/Edge no computador.' };
+            }
+            try {
+                const dest = await obterPastaClienteNoPC(cliente, true);
+                if (!dest) return { ok: false, motivo: 'Pasta PC: seleção cancelada.' };
+                await salvarAtendimentoArquivoNaPasta(dest.pastaCliente, atendimento);
+                await sincronizarPastaCliente(dest.pastaCliente, cliente);
+                return { ok: true, caminho: dest.caminho };
+            } catch (err) {
+                console.error(err);
+                return { ok: false, motivo: 'Pasta PC: erro ao gravar — ' + err.message };
+            }
+        }
         function carregarDados() {
             try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clientes: [], clienteAtivoId: null };
+                const dados = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clientes: [], clienteAtivoId: null };
+                dados.clientes.forEach(normalizarVeiculosCliente);
+                return dados;
             } catch {
                 return { clientes: [], clienteAtivoId: null };
             }
+        }
+        function normalizarVeiculosCliente(cliente) {
+            if (!cliente.veiculos || !cliente.veiculos.length) {
+                cliente.veiculos = [];
+                return;
+            }
+            if (cliente.veiculos[0].atendimentos) return;
+            const grupos = {};
+            for (const v of cliente.veiculos) {
+                const placa = (v.placa || '').toUpperCase();
+                if (!placa) continue;
+                if (!grupos[placa]) grupos[placa] = { placa, carro: v.carro || '', atendimentos: [] };
+                grupos[placa].atendimentos.push({
+                    id: v.id || gerarId(),
+                    responsavel: v.responsavel || '',
+                    carro: v.carro || '',
+                    cidade: v.cidade || '',
+                    placa,
+                    dataEntrada: v.dataEntrada || '',
+                    chassi: v.chassi || '',
+                    cor: v.cor || '',
+                    km: v.km || '',
+                    estadoChegada: v.estadoChegada || '',
+                    servicosRealizados: v.servicosRealizados || '',
+                    foto: v.foto || null,
+                    dataRegistro: v.dataRegistro || new Date().toISOString()
+                });
+                if (v.carro) grupos[placa].carro = v.carro;
+            }
+            cliente.veiculos = Object.values(grupos);
+        }
+        function contarAtendimentos(cliente) {
+            return (cliente.veiculos || []).reduce((t, v) => t + (v.atendimentos || []).length, 0);
+        }
+        function contarPlacas(cliente) {
+            return (cliente.veiculos || []).length;
+        }
+        function formatarDataRegistro(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            if (isNaN(d)) return iso;
+            return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+        function irParaAba(panelId) {
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.panel === panelId);
+            });
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(panelId).classList.add('active');
         }
         function salvarDados(dados) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
@@ -509,19 +955,62 @@
                 return;
             }
             lista.innerHTML = dados.clientes.map(c => {
-                const qtd = (c.veiculos || []).length;
+                const placas = contarPlacas(c);
+                const atend = contarAtendimentos(c);
                 const sel = c.id === clienteSelecionadoId ? ' selecionado' : '';
                 return `<div class="cliente-item${sel}" data-id="${c.id}">
                     <div>
                         <strong>${escapeHtml(c.nome)}</strong>
                         ${c.telefone ? `<small>${escapeHtml(c.telefone)}</small>` : ''}
                     </div>
-                    <span class="badge">${qtd} veíc.</span>
+                    <div class="cliente-item-acoes">
+                        <span class="badge">${placas} carro${placas !== 1 ? 's' : ''} · ${atend} atend.</span>
+                        <button type="button" class="btn-excluir-cliente" data-excluir="${c.id}" title="Excluir cliente">Excluir</button>
+                    </div>
                 </div>`;
             }).join('');
             lista.querySelectorAll('.cliente-item').forEach(el => {
-                el.addEventListener('click', () => selecionarCliente(el.dataset.id));
+                el.addEventListener('click', (e) => {
+                    if (e.target.closest('[data-excluir]')) return;
+                    selecionarCliente(el.dataset.id);
+                });
             });
+            lista.querySelectorAll('[data-excluir]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    excluirCliente(btn.dataset.excluir);
+                });
+            });
+        }
+        async function excluirCliente(id) {
+            const dados = carregarDados();
+            const cliente = dados.clientes.find(c => c.id === id);
+            if (!cliente) return;
+            const atend = contarAtendimentos(cliente);
+            const placas = contarPlacas(cliente);
+            const msg = atend > 0
+                ? `Excluir "${cliente.nome}"?\n\nIsso apaga ${placas} veículo(s) e ${atend} atendimento(s). Não dá para desfazer.`
+                : `Excluir o cliente "${cliente.nome}"?\n\nNão dá para desfazer.`;
+            if (!confirm(msg)) return;
+            dados.clientes = dados.clientes.filter(c => c.id !== id);
+            if (dados.clienteAtivoId === id) dados.clienteAtivoId = null;
+            salvarDados(dados);
+            if (clienteSelecionadoId === id) {
+                clienteSelecionadoId = null;
+                document.getElementById('in_cliente').value = '';
+                limparFormVeiculo();
+                atualizarAlertaCliente();
+                renderHistoricoCliente();
+            }
+            renderListaClientes();
+            if (window.excluirClienteNuvem) {
+                const nuvem = await window.excluirClienteNuvem(id);
+                if (nuvem.ok) alert(`Cliente "${cliente.nome}" excluído (aparelho e nuvem).`);
+                else alert(`Cliente excluído no aparelho.\nNuvem: ${nuvem.motivo || 'não removido'}`);
+            } else {
+                alert(`Cliente "${cliente.nome}" excluído.`);
+            }
+            irParaAba('panelClientes');
         }
         function escapeHtml(text) {
             const d = document.createElement('div');
@@ -536,19 +1025,230 @@
             dados.clienteAtivoId = id;
             salvarDados(dados);
             document.getElementById('in_cliente').value = cliente.nome;
+            cancelarEdicaoAtendimento();
             atualizarAlertaCliente();
             renderListaClientes();
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.querySelector('[data-panel="panelVeiculo"]').classList.add('active');
-            document.getElementById('panelVeiculo').classList.add('active');
+            renderHistoricoCliente();
+            irParaAba('panelHistorico');
         }
-        function trocarAba(panelId) {
-            document.querySelectorAll('.nav-tab').forEach(t => {
-                t.classList.toggle('active', t.dataset.panel === panelId);
+        function renderHistoricoCliente() {
+            const semCliente = document.getElementById('historico_sem_cliente');
+            const conteudo = document.getElementById('historico_conteudo');
+            const vazio = document.getElementById('historico_vazio');
+            const lista = document.getElementById('lista_veiculos_historico');
+            const titulo = document.getElementById('historico_titulo_cliente');
+            const cliente = getClienteAtivo();
+            if (!cliente) {
+                semCliente.style.display = 'block';
+                conteudo.style.display = 'none';
+                titulo.textContent = 'Histórico do Cliente';
+                return;
+            }
+            semCliente.style.display = 'none';
+            conteudo.style.display = 'block';
+            titulo.textContent = `Histórico — ${cliente.nome}`;
+            const veiculos = cliente.veiculos || [];
+            if (!veiculos.length) {
+                lista.innerHTML = '';
+                vazio.style.display = 'block';
+                return;
+            }
+            vazio.style.display = 'none';
+            lista.innerHTML = veiculos.map((vg, gi) => {
+                const atendimentos = [...(vg.atendimentos || [])].sort(
+                    (a, b) => new Date(b.dataRegistro || 0) - new Date(a.dataRegistro || 0)
+                );
+                const itens = atendimentos.map(a => {
+                    const resumo = a.servicosRealizados || a.estadoChegada || 'Sem descrição';
+                    return `<div class="atendimento-item" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">
+                        <div class="data-linha">${escapeHtml(a.dataEntrada || '—')} · ${formatarDataRegistro(a.dataRegistro)}</div>
+                        <div class="resumo"><strong>Resp:</strong> ${escapeHtml(a.responsavel || '—')}<br>${escapeHtml(resumo)}</div>
+                        <div class="btn-row">
+                            <button type="button" class="btn-sm btn-sm-ver" data-acao="ver" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Ver</button>
+                            <button type="button" class="btn-sm btn-sm-edit" data-acao="editar" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Editar</button>
+                            <button type="button" class="btn-sm btn-sm-print" data-acao="imprimir" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">PDF</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                return `<div class="veiculo-grupo aberto" data-grupo="${gi}">
+                    <div class="veiculo-grupo-cabecalho" data-toggle-grupo="${gi}">
+                        <div>
+                            <strong>${escapeHtml(vg.placa)}</strong>
+                            <span>${escapeHtml(vg.carro || 'Modelo não informado')}</span>
+                        </div>
+                        <span class="badge">${atendimentos.length} atend.</span>
+                    </div>
+                    <div class="atendimentos-lista">${itens}
+                        <button type="button" class="btn btn-sm-novo btn-sm" data-acao="nova-visita" data-placa="${escapeHtml(vg.placa)}" style="width:100%;margin-top:4px;">+ Nova visita deste veículo</button>
+                    </div>
+                </div>`;
+            }).join('');
+            lista.querySelectorAll('[data-toggle-grupo]').forEach(el => {
+                el.addEventListener('click', () => {
+                    el.closest('.veiculo-grupo').classList.toggle('aberto');
+                });
             });
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(panelId).classList.add('active');
+            lista.querySelectorAll('[data-acao]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const placa = btn.dataset.placa;
+                    const id = btn.dataset.id;
+                    const acao = btn.dataset.acao;
+                    if (acao === 'ver') abrirVisualizacaoAtendimento(placa, id);
+                    else if (acao === 'editar') carregarAtendimentoNoForm(placa, id);
+                    else if (acao === 'imprimir') reimprimirAtendimento(placa, id);
+                    else if (acao === 'nova-visita') iniciarNovaVisita(placa);
+                });
+            });
+        }
+        function buscarAtendimento(placa, atendimentoId) {
+            const cliente = getClienteAtivo();
+            if (!cliente) return null;
+            const vg = (cliente.veiculos || []).find(v => v.placa === placa);
+            if (!vg) return null;
+            const at = (vg.atendimentos || []).find(a => a.id === atendimentoId);
+            return at ? { cliente, vg, atendimento: at } : null;
+        }
+        function abrirVisualizacaoAtendimento(placa, atendimentoId) {
+            const found = buscarAtendimento(placa, atendimentoId);
+            if (!found) return;
+            modalAtendimentoAtual = { placa, atendimentoId };
+            const a = found.atendimento;
+            const campos = [
+                ['Cliente', found.cliente.nome],
+                ['Data de Entrada', a.dataEntrada],
+                ['Registrado em', formatarDataRegistro(a.dataRegistro)],
+                ['Responsável', a.responsavel],
+                ['Veículo', a.carro],
+                ['Placa', a.placa],
+                ['Cidade / UF', a.cidade],
+                ['Chassi', a.chassi || '—'],
+                ['Cor', a.cor || '—'],
+                ['Km', a.km ? a.km + ' Km' : '—'],
+                ['Estado de Chegada', a.estadoChegada || '—'],
+                ['Serviços Realizados', a.servicosRealizados || '—']
+            ];
+            document.getElementById('modal_titulo').textContent = `Atendimento — ${a.placa} (${a.dataEntrada})`;
+            let html = campos.map(([l, v]) =>
+                `<div class="modal-campo"><label>${escapeHtml(l)}</label><p>${escapeHtml(String(v))}</p></div>`
+            ).join('');
+            const foto = fotoAtendimento(a);
+            if (foto) html += `<div class="modal-campo"><label>Foto</label><img src="${foto}" class="modal-foto" alt="Foto"></div>`;
+            document.getElementById('modal_corpo').innerHTML = html;
+            document.getElementById('modal_visualizar').classList.add('aberto');
+        }
+        function fecharModal() {
+            document.getElementById('modal_visualizar').classList.remove('aberto');
+            modalAtendimentoAtual = null;
+        }
+        function parseDataEntrada(dataEntrada) {
+            const p = (dataEntrada || '').split('/');
+            return { dia: p[0] || '', mes: p[1] || '', ano: p[2] || '' };
+        }
+        function preencherFormComAtendimento(a, placaFixa) {
+            document.getElementById('in_responsavel').value = a.responsavel || '';
+            document.getElementById('in_carro').value = a.carro || '';
+            document.getElementById('in_cidade').value = a.cidade || '';
+            document.getElementById('in_placa').value = placaFixa || a.placa || '';
+            document.getElementById('in_placa').readOnly = !!placaFixa && !atendimentoEditandoId;
+            const dt = parseDataEntrada(a.dataEntrada);
+            document.getElementById('in_dia').value = dt.dia;
+            document.getElementById('in_mes').value = dt.mes;
+            document.getElementById('in_ano').value = dt.ano;
+            document.getElementById('in_chassi').value = a.chassi || '';
+            document.getElementById('in_cor').value = a.cor || '';
+            document.getElementById('in_km').value = a.km || '';
+            document.getElementById('in_estado').value = a.estadoChegada || '';
+            document.getElementById('in_servicos').value = a.servicosRealizados || '';
+            if (fotoAtendimento(a)) mostrarFotoPreview(fotoAtendimento(a));
+            else removerFoto();
+            updatePlate();
+        }
+        function atualizarBannerModoForm() {
+            const banner = document.getElementById('modo_form_banner');
+            const btnSalvar = document.getElementById('btn_salvar_atendimento');
+            const btnCancelar = document.getElementById('btn_cancelar_edicao');
+            if (atendimentoEditandoId) {
+                banner.textContent = 'Modo edição: alterando um atendimento já registrado.';
+                banner.classList.add('visivel');
+                btnSalvar.textContent = 'Salvar Alterações';
+                btnCancelar.style.display = 'block';
+            } else {
+                banner.classList.remove('visivel');
+                btnSalvar.textContent = 'Salvar Novo Atendimento';
+                btnCancelar.style.display = 'none';
+            }
+        }
+        function carregarAtendimentoNoForm(placa, atendimentoId) {
+            const found = buscarAtendimento(placa, atendimentoId);
+            if (!found) return;
+            atendimentoEditandoId = atendimentoId;
+            preencherFormComAtendimento(found.atendimento, placa);
+            document.getElementById('in_placa').readOnly = true;
+            atualizarBannerModoForm();
+            irParaAba('panelVeiculo');
+        }
+        function iniciarNovaVisita(placa) {
+            const cliente = getClienteAtivo();
+            const vg = (cliente.veiculos || []).find(v => v.placa === placa);
+            cancelarEdicaoAtendimento();
+            limparFormVeiculo();
+            if (vg) {
+                document.getElementById('in_placa').value = placa;
+                document.getElementById('in_carro').value = vg.carro || '';
+                if (vg.atendimentos && vg.atendimentos.length) {
+                    const ultimo = vg.atendimentos[vg.atendimentos.length - 1];
+                    document.getElementById('in_cidade').value = ultimo.cidade || '';
+                    document.getElementById('in_chassi').value = ultimo.chassi || '';
+                    document.getElementById('in_cor').value = ultimo.cor || '';
+                }
+            }
+            document.getElementById('in_placa').readOnly = true;
+            updatePlate();
+            irParaAba('panelVeiculo');
+        }
+        function iniciarNovoAtendimento() {
+            if (!clienteSelecionadoId) {
+                alert('Selecione um cliente na aba Clientes.');
+                return;
+            }
+            cancelarEdicaoAtendimento();
+            limparFormVeiculo();
+            irParaAba('panelVeiculo');
+        }
+        function cancelarEdicaoAtendimento() {
+            atendimentoEditandoId = null;
+            document.getElementById('in_placa').readOnly = false;
+            atualizarBannerModoForm();
+        }
+        function reimprimirAtendimento(placa, atendimentoId) {
+            const found = buscarAtendimento(placa, atendimentoId);
+            if (!found) return;
+            gerarEspelhoComDados(found.cliente.nome, found.atendimento);
+        }
+        function gerarEspelhoComDados(nomeCliente, a) {
+            document.getElementById('p_cliente').textContent = nomeCliente;
+            document.getElementById('p_responsavel').textContent = a.responsavel || '—';
+            document.getElementById('p_carro').textContent = a.carro || '—';
+            document.getElementById('p_chassi').textContent = a.chassi || 'Não Informado';
+            document.getElementById('p_cor').textContent = a.cor || 'Não Informado';
+            document.getElementById('p_km').textContent = a.km ? a.km + ' Km' : 'Não Informado';
+            document.getElementById('p_estado').textContent = a.estadoChegada || 'Sem avarias ou observações de chegada registradas.';
+            document.getElementById('p_servicos').textContent = a.servicosRealizados || 'Nenhum serviço detalhado até o momento.';
+            document.getElementById('p_placa').textContent = (a.placa || '---').toUpperCase();
+            document.getElementById('p_cidade').textContent = (a.cidade || 'Não Informada').toUpperCase();
+            document.getElementById('p_data').textContent = a.dataEntrada || '—';
+            document.getElementById('p_registro_atendimento').textContent =
+                'Registro: ' + formatarDataRegistro(a.dataRegistro) + (a.id ? ' · ID: ' + a.id.slice(-6) : '');
+            const wrapFoto = document.getElementById('p_foto_wrap');
+            const foto = fotoAtendimento(a);
+            if (foto) {
+                document.getElementById('p_foto').src = foto;
+                wrapFoto.style.display = 'block';
+            } else {
+                wrapFoto.style.display = 'none';
+            }
+            window.print();
         }
         async function comprimirImagem(file) {
             return new Promise((resolve, reject) => {
@@ -601,6 +1301,7 @@
         }
         function coletarDadosVeiculo() {
             return {
+                id: atendimentoEditandoId || gerarId(),
                 responsavel: document.getElementById('in_responsavel').value.trim(),
                 carro: document.getElementById('in_carro').value.trim(),
                 cidade: document.getElementById('in_cidade').value.trim(),
@@ -612,7 +1313,7 @@
                 estadoChegada: document.getElementById('in_estado').value.trim(),
                 servicosRealizados: document.getElementById('in_servicos').value.trim(),
                 foto: fotoAtualBase64,
-                dataRegistro: new Date().toISOString()
+                dataRegistro: atendimentoEditandoId ? undefined : new Date().toISOString()
             };
         }
         function gerarEspelhoPDF() {
@@ -625,30 +1326,9 @@
                 form.reportValidity();
                 return;
             }
-            document.getElementById('p_cliente').textContent = document.getElementById('in_cliente').value;
-            document.getElementById('p_responsavel').textContent = document.getElementById('in_responsavel').value;
-            document.getElementById('p_carro').textContent = document.getElementById('in_carro').value;
-            document.getElementById('p_chassi').textContent = document.getElementById('in_chassi').value || 'Não Informado';
-            document.getElementById('p_cor').textContent = document.getElementById('in_cor').value || 'Não Informado';
-            document.getElementById('p_km').textContent = document.getElementById('in_km').value ? document.getElementById('in_km').value + ' Km' : 'Não Informado';
-            document.getElementById('p_estado').textContent = document.getElementById('in_estado').value || 'Sem avarias ou observações de chegada registradas.';
-            document.getElementById('p_servicos').textContent = document.getElementById('in_servicos').value || 'Nenhum serviço detalhado até o momento.';
-            const cidade = document.getElementById('in_cidade').value || 'Não Informada';
-            const placa = document.getElementById('in_placa').value.toUpperCase() || '---';
-            const dia = document.getElementById('in_dia').value;
-            const mes = document.getElementById('in_mes').value;
-            const ano = document.getElementById('in_ano').value;
-            document.getElementById('p_placa').textContent = placa;
-            document.getElementById('p_cidade').textContent = cidade.toUpperCase();
-            document.getElementById('p_data').textContent = `${dia}/${mes}/${ano}`;
-            const wrapFoto = document.getElementById('p_foto_wrap');
-            if (fotoAtualBase64) {
-                document.getElementById('p_foto').src = fotoAtualBase64;
-                wrapFoto.style.display = 'block';
-            } else {
-                wrapFoto.style.display = 'none';
-            }
-            window.print();
+            const dados = coletarDadosVeiculo();
+            if (!dados.dataRegistro) dados.dataRegistro = new Date().toISOString();
+            gerarEspelhoComDados(document.getElementById('in_cliente').value, dados);
         }
         function gerarBackupLocal() {
             const placa = document.getElementById('in_placa').value.toUpperCase();
@@ -707,71 +1387,46 @@
                 alert('Selecione um cliente na aba Clientes.');
                 return;
             }
-            const pastaNome = slugNome(cliente.nome);
-            const veiculos = cliente.veiculos || [];
-            const manifest = {
-                cliente: cliente.nome,
-                telefone: cliente.telefone || '',
-                exportadoEm: new Date().toISOString(),
-                veiculos: veiculos.map(v => ({
-                    placa: v.placa,
-                    carro: v.carro,
-                    dataEntrada: v.dataEntrada,
-                    responsavel: v.responsavel,
-                    temFoto: !!v.foto
-                }))
-            };
             if ('showDirectoryPicker' in window) {
                 try {
-                    const dir = await window.showDirectoryPicker();
-                    const pasta = await dir.getDirectoryHandle(pastaNome, { create: true });
-                    const jsonHandle = await pasta.getFileHandle('dados_cliente.json', { create: true });
-                    const jsonWritable = await jsonHandle.createWritable();
-                    await jsonWritable.write(JSON.stringify({ ...cliente, veiculos: veiculos.map(v => ({ ...v, foto: v.foto ? '[arquivo separado]' : null })) }, null, 2));
-                    await jsonWritable.close();
-                    for (const v of veiculos) {
-                        if (!v.foto) continue;
-                        const nomeFoto = `${v.placa || 'sem_placa'}_foto.jpg`;
-                        const fotoHandle = await pasta.getFileHandle(nomeFoto, { create: true });
-                        const fotoWritable = await fotoHandle.createWritable();
-                        await fotoWritable.write(base64ParaBlob(v.foto));
-                        await fotoWritable.close();
+                    const dest = await obterPastaClienteNoPC(cliente, true);
+                    if (!dest) return;
+                    for (const vg of (cliente.veiculos || [])) {
+                        for (const a of (vg.atendimentos || [])) {
+                            await salvarAtendimentoArquivoNaPasta(dest.pastaCliente, a);
+                        }
                     }
-                    for (const v of veiculos) {
-                        const nomeCsv = `${v.placa || 'sem_placa'}_dados.csv`;
-                        const csv = 'Chave,Valor\n' + Object.entries(v)
-                            .filter(([k]) => k !== 'foto')
-                            .map(([k, val]) => `${k},"${String(val ?? '').replace(/"/g, '""')}"`)
-                            .join('\n');
-                        const csvHandle = await pasta.getFileHandle(nomeCsv, { create: true });
-                        const csvWritable = await csvHandle.createWritable();
-                        await csvWritable.write(csv);
-                        await csvWritable.close();
-                    }
-                    alert(`Pasta "${pastaNome}" criada com sucesso no local escolhido!`);
+                    await sincronizarPastaCliente(dest.pastaCliente, cliente);
+                    alert(`Pasta sincronizada:\n${dest.caminho}`);
                     return;
                 } catch (err) {
                     if (err.name === 'AbortError') return;
+                    console.error(err);
                 }
             }
+            const pastaNome = slugNome(cliente.nome);
             downloadArquivo(`${pastaNome}_dados_cliente.json`, JSON.stringify(cliente, null, 2), 'application/json');
-            for (const v of veiculos) {
-                if (v.foto) {
-                    const link = document.createElement('a');
-                    link.href = v.foto;
-                    link.download = `${pastaNome}_${v.placa}_foto.jpg`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+            for (const vg of (cliente.veiculos || [])) {
+                for (const a of (vg.atendimentos || [])) {
+                    const foto = fotoAtendimento(a);
+                    if (foto) {
+                        const link = document.createElement('a');
+                        link.href = foto;
+                        link.download = `${pastaNome}_${nomeBaseArquivo(a)}_foto.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
                 }
             }
-            alert(`Arquivos baixados com prefixo "${pastaNome}_". No Chrome/Edge você pode escolher uma pasta fixa ao exportar.`);
+            alert(`Download iniciado com prefixo "${pastaNome}_". No PC use Chrome/Edge para pasta fixa.`);
         }
         function limparFormVeiculo() {
             document.getElementById('in_responsavel').value = '';
             document.getElementById('in_carro').value = '';
             document.getElementById('in_cidade').value = '';
             document.getElementById('in_placa').value = '';
+            document.getElementById('in_placa').readOnly = false;
             document.getElementById('in_chassi').value = '';
             document.getElementById('in_cor').value = '';
             document.getElementById('in_km').value = '';
@@ -780,22 +1435,127 @@
             removerFoto();
             preencherDataHoje();
             updatePlate();
+            cancelarEdicaoAtendimento();
+        }
+        function configurarPWA() {
+            let deferredPrompt = null;
+            const bar = document.getElementById('pwa_install_bar');
+            const iosHint = document.getElementById('pwa_ios_hint');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            }
+            if (isStandalone) {
+                if (bar) bar.hidden = true;
+                if (iosHint) iosHint.classList.remove('visivel');
+                return;
+            }
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS && iosHint) iosHint.classList.add('visivel');
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                if (bar) bar.hidden = false;
+            });
+            const btnInstalar = document.getElementById('btn_instalar_app');
+            const btnFechar = document.getElementById('btn_fechar_install');
+            if (btnInstalar) {
+                btnInstalar.addEventListener('click', async () => {
+                    if (!deferredPrompt) {
+                        alert('Use o menu do navegador: Instalar aplicativo / Adicionar à tela inicial.');
+                        return;
+                    }
+                    deferredPrompt.prompt();
+                    await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    if (bar) bar.hidden = true;
+                });
+            }
+            if (btnFechar) btnFechar.addEventListener('click', () => { if (bar) bar.hidden = true; });
+        }
+        function salvarAtendimentoNoCliente(cliente, atendimento) {
+            if (!cliente.veiculos) cliente.veiculos = [];
+            let vg = cliente.veiculos.find(v => v.placa === atendimento.placa);
+            if (!vg) {
+                vg = { placa: atendimento.placa, carro: atendimento.carro, atendimentos: [] };
+                cliente.veiculos.push(vg);
+            }
+            vg.carro = atendimento.carro || vg.carro;
+            if (atendimentoEditandoId) {
+                const idx = (vg.atendimentos || []).findIndex(a => a.id === atendimentoEditandoId);
+                if (!vg.atendimentos) vg.atendimentos = [];
+                if (idx >= 0) {
+                    const antigo = vg.atendimentos[idx];
+                    atendimento.dataRegistro = antigo.dataRegistro;
+                    atendimento.id = antigo.id;
+                    vg.atendimentos[idx] = atendimento;
+                }
+            } else {
+                atendimento.id = atendimento.id || gerarId();
+                atendimento.dataRegistro = new Date().toISOString();
+                vg.atendimentos.push(atendimento);
+            }
         }
         document.addEventListener('DOMContentLoaded', () => {
             preencherDataHoje();
             updatePlate();
+            atualizarStatusPastaUI();
+            configurarPWA();
+            document.getElementById('btn_config_pasta').addEventListener('click', configurarPastaRaiz);
             const dados = carregarDados();
             if (dados.clienteAtivoId) {
                 const existe = dados.clientes.some(c => c.id === dados.clienteAtivoId);
-                if (existe) selecionarCliente(dados.clienteAtivoId);
+                if (existe) {
+                    clienteSelecionadoId = dados.clienteAtivoId;
+                    document.getElementById('in_cliente').value = dados.clientes.find(c => c.id === dados.clienteAtivoId).nome;
+                    renderHistoricoCliente();
+                }
             }
             renderListaClientes();
+            renderHistoricoCliente();
             atualizarAlertaCliente();
             ['in_cidade', 'in_placa'].forEach(id => {
                 document.getElementById(id).addEventListener('input', updatePlate);
             });
             document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', () => trocarAba(tab.dataset.panel));
+                tab.addEventListener('click', () => {
+                    if (tab.dataset.panel === 'panelHistorico') renderHistoricoCliente();
+                    if (tab.dataset.panel === 'panelVeiculo' && !clienteSelecionadoId) {
+                        alert('Selecione um cliente na aba Clientes.');
+                        irParaAba('panelClientes');
+                        return;
+                    }
+                    irParaAba(tab.dataset.panel);
+                });
+            });
+            document.getElementById('btn_novo_atendimento').addEventListener('click', iniciarNovoAtendimento);
+            document.getElementById('btn_exportar_pasta_hist').addEventListener('click', exportarPastaCliente);
+            document.getElementById('btn_excluir_cliente_hist').addEventListener('click', () => {
+                if (!clienteSelecionadoId) {
+                    alert('Selecione um cliente.');
+                    return;
+                }
+                excluirCliente(clienteSelecionadoId);
+            });
+            document.getElementById('btn_cancelar_edicao').addEventListener('click', () => {
+                cancelarEdicaoAtendimento();
+                limparFormVeiculo();
+                irParaAba('panelHistorico');
+            });
+            document.getElementById('modal_btn_fechar').addEventListener('click', fecharModal);
+            document.getElementById('modal_visualizar').addEventListener('click', (e) => {
+                if (e.target.id === 'modal_visualizar') fecharModal();
+            });
+            document.getElementById('modal_btn_imprimir').addEventListener('click', () => {
+                if (modalAtendimentoAtual) reimprimirAtendimento(modalAtendimentoAtual.placa, modalAtendimentoAtual.atendimentoId);
+            });
+            document.getElementById('modal_btn_editar').addEventListener('click', () => {
+                if (modalAtendimentoAtual) {
+                    const { placa, atendimentoId } = modalAtendimentoAtual;
+                    fecharModal();
+                    carregarAtendimentoNoForm(placa, atendimentoId);
+                }
             });
             document.getElementById('clienteForm').addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -834,56 +1594,117 @@
                     alert('Selecione um cliente na aba Clientes.');
                     return;
                 }
-                const veiculo = coletarDadosVeiculo();
-                if (!veiculo.placa) {
+                const atendimento = coletarDadosVeiculo();
+                if (!atendimento.placa) {
                     alert('Informe a placa do veículo.');
                     return;
                 }
                 const dados = carregarDados();
                 const cliente = dados.clientes.find(c => c.id === clienteSelecionadoId);
-                if (!cliente.veiculos) cliente.veiculos = [];
-                const idx = cliente.veiculos.findIndex(v => v.placa === veiculo.placa);
-                if (idx >= 0) {
-                    if (!confirm(`Já existe veículo com placa ${veiculo.placa}. Deseja atualizar?`)) return;
-                    cliente.veiculos[idx] = veiculo;
-                } else {
-                    cliente.veiculos.push(veiculo);
-                }
+                salvarAtendimentoNoCliente(cliente, atendimento);
                 salvarDados(dados);
+                const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
                 renderListaClientes();
-                if (window.salvarVeiculoFirebase) {
-                    await window.salvarVeiculoFirebase(cliente, veiculo);
+                renderHistoricoCliente();
+                const partes = ['✓ Salvo no aparelho'];
+                const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
+                if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
+                else if (pc.motivo) partes.push('⚠ ' + pc.motivo);
+                if (window.salvarAtendimentoNuvem) {
+                    const nuvem = await window.salvarAtendimentoNuvem(clienteAtualizado, atendimento, !!atendimentoEditandoId);
+                    if (nuvem.ok) {
+                        partes.push(`✓ Nuvem: ${nuvem.caminho}`);
+                        if (nuvem.fotoUrl) {
+                            const vg = clienteAtualizado.veiculos.find(v => v.placa === atendimento.placa);
+                            const at = vg?.atendimentos?.find(x => x.id === atendimento.id);
+                            if (at) { at.fotoUrl = nuvem.fotoUrl; salvarDados(dados); }
+                        }
+                    } else if (nuvem.motivo) partes.push('⚠ Nuvem: ' + nuvem.motivo);
                 } else {
-                    alert(`Veículo ${veiculo.placa} salvo no cliente "${cliente.nome}"!`);
+                    partes.push('⚠ Nuvem: configure firebase-env.js');
                 }
+                alert(partes.join('\n'));
                 limparFormVeiculo();
+                irParaAba('panelHistorico');
             });
         });
     </script>
     <script type="module">
         try {
-            const { db, collection, addDoc, doc, setDoc } = await import('./firebase-env.js');
-            window.salvarVeiculoFirebase = async function(cliente, veiculo) {
+            const { db, storage, doc, setDoc, deleteDoc, collection, getDocs } = await import('./firebase-env.js');
+            const { ref, uploadString, getDownloadURL, listAll, deleteObject } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js');
+
+            async function apagarPastaStorageRecursiva(pastaRef) {
+                const lista = await listAll(pastaRef);
+                await Promise.all(lista.items.map(item => deleteObject(item)));
+                await Promise.all(lista.prefixes.map(sub => apagarPastaStorageRecursiva(sub)));
+            }
+
+            window.salvarAtendimentoNuvem = async function(cliente, atendimento, isEdicao) {
                 try {
-                    const clienteRef = doc(collection(db, 'clientes'), cliente.id);
-                    await setDoc(clienteRef, {
+                    const pastaSlug = cliente.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'CLIENTE';
+
+                    await setDoc(doc(db, 'clientes', cliente.id), {
                         nome: cliente.nome,
                         telefone: cliente.telefone || '',
+                        pastaSlug,
                         atualizadoEm: new Date()
                     }, { merge: true });
-                    await addDoc(collection(db, 'clientes', cliente.id, 'veiculos'), {
-                        ...veiculo,
-                        foto: veiculo.foto ? '[salva localmente - Storage em breve]' : null,
-                        dataRegistroDB: new Date()
-                    });
-                    alert(`SUCESSO! Veículo ${veiculo.placa} salvo na nuvem (cliente: ${cliente.nome}).`);
+
+                    const dados = { ...atendimento };
+                    const basePath = `clientes/${cliente.id}/${pastaSlug}/${atendimento.placa}/${atendimento.id}`;
+                    let fotoUrl = atendimento.fotoUrl || null;
+
+                    if (atendimento.foto && atendimento.foto.startsWith('data:')) {
+                        const fotoRef = ref(storage, `${basePath}/foto.jpg`);
+                        await uploadString(fotoRef, atendimento.foto, 'data_url');
+                        fotoUrl = await getDownloadURL(fotoRef);
+                    }
+
+                    if (fotoUrl) dados.fotoUrl = fotoUrl;
+                    delete dados.foto;
+
+                    const jsonRef = ref(storage, `${basePath}/dados.json`);
+                    await uploadString(jsonRef, JSON.stringify(dados, null, 2), 'raw');
+
+                    await setDoc(doc(db, 'clientes', cliente.id, 'atendimentos', atendimento.id), {
+                        ...dados,
+                        pastaNuvem: basePath,
+                        dataRegistroDB: atendimento.dataRegistro || new Date().toISOString(),
+                        atualizadoEm: new Date()
+                    }, { merge: true });
+
+                    const exportFn = window.exportarClienteSemFotosBase64;
+                    const clienteJson = exportFn ? exportFn(cliente) : { nome: cliente.nome, veiculos: cliente.veiculos };
+                    const clienteJsonRef = ref(storage, `clientes/${cliente.id}/${pastaSlug}/dados_cliente.json`);
+                    await uploadString(clienteJsonRef, JSON.stringify(clienteJson, null, 2), 'raw');
+
+                    return { ok: true, caminho: `${pastaSlug}/${atendimento.placa}`, fotoUrl };
                 } catch (erro) {
                     console.error(erro);
-                    alert('Salvo localmente, mas falhou no Firebase. Verifique firebase-env.js e o console.');
+                    return { ok: false, motivo: erro.message || 'erro ao enviar' };
+                }
+            };
+
+            window.excluirClienteNuvem = async function(clienteId) {
+                try {
+                    const atendSnap = await getDocs(collection(db, 'clientes', clienteId, 'atendimentos'));
+                    await Promise.all(atendSnap.docs.map(d => deleteDoc(d.ref)));
+                    await deleteDoc(doc(db, 'clientes', clienteId));
+                    try {
+                        await apagarPastaStorageRecursiva(ref(storage, `clientes/${clienteId}`));
+                    } catch (storageErr) {
+                        console.warn('Storage parcial:', storageErr);
+                    }
+                    return { ok: true };
+                } catch (erro) {
+                    console.error(erro);
+                    return { ok: false, motivo: erro.message || 'erro ao excluir na nuvem' };
                 }
             };
         } catch (e) {
-            console.info('Firebase não configurado — dados salvos apenas localmente.', e);
+            console.info('Firebase não configurado — nuvem desativada.', e);
         }
     </script>
 </body>
