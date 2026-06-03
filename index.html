@@ -1886,6 +1886,7 @@
 
             async function uploadFotosCliente(cliente) {
                 const copia = JSON.parse(JSON.stringify(cliente));
+                if (!storage) return copia;
                 const pastaSlug = slugCliente(cliente.nome);
                 for (const vg of copia.veiculos || []) {
                     for (const a of vg.atendimentos || []) {
@@ -1967,10 +1968,12 @@
 
             window.excluirClienteNuvem = async function(clienteId) {
                 try {
-                    try {
-                        await apagarPastaStorageRecursiva(ref(storage, `${STORAGE_PREFIX}/${clienteId}`));
-                    } catch (storageErr) {
-                        console.warn('Storage:', storageErr);
+                    if (storage) {
+                        try {
+                            await apagarPastaStorageRecursiva(ref(storage, `${STORAGE_PREFIX}/${clienteId}`));
+                        } catch (storageErr) {
+                            console.warn('Storage:', storageErr);
+                        }
                     }
                     await deleteDoc(doc(db, COLECAO_NUVEM, clienteId));
                     return { ok: true };
