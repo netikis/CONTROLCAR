@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="Paraná Peças">
     <meta name="description" content="Controle de veículos, clientes e atendimentos — Paraná Peças">
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <title>PARANÁ PEÇAS - CONTROLE DE veículos</title>
@@ -54,8 +55,13 @@
             height: 72px;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0, 123, 255, 0.35);
-            object-fit: cover;
+            flex-shrink: 0;
         }
+        .app-logo svg { width: 100%; height: 100%; display: block; border-radius: 16px; }
+        .pwa-install-bar .pwa-icon-wrap {
+            width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; overflow: hidden;
+        }
+        .pwa-install-bar .pwa-icon-wrap svg { width: 100%; height: 100%; display: block; }
         h1.main-title {
             text-align: center;
             color: #ffffff;
@@ -81,7 +87,7 @@
             flex-wrap: wrap;
         }
         .pwa-install-bar[hidden] { display: none !important; }
-        .pwa-install-bar .pwa-icon { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
+        .pwa-install-bar .pwa-icon { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; object-fit: cover; }
         .pwa-install-bar .pwa-texto { flex: 1; min-width: 140px; font-size: 0.8rem; color: #ccc; }
         .pwa-install-bar .pwa-texto strong { color: #fff; display: block; margin-bottom: 2px; }
         .pwa-install-bar .pwa-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -430,11 +436,22 @@
 </head>
 <body>
     <header class="app-header">
-        <img src="icons/icon-192.png" alt="Paraná Peças" class="app-logo" width="192" height="192">
+        <div class="app-logo" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Paraná Peças">
+                <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#111"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
+                <rect width="512" height="512" rx="96" fill="url(#lg)"/>
+                <circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/>
+                <circle cx="256" cy="230" r="58" fill="#007bff"/>
+                <rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/>
+                <text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text>
+            </svg>
+        </div>
         <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
     </header>
     <div id="pwa_install_bar" class="pwa-install-bar" hidden>
-        <img src="icons/icon-192.png" alt="" class="pwa-icon" width="48" height="48">
+        <div class="pwa-icon-wrap" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
+        </div>
         <div class="pwa-texto">
             <strong>Instalar aplicativo</strong>
             Atalho na tela do celular com ícone da empresa
