@@ -1,2014 +1,890 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>PARANÁ PEÇAS - CONTROLE DE veículos</title>
-
     <style>
-
         * {
-
             box-sizing: border-box;
-
             margin: 0;
-
             padding: 0;
-
             font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-
         }
-
-
-
         body {
-
             background-color: #000000;
-
             color: #ffffff;
-
             display: flex;
-
             flex-direction: column;
-
             align-items: center;
-
             min-height: 100vh;
-
             padding: 15px;
-
         }
-
-
-
         h1.main-title {
-
             text-align: center;
-
             color: #ffffff;
-
             text-transform: uppercase;
-
             font-size: 1.6rem;
-
             margin-top: 10px;
-
             margin-bottom: 15px;
-
             letter-spacing: 1px;
-
             width: 100%;
-
             max-width: 600px;
-
         }
-
-
-
         .nav-tabs {
-
             display: flex;
-
             gap: 8px;
-
             width: 100%;
-
             max-width: 600px;
-
             margin-bottom: 20px;
-
         }
-
-
-
         .nav-tab {
-
             flex: 1;
-
             padding: 12px 8px;
-
             border: 2px solid #555;
-
             background: #111;
-
             color: #aaa;
-
             border-radius: 6px;
-
             font-weight: bold;
-
             text-transform: uppercase;
-
             font-size: 0.75rem;
-
             cursor: pointer;
-
             transition: all 0.2s;
-
         }
-
-
-
         .nav-tab.active {
-
             background: #007bff;
-
             border-color: #007bff;
-
             color: #fff;
-
         }
-
-
-
         .panel { display: none; width: 100%; max-width: 600px; }
-
         .panel.active { display: block; }
-
-
-
         .screen-container {
-
             width: 100%;
-
             display: flex;
-
             flex-direction: column;
-
             gap: 20px;
-
         }
-
-
-
         .quadro {
-
             background: #0a0a0a;
-
             border-radius: 8px;
-
             padding: 20px;
-
             box-shadow: 0 4px 15px rgba(255, 255, 255, 0.03);
-
         }
-
-
-
         .quadro-azul { border: 2px solid #0056b3; border-left: 6px solid #0056b3; }
-
         .quadro-azul h2 { color: #007bff; }
-
         .quadro-verde { border: 2px solid #28a745; border-left: 6px solid #28a745; }
-
         .quadro-verde h2 { color: #5dd879; }
-
         .quadro-vermelho { border: 2px solid #ff0000; border-left: 6px solid #ff0000; }
-
         .quadro-vermelho h2 { color: #ff3333; }
-
         .quadro-branco { border: 2px solid #ffffff; border-left: 6px solid #ffffff; }
-
         .quadro-branco h2 { color: #ffffff; }
-
-
-
         .quadro h2 {
-
             font-size: 1.1rem;
-
             text-transform: uppercase;
-
             margin-bottom: 15px;
-
             letter-spacing: 0.5px;
-
         }
-
-
-
         .form-group { margin-bottom: 15px; }
-
-
-
         .form-group label {
-
             display: block;
-
             color: #b0b0b0;
-
             text-transform: uppercase;
-
             font-size: 0.75rem;
-
             margin-bottom: 5px;
-
             font-weight: bold;
-
         }
-
-
-
         .form-group input,
-
         .form-group select,
-
         .form-group textarea {
-
             width: 100%;
-
             padding: 11px 14px;
-
             background: #ffffff;
-
             border: 1px solid #ccc;
-
             border-radius: 5px;
-
             color: #000000;
-
             font-size: 1rem;
-
             transition: all 0.2s;
-
         }
-
-
-
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-
             outline: none;
-
             box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
-
         }
-
-
-
         .form-group input[readonly] {
-
             background: #e9ecef;
-
             color: #333;
-
         }
-
-
-
         .date-group { display: flex; gap: 10px; }
-
         .date-group input, .date-group select { text-align: center; }
-
-
-
         .mini-plate-wrapper {
-
             display: flex;
-
             justify-content: center;
-
             margin-top: 12px;
-
             background: #111;
-
             padding: 10px;
-
             border-radius: 6px;
-
         }
-
-
-
         .mercosul-plate-mini {
-
             width: 200px; height: 66px;
-
             background-color: #f5f5f5;
-
             border: 2px solid #000000; border-radius: 5px;
-
             overflow: hidden; position: relative;
-
         }
-
-
-
         .plate-header-mini {
-
             background-color: #003399; height: 16px; width: 100%;
-
             display: flex; align-items: center; justify-content: space-between; padding: 0 6px;
-
         }
-
-
-
         .brasil-text-mini { color: #ffffff; font-weight: bold; text-transform: uppercase; font-size: 0.55rem; letter-spacing: 1px; }
-
         .plate-body-mini { display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100% - 16px); }
-
         .plate-location-mini { font-weight: bold; color: #333333; font-size: 0.4rem; text-transform: uppercase; margin-bottom: 1px; }
-
         .plate-number-mini { font-family: 'Courier New', Courier, monospace; font-weight: 900; color: #000000; font-size: 1.5rem; letter-spacing: 1px; line-height: 1; }
-
-
-
         .cliente-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 220px; overflow-y: auto; }
-
-
-
         .cliente-item {
-
             display: flex;
-
             justify-content: space-between;
-
             align-items: center;
-
             padding: 12px 14px;
-
             background: #1a1a1a;
-
             border: 1px solid #333;
-
             border-radius: 6px;
-
             cursor: pointer;
-
             transition: border-color 0.2s;
-
         }
-
-
-
         .cliente-item:hover { border-color: #007bff; }
-
         .cliente-item.selecionado { border-color: #28a745; background: #0d2818; }
-
         .cliente-item strong { color: #fff; font-size: 0.95rem; }
-
         .cliente-item small { color: #888; display: block; margin-top: 2px; }
-
         .cliente-item .badge { background: #007bff; color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
-
-
-
         .cliente-vazio { color: #666; text-align: center; padding: 20px; font-size: 0.9rem; }
-
-
-
         .alerta-cliente {
-
             background: #3d1a00;
-
             border: 1px solid #ff8800;
-
             color: #ffcc80;
-
             padding: 12px;
-
             border-radius: 6px;
-
             font-size: 0.85rem;
-
             margin-bottom: 15px;
-
             display: none;
-
         }
-
-
-
         .alerta-cliente.visivel { display: block; }
-
-
-
         .photo-zone { display: flex; flex-direction: column; gap: 10px; }
-
-
-
         .photo-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-
-
-
         .btn-foto {
-
             flex: 1;
-
             min-width: 140px;
-
             padding: 10px;
-
             background: #333;
-
             color: #fff;
-
             border: 1px solid #555;
-
             border-radius: 6px;
-
             font-size: 0.8rem;
-
             font-weight: bold;
-
             text-transform: uppercase;
-
             cursor: pointer;
-
         }
-
-
-
         .btn-foto:hover { background: #444; }
-
-
-
         .photo-preview {
-
             display: none;
-
             width: 100%;
-
             max-height: 200px;
-
             object-fit: contain;
-
             border-radius: 6px;
-
             border: 2px solid #333;
-
             background: #111;
-
         }
-
-
-
         .photo-preview.visivel { display: block; }
-
-
-
         input[type="file"] { display: none; }
-
-
-
         .button-zone {
-
             display: flex; flex-direction: column; gap: 10px;
-
             margin-top: 10px; margin-bottom: 30px;
-
         }
-
-
-
         .btn {
-
             width: 100%; padding: 14px; border: none; border-radius: 6px;
-
             font-size: 1rem; font-weight: bold; text-transform: uppercase;
-
             cursor: pointer; transition: background 0.2s;
-
         }
-
-
-
         .btn-enviar { background-color: #007bff; color: #ffffff; }
-
         .btn-enviar:hover { background-color: #0056b3; }
-
         .btn-verde { background-color: #28a745; color: #ffffff; }
-
         .btn-verde:hover { background-color: #1e7e34; }
-
         .btn-pdf { background-color: #ff0000; color: #ffffff; }
-
         .btn-pdf:hover { background-color: #cc0000; }
-
         .btn-backup { background-color: #ffffff; color: #000000; border: 2px solid #555; }
-
         .btn-backup:hover { background-color: #e6e6e6; }
-
         .btn-pasta { background-color: #6f42c1; color: #ffffff; }
-
         .btn-pasta:hover { background-color: #5a32a3; }
-
-
-
         .mirror-print-section { display: none; }
-
-
-
         @media print {
-
             body { background: #f4f6f9 !important; color: #000000 !important; padding: 0; margin: 0; }
-
             .nav-tabs, .panel, h1.main-title, .button-zone, .mini-plate-wrapper { display: none !important; }
-
             .mirror-print-section {
-
                 display: block !important; width: 100%; max-width: 800px;
-
                 margin: 0 auto; padding: 30px; background: #ffffff;
-
             }
-
             .print-header {
-
                 text-align: center; background: #111; color: #fff;
-
                 padding: 20px; border-radius: 8px 8px 0 0; margin-bottom: 25px;
-
                 -webkit-print-color-adjust: exact; print-color-adjust: exact;
-
             }
-
             .print-header h1 { font-size: 1.8rem; text-transform: uppercase; margin-bottom: 5px; color: #ffffff; }
-
             .print-header p { font-size: 1rem; font-weight: bold; color: #a0b0c0; letter-spacing: 2px; }
-
             .print-block { margin-bottom: 25px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
             .block-title { padding: 10px 15px; font-weight: bold; font-size: 1rem; text-transform: uppercase; color: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
             .bg-blue { background-color: #0056b3 !important; }
-
             .bg-red { background-color: #cc0000 !important; }
-
             .bg-dark { background-color: #333333 !important; }
-
             .block-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px 20px; background: #ffffff; }
-
             .print-field { display: flex; flex-direction: column; }
-
             .print-label { font-size: 0.75rem; color: #666666; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; }
-
             .print-value { font-size: 1.1rem; color: #111111; font-weight: 500; border-bottom: 1px solid #eeeeee; padding-bottom: 5px; min-height: 28px; }
-
             .full-width { grid-column: span 2; }
-
             .print-foto { max-width: 100%; max-height: 280px; border-radius: 6px; margin-top: 8px; }
-
             .print-signatures { margin-top: 50px; display: flex; justify-content: space-around; padding: 0 20px; }
-
             .sig-box { width: 40%; text-align: center; border-top: 1px solid #000000; padding-top: 8px; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: #333; }
-
         }
-
     </style>
-
 </head>
-
 <body>
-
-
-
     <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
-
-
-
     <div class="nav-tabs">
-
         <button type="button" class="nav-tab active" data-panel="panelClientes">1. Clientes</button>
-
         <button type="button" class="nav-tab" data-panel="panelVeiculo">2. Veículo</button>
-
     </div>
-
-
-
     <!-- PAINEL CLIENTES -->
-
     <div id="panelClientes" class="panel active">
-
         <div class="screen-container">
-
             <div class="quadro quadro-verde">
-
                 <h2>Cadastro de Cliente</h2>
-
                 <form id="clienteForm">
-
                     <div class="form-group">
-
                         <label>Nome do Cliente:</label>
-
                         <input type="text" id="novo_cliente_nome" placeholder="Ex: Carlos Souza" required>
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Telefone (opcional):</label>
-
                         <input type="tel" id="novo_cliente_tel" placeholder="Ex: (43) 99999-9999">
-
                     </div>
-
                     <button type="submit" class="btn btn-verde">Cadastrar Cliente</button>
-
                 </form>
-
             </div>
-
-
-
             <div class="quadro quadro-azul">
-
                 <h2>Clientes Cadastrados</h2>
-
                 <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">Toque no cliente para selecionar e cadastrar o veículo dele.</p>
-
                 <div id="lista_clientes" class="cliente-lista">
-
                     <div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
-
-
     <!-- PAINEL VEÍCULO -->
-
     <div id="panelVeiculo" class="panel">
-
         <div class="screen-container">
-
             <div id="alerta_sem_cliente" class="alerta-cliente visivel">
-
                 Selecione um cliente na aba <strong>Clientes</strong> antes de preencher o veículo.
-
             </div>
-
-
-
             <form id="vehicleForm">
-
                 <div class="quadro quadro-azul">
-
                     <h2>Cliente Selecionado</h2>
-
                     <div class="form-group">
-
                         <label>Nome do Cliente:</label>
-
                         <input type="text" id="in_cliente" readonly placeholder="Selecione na aba Clientes">
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Responsável pelo conserto:</label>
-
                         <input type="text" id="in_responsavel" placeholder="Quem vai executar o serviço?" required>
-
                     </div>
-
                 </div>
-
-
-
                 <div class="quadro quadro-vermelho">
-
                     <h2>Especificações do Veículo</h2>
-
                     <div class="form-group">
-
                         <label>Carro (Modelo / Marca):</label>
-
                         <input type="text" id="in_carro" placeholder="Ex: Chevrolet Onix" required>
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Cidade / UF (Para a Placa):</label>
-
                         <input type="text" id="in_cidade" placeholder="Ex: Ibaiti / PR">
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Placa (Mercosul):</label>
-
                         <input type="text" id="in_placa" placeholder="ABC1D23" maxlength="7" style="text-transform: uppercase;" required>
-
-
-
                         <div class="mini-plate-wrapper">
-
                             <div class="mercosul-plate-mini">
-
                                 <div class="plate-header-mini">
-
                                     <span style="color:#fff; font-size:0.4rem;">★★★★★</span>
-
                                     <span class="brasil-text-mini">BRASIL</span>
-
                                     <div style="width:10px; height:7px; background:#009c3b; border:0.5px solid #fff;"></div>
-
                                 </div>
-
                                 <div class="plate-body-mini">
-
                                     <div class="plate-location-mini" id="plate_loc_mini">CIDADE / UF</div>
-
                                     <div class="plate-number-mini" id="plate_num_mini">PLACA</div>
-
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
-
-
-
                     <div class="form-group">
-
                         <label>Data de Entrada:</label>
-
                         <div class="date-group">
-
                             <input type="text" id="in_dia" placeholder="Dia" maxlength="2">
-
                             <select id="in_mes">
-
                                 <option value="">Mês</option>
-
                                 <option value="01">Janeiro</option>
-
                                 <option value="02">Fevereiro</option>
-
                                 <option value="03">Março</option>
-
                                 <option value="04">Abril</option>
-
                                 <option value="05">Maio</option>
-
                                 <option value="06">Junho</option>
-
                                 <option value="07">Julho</option>
-
                                 <option value="08">Agosto</option>
-
                                 <option value="09">Setembro</option>
-
                                 <option value="10">Outubro</option>
-
                                 <option value="11">Novembro</option>
-
                                 <option value="12">Dezembro</option>
-
                             </select>
-
                             <input type="text" id="in_ano" placeholder="Ano" maxlength="4">
-
                         </div>
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Chassi:</label>
-
                         <input type="text" id="in_chassi" placeholder="Número do Chassi">
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Cor:</label>
-
                         <input type="text" id="in_cor" placeholder="Ex: Vermelho Metálico">
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Quilometragem (Km):</label>
-
                         <input type="number" id="in_km" placeholder="Ex: 85000">
-
                     </div>
-
                 </div>
-
-
-
                 <div class="quadro quadro-branco">
-
                     <h2>Quadro de Chegada & Serviços</h2>
-
                     <div class="form-group">
-
                         <label>Como o carro veio? (Checklist de Chegada):</label>
-
                         <textarea id="in_estado" rows="3" placeholder="Especifique arranhões, peças soltas, nível de combustível..."></textarea>
-
                     </div>
-
                     <div class="form-group">
-
                         <label>Serviços Realizados (Ou a realizar):</label>
-
                         <textarea id="in_servicos" rows="4" placeholder="Descreva os serviços executados, peças trocadas, etc..."></textarea>
-
                     </div>
-
                     <div class="form-group photo-zone">
-
                         <label>Foto do Veículo:</label>
-
                         <div class="photo-buttons">
-
                             <button type="button" class="btn-foto" id="btn_tirar_foto">Tirar Foto</button>
-
                             <button type="button" class="btn-foto" id="btn_galeria">Galeria / Arquivo</button>
-
                             <button type="button" class="btn-foto" id="btn_remover_foto" style="display:none;">Remover Foto</button>
-
                         </div>
-
                         <input type="file" id="in_foto_camera" accept="image/*" capture="environment">
-
                         <input type="file" id="in_foto_galeria" accept="image/*">
-
                         <img id="foto_preview" class="photo-preview" alt="Preview da foto">
-
                     </div>
-
                 </div>
-
-
-
                 <div class="button-zone">
-
                     <button type="submit" class="btn btn-enviar">Salvar Veículo do Cliente</button>
-
                     <button type="button" class="btn btn-pasta" id="btn_exportar_pasta">Exportar Pasta do Cliente</button>
-
                     <button type="button" class="btn btn-pdf" id="btn_pdf">Salvar Espelho Colorido (PDF)</button>
-
                     <button type="button" class="btn btn-backup" id="btn_backup">Backup Desktop (.CSV)</button>
-
                 </div>
-
             </form>
-
         </div>
-
     </div>
-
-
-
     <div class="mirror-print-section">
-
         <div class="print-header">
-
             <h1>PARANÁ PEÇAS</h1>
-
             <p>ESPELHO DE ENTRADA E SERVIÇOS</p>
-
         </div>
-
-
-
         <div class="print-block">
-
             <div class="block-title bg-blue">Dados do Cliente & Oficina</div>
-
             <div class="block-grid">
-
                 <div class="print-field full-width">
-
                     <span class="print-label">Nome do Cliente</span>
-
                     <span class="print-value" id="p_cliente">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Responsável pelo conserto</span>
-
                     <span class="print-value" id="p_responsavel">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Data de Entrada</span>
-
                     <span class="print-value" id="p_data">--</span>
-
                 </div>
-
             </div>
-
         </div>
-
-
-
         <div class="print-block">
-
             <div class="block-title bg-red">Especificações do Veículo</div>
-
             <div class="block-grid">
-
                 <div class="print-field">
-
                     <span class="print-label">Veículo / Modelo</span>
-
                     <span class="print-value" id="p_carro">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Placa</span>
-
                     <span class="print-value" id="p_placa" style="font-weight: 700; letter-spacing: 2px;">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Cidade / UF</span>
-
                     <span class="print-value" id="p_cidade">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Quilometragem</span>
-
                     <span class="print-value" id="p_km">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Cor do Veículo</span>
-
                     <span class="print-value" id="p_cor">--</span>
-
                 </div>
-
                 <div class="print-field">
-
                     <span class="print-label">Chassi</span>
-
                     <span class="print-value" id="p_chassi">--</span>
-
                 </div>
-
             </div>
-
         </div>
-
-
-
         <div class="print-block">
-
             <div class="block-title bg-dark">Quadro de Chegada & Serviços Realizados</div>
-
             <div class="block-grid">
-
                 <div class="print-field full-width">
-
                     <span class="print-label">Estado de Chegada / Observações</span>
-
                     <span class="print-value" id="p_estado" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.4;">--</span>
-
                 </div>
-
                 <div class="print-field full-width" style="margin-top: 10px;">
-
                     <span class="print-label">Serviços Realizados</span>
-
                     <span class="print-value" id="p_servicos" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.4; color: #0056b3; font-weight: bold;">--</span>
-
                 </div>
-
                 <div class="print-field full-width" id="p_foto_wrap" style="display:none;">
-
                     <span class="print-label">Foto do Veículo</span>
-
                     <img id="p_foto" class="print-foto" alt="Foto do veículo">
-
                 </div>
-
             </div>
-
         </div>
-
-
-
         <div class="print-signatures">
-
             <div class="sig-box">Assinatura do Responsável</div>
-
             <div class="sig-box">Assinatura do Cliente</div>
-
         </div>
-
     </div>
-
-
-
     <script>
-
         const STORAGE_KEY = 'parana_pecas_dados';
-
         let fotoAtualBase64 = null;
-
         let clienteSelecionadoId = null;
-
-
-
         function gerarId() {
-
             return 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
         }
-
-
-
         function slugNome(nome) {
-
             return nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-
                 .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'CLIENTE';
-
         }
-
-
-
         function carregarDados() {
-
             try {
-
                 return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clientes: [], clienteAtivoId: null };
-
             } catch {
-
                 return { clientes: [], clienteAtivoId: null };
-
             }
-
         }
-
-
-
         function salvarDados(dados) {
-
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
-
         }
-
-
-
         function getClienteAtivo() {
-
             const dados = carregarDados();
-
             return dados.clientes.find(c => c.id === clienteSelecionadoId) || null;
-
         }
-
-
-
         function updatePlate() {
-
             const cidade = document.getElementById('in_cidade').value.trim();
-
             const placa = document.getElementById('in_placa').value.trim();
-
             document.getElementById('plate_loc_mini').textContent = cidade ? cidade.toUpperCase() : 'CIDADE / UF';
-
             document.getElementById('plate_num_mini').textContent = placa ? placa.toUpperCase() : 'PLACA';
-
         }
-
-
-
         function preencherDataHoje() {
-
             const hoje = new Date();
-
             document.getElementById('in_dia').value = String(hoje.getDate()).padStart(2, '0');
-
             document.getElementById('in_mes').value = String(hoje.getMonth() + 1).padStart(2, '0');
-
             document.getElementById('in_ano').value = hoje.getFullYear();
-
         }
-
-
-
         function atualizarAlertaCliente() {
-
             const alerta = document.getElementById('alerta_sem_cliente');
-
             const temCliente = !!clienteSelecionadoId && !!document.getElementById('in_cliente').value;
-
             alerta.classList.toggle('visivel', !temCliente);
-
         }
-
-
-
         function renderListaClientes() {
-
             const dados = carregarDados();
-
             const lista = document.getElementById('lista_clientes');
-
             if (!dados.clientes.length) {
-
                 lista.innerHTML = '<div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>';
-
                 return;
-
             }
-
-
-
             lista.innerHTML = dados.clientes.map(c => {
-
                 const qtd = (c.veiculos || []).length;
-
                 const sel = c.id === clienteSelecionadoId ? ' selecionado' : '';
-
                 return `<div class="cliente-item${sel}" data-id="${c.id}">
-
                     <div>
-
                         <strong>${escapeHtml(c.nome)}</strong>
-
                         ${c.telefone ? `<small>${escapeHtml(c.telefone)}</small>` : ''}
-
                     </div>
-
                     <span class="badge">${qtd} veíc.</span>
-
                 </div>`;
-
             }).join('');
-
-
-
             lista.querySelectorAll('.cliente-item').forEach(el => {
-
                 el.addEventListener('click', () => selecionarCliente(el.dataset.id));
-
             });
-
         }
-
-
-
         function escapeHtml(text) {
-
             const d = document.createElement('div');
-
             d.textContent = text;
-
             return d.innerHTML;
-
         }
-
-
-
         function selecionarCliente(id) {
-
             const dados = carregarDados();
-
             const cliente = dados.clientes.find(c => c.id === id);
-
             if (!cliente) return;
-
-
-
             clienteSelecionadoId = id;
-
             dados.clienteAtivoId = id;
-
             salvarDados(dados);
-
-
-
             document.getElementById('in_cliente').value = cliente.nome;
-
             atualizarAlertaCliente();
-
             renderListaClientes();
-
-
-
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-
             document.querySelector('[data-panel="panelVeiculo"]').classList.add('active');
-
             document.getElementById('panelVeiculo').classList.add('active');
-
         }
-
-
-
         function trocarAba(panelId) {
-
             document.querySelectorAll('.nav-tab').forEach(t => {
-
                 t.classList.toggle('active', t.dataset.panel === panelId);
-
             });
-
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-
             document.getElementById(panelId).classList.add('active');
-
         }
-
-
-
         async function comprimirImagem(file) {
-
             return new Promise((resolve, reject) => {
-
                 const reader = new FileReader();
-
                 reader.onload = (e) => {
-
                     const img = new Image();
-
                     img.onload = () => {
-
                         const max = 1200;
-
                         let w = img.width, h = img.height;
-
                         if (w > max || h > max) {
-
                             if (w > h) { h = (h * max) / w; w = max; }
-
                             else { w = (w * max) / h; h = max; }
-
                         }
-
                         const canvas = document.createElement('canvas');
-
                         canvas.width = w;
-
                         canvas.height = h;
-
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-
                         resolve(canvas.toDataURL('image/jpeg', 0.75));
-
                     };
-
                     img.onerror = reject;
-
                     img.src = e.target.result;
-
                 };
-
                 reader.onerror = reject;
-
                 reader.readAsDataURL(file);
-
             });
-
         }
-
-
-
         function mostrarFotoPreview(base64) {
-
             fotoAtualBase64 = base64;
-
             const img = document.getElementById('foto_preview');
-
             img.src = base64;
-
             img.classList.add('visivel');
-
             document.getElementById('btn_remover_foto').style.display = 'block';
-
         }
-
-
-
         function removerFoto() {
-
             fotoAtualBase64 = null;
-
             document.getElementById('foto_preview').classList.remove('visivel');
-
             document.getElementById('foto_preview').src = '';
-
             document.getElementById('in_foto_camera').value = '';
-
             document.getElementById('in_foto_galeria').value = '';
-
             document.getElementById('btn_remover_foto').style.display = 'none';
-
         }
-
-
-
         async function processarArquivoFoto(file) {
-
             if (!file || !file.type.startsWith('image/')) return;
-
             try {
-
                 const base64 = await comprimirImagem(file);
-
                 mostrarFotoPreview(base64);
-
             } catch {
-
                 alert('Não foi possível processar a imagem.');
-
             }
-
         }
-
-
-
         function coletarDadosVeiculo() {
-
             return {
-
                 responsavel: document.getElementById('in_responsavel').value.trim(),
-
                 carro: document.getElementById('in_carro').value.trim(),
-
                 cidade: document.getElementById('in_cidade').value.trim(),
-
                 placa: document.getElementById('in_placa').value.trim().toUpperCase(),
-
                 dataEntrada: `${document.getElementById('in_dia').value}/${document.getElementById('in_mes').value}/${document.getElementById('in_ano').value}`,
-
                 chassi: document.getElementById('in_chassi').value.trim(),
-
                 cor: document.getElementById('in_cor').value.trim(),
-
                 km: document.getElementById('in_km').value,
-
                 estadoChegada: document.getElementById('in_estado').value.trim(),
-
                 servicosRealizados: document.getElementById('in_servicos').value.trim(),
-
                 foto: fotoAtualBase64,
-
                 dataRegistro: new Date().toISOString()
-
             };
-
         }
-
-
-
         function gerarEspelhoPDF() {
-
             const form = document.getElementById('vehicleForm');
-
             if (!clienteSelecionadoId) {
-
                 alert('Selecione um cliente na aba Clientes primeiro.');
-
                 return;
-
             }
-
             if (!form.checkValidity()) {
-
                 form.reportValidity();
-
                 return;
-
             }
-
-
-
             document.getElementById('p_cliente').textContent = document.getElementById('in_cliente').value;
-
             document.getElementById('p_responsavel').textContent = document.getElementById('in_responsavel').value;
-
             document.getElementById('p_carro').textContent = document.getElementById('in_carro').value;
-
             document.getElementById('p_chassi').textContent = document.getElementById('in_chassi').value || 'Não Informado';
-
             document.getElementById('p_cor').textContent = document.getElementById('in_cor').value || 'Não Informado';
-
             document.getElementById('p_km').textContent = document.getElementById('in_km').value ? document.getElementById('in_km').value + ' Km' : 'Não Informado';
-
             document.getElementById('p_estado').textContent = document.getElementById('in_estado').value || 'Sem avarias ou observações de chegada registradas.';
-
             document.getElementById('p_servicos').textContent = document.getElementById('in_servicos').value || 'Nenhum serviço detalhado até o momento.';
-
-
-
             const cidade = document.getElementById('in_cidade').value || 'Não Informada';
-
             const placa = document.getElementById('in_placa').value.toUpperCase() || '---';
-
             const dia = document.getElementById('in_dia').value;
-
             const mes = document.getElementById('in_mes').value;
-
             const ano = document.getElementById('in_ano').value;
-
-
-
             document.getElementById('p_placa').textContent = placa;
-
             document.getElementById('p_cidade').textContent = cidade.toUpperCase();
-
             document.getElementById('p_data').textContent = `${dia}/${mes}/${ano}`;
-
-
-
             const wrapFoto = document.getElementById('p_foto_wrap');
-
             if (fotoAtualBase64) {
-
                 document.getElementById('p_foto').src = fotoAtualBase64;
-
                 wrapFoto.style.display = 'block';
-
             } else {
-
                 wrapFoto.style.display = 'none';
-
             }
-
-
-
             window.print();
-
         }
-
-
-
         function gerarBackupLocal() {
-
             const placa = document.getElementById('in_placa').value.toUpperCase();
-
             if (!placa) {
-
                 alert('Informe a placa do veículo antes de gerar o backup.');
-
                 return;
-
             }
-
-
-
             const dados = {
-
                 Data: `${document.getElementById('in_dia').value}/${document.getElementById('in_mes').value}/${document.getElementById('in_ano').value}`,
-
                 Cliente: document.getElementById('in_cliente').value,
-
                 Responsavel: document.getElementById('in_responsavel').value,
-
                 Carro: document.getElementById('in_carro').value,
-
                 Placa: placa,
-
                 Cidade_UF: document.getElementById('in_cidade').value,
-
                 Km: document.getElementById('in_km').value,
-
                 Chassi: document.getElementById('in_chassi').value,
-
                 Cor: document.getElementById('in_cor').value,
-
                 Estado_Chegada: document.getElementById('in_estado').value,
-
                 Servicos_Realizados: document.getElementById('in_servicos').value
-
             };
-
-
-
             let csvContent = 'data:text/csv;charset=utf-8,Chave,Valor\n';
-
             for (const chave in dados) {
-
                 const valorTratado = String(dados[chave]).replace(/"/g, '""');
-
                 csvContent += `${chave},"${valorTratado}"\n`;
-
             }
-
-
-
             const clienteSlug = slugNome(dados.Cliente);
-
             const link = document.createElement('a');
-
             link.href = encodeURI(csvContent);
-
             link.download = `${clienteSlug}_ESPELHO_${placa}.csv`;
-
             document.body.appendChild(link);
-
             link.click();
-
             document.body.removeChild(link);
-
         }
-
-
-
         function downloadArquivo(nome, conteudo, mime) {
-
             const blob = new Blob([conteudo], { type: mime });
-
             const url = URL.createObjectURL(blob);
-
             const link = document.createElement('a');
-
             link.href = url;
-
             link.download = nome;
-
             document.body.appendChild(link);
-
             link.click();
-
             document.body.removeChild(link);
-
             URL.revokeObjectURL(url);
-
         }
-
-
-
         function base64ParaBlob(base64) {
-
             const partes = base64.split(',');
-
             const mime = partes[0].match(/:(.*?);/)[1];
-
             const bin = atob(partes[1]);
-
             const arr = new Uint8Array(bin.length);
-
             for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-
             return new Blob([arr], { type: mime });
-
         }
-
-
-
         async function exportarPastaCliente() {
-
             const cliente = getClienteAtivo();
-
             if (!cliente) {
-
                 alert('Selecione um cliente na aba Clientes.');
-
                 return;
-
             }
-
-
-
             const pastaNome = slugNome(cliente.nome);
-
             const veiculos = cliente.veiculos || [];
-
             const manifest = {
-
                 cliente: cliente.nome,
-
                 telefone: cliente.telefone || '',
-
                 exportadoEm: new Date().toISOString(),
-
                 veiculos: veiculos.map(v => ({
-
                     placa: v.placa,
-
                     carro: v.carro,
-
                     dataEntrada: v.dataEntrada,
-
                     responsavel: v.responsavel,
-
                     temFoto: !!v.foto
-
                 }))
-
             };
-
-
-
             if ('showDirectoryPicker' in window) {
-
                 try {
-
                     const dir = await window.showDirectoryPicker();
-
                     const pasta = await dir.getDirectoryHandle(pastaNome, { create: true });
-
-
-
                     const jsonHandle = await pasta.getFileHandle('dados_cliente.json', { create: true });
-
                     const jsonWritable = await jsonHandle.createWritable();
-
                     await jsonWritable.write(JSON.stringify({ ...cliente, veiculos: veiculos.map(v => ({ ...v, foto: v.foto ? '[arquivo separado]' : null })) }, null, 2));
-
                     await jsonWritable.close();
-
-
-
                     for (const v of veiculos) {
-
                         if (!v.foto) continue;
-
                         const nomeFoto = `${v.placa || 'sem_placa'}_foto.jpg`;
-
                         const fotoHandle = await pasta.getFileHandle(nomeFoto, { create: true });
-
                         const fotoWritable = await fotoHandle.createWritable();
-
                         await fotoWritable.write(base64ParaBlob(v.foto));
-
                         await fotoWritable.close();
-
                     }
-
-
-
                     for (const v of veiculos) {
-
                         const nomeCsv = `${v.placa || 'sem_placa'}_dados.csv`;
-
                         const csv = 'Chave,Valor\n' + Object.entries(v)
-
                             .filter(([k]) => k !== 'foto')
-
                             .map(([k, val]) => `${k},"${String(val ?? '').replace(/"/g, '""')}"`)
-
                             .join('\n');
-
                         const csvHandle = await pasta.getFileHandle(nomeCsv, { create: true });
-
                         const csvWritable = await csvHandle.createWritable();
-
                         await csvWritable.write(csv);
-
                         await csvWritable.close();
-
                     }
-
-
-
                     alert(`Pasta "${pastaNome}" criada com sucesso no local escolhido!`);
-
                     return;
-
                 } catch (err) {
-
                     if (err.name === 'AbortError') return;
-
                 }
-
             }
-
-
-
             downloadArquivo(`${pastaNome}_dados_cliente.json`, JSON.stringify(cliente, null, 2), 'application/json');
-
             for (const v of veiculos) {
-
                 if (v.foto) {
-
                     const link = document.createElement('a');
-
                     link.href = v.foto;
-
                     link.download = `${pastaNome}_${v.placa}_foto.jpg`;
-
                     document.body.appendChild(link);
-
                     link.click();
-
                     document.body.removeChild(link);
-
                 }
-
             }
-
             alert(`Arquivos baixados com prefixo "${pastaNome}_". No Chrome/Edge você pode escolher uma pasta fixa ao exportar.`);
-
         }
-
-
-
         function limparFormVeiculo() {
-
             document.getElementById('in_responsavel').value = '';
-
             document.getElementById('in_carro').value = '';
-
             document.getElementById('in_cidade').value = '';
-
             document.getElementById('in_placa').value = '';
-
             document.getElementById('in_chassi').value = '';
-
             document.getElementById('in_cor').value = '';
-
             document.getElementById('in_km').value = '';
-
             document.getElementById('in_estado').value = '';
-
             document.getElementById('in_servicos').value = '';
-
             removerFoto();
-
             preencherDataHoje();
-
             updatePlate();
-
         }
-
-
-
         document.addEventListener('DOMContentLoaded', () => {
-
             preencherDataHoje();
-
             updatePlate();
-
-
-
             const dados = carregarDados();
-
             if (dados.clienteAtivoId) {
-
                 const existe = dados.clientes.some(c => c.id === dados.clienteAtivoId);
-
                 if (existe) selecionarCliente(dados.clienteAtivoId);
-
             }
-
             renderListaClientes();
-
             atualizarAlertaCliente();
-
-
-
             ['in_cidade', 'in_placa'].forEach(id => {
-
                 document.getElementById(id).addEventListener('input', updatePlate);
-
             });
-
-
-
             document.querySelectorAll('.nav-tab').forEach(tab => {
-
                 tab.addEventListener('click', () => trocarAba(tab.dataset.panel));
-
             });
-
-
-
             document.getElementById('clienteForm').addEventListener('submit', (e) => {
-
                 e.preventDefault();
-
                 const nome = document.getElementById('novo_cliente_nome').value.trim();
-
                 const telefone = document.getElementById('novo_cliente_tel').value.trim();
-
                 if (!nome) return;
-
-
-
                 const dados = carregarDados();
-
                 const novo = { id: gerarId(), nome, telefone, veiculos: [], criadoEm: new Date().toISOString() };
-
                 dados.clientes.push(novo);
-
                 salvarDados(dados);
-
-
-
                 document.getElementById('novo_cliente_nome').value = '';
-
                 document.getElementById('novo_cliente_tel').value = '';
-
                 renderListaClientes();
-
                 selecionarCliente(novo.id);
-
                 alert(`Cliente "${nome}" cadastrado!`);
-
             });
-
-
-
             document.getElementById('btn_tirar_foto').addEventListener('click', () => {
-
                 document.getElementById('in_foto_camera').click();
-
             });
-
             document.getElementById('btn_galeria').addEventListener('click', () => {
-
                 document.getElementById('in_foto_galeria').click();
-
             });
-
             document.getElementById('in_foto_camera').addEventListener('change', (e) => {
-
                 if (e.target.files[0]) processarArquivoFoto(e.target.files[0]);
-
             });
-
             document.getElementById('in_foto_galeria').addEventListener('change', (e) => {
-
                 if (e.target.files[0]) processarArquivoFoto(e.target.files[0]);
-
             });
-
             document.getElementById('btn_remover_foto').addEventListener('click', removerFoto);
-
-
-
             document.getElementById('btn_pdf').addEventListener('click', gerarEspelhoPDF);
-
             document.getElementById('btn_backup').addEventListener('click', gerarBackupLocal);
-
             document.getElementById('btn_exportar_pasta').addEventListener('click', exportarPastaCliente);
-
-
-
             document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
-
                 e.preventDefault();
-
                 if (!clienteSelecionadoId) {
-
                     alert('Selecione um cliente na aba Clientes.');
-
                     return;
-
                 }
-
-
-
                 const veiculo = coletarDadosVeiculo();
-
                 if (!veiculo.placa) {
-
                     alert('Informe a placa do veículo.');
-
                     return;
-
                 }
-
-
-
                 const dados = carregarDados();
-
                 const cliente = dados.clientes.find(c => c.id === clienteSelecionadoId);
-
                 if (!cliente.veiculos) cliente.veiculos = [];
-
-
-
                 const idx = cliente.veiculos.findIndex(v => v.placa === veiculo.placa);
-
                 if (idx >= 0) {
-
                     if (!confirm(`Já existe veículo com placa ${veiculo.placa}. Deseja atualizar?`)) return;
-
                     cliente.veiculos[idx] = veiculo;
-
                 } else {
-
                     cliente.veiculos.push(veiculo);
-
                 }
-
                 salvarDados(dados);
-
                 renderListaClientes();
-
-
-
                 if (window.salvarVeiculoFirebase) {
-
                     await window.salvarVeiculoFirebase(cliente, veiculo);
-
                 } else {
-
                     alert(`Veículo ${veiculo.placa} salvo no cliente "${cliente.nome}"!`);
-
                 }
-
-
-
                 limparFormVeiculo();
-
             });
-
         });
-
     </script>
-
-
-
     <script type="module">
-
         try {
-
             const { db, collection, addDoc, doc, setDoc } = await import('./firebase-env.js');
-
-
-
             window.salvarVeiculoFirebase = async function(cliente, veiculo) {
-
                 try {
-
                     const clienteRef = doc(collection(db, 'clientes'), cliente.id);
-
                     await setDoc(clienteRef, {
-
                         nome: cliente.nome,
-
                         telefone: cliente.telefone || '',
-
                         atualizadoEm: new Date()
-
                     }, { merge: true });
-
-
-
                     await addDoc(collection(db, 'clientes', cliente.id, 'veiculos'), {
-
                         ...veiculo,
-
                         foto: veiculo.foto ? '[salva localmente - Storage em breve]' : null,
-
                         dataRegistroDB: new Date()
-
                     });
-
-
-
                     alert(`SUCESSO! Veículo ${veiculo.placa} salvo na nuvem (cliente: ${cliente.nome}).`);
-
                 } catch (erro) {
-
                     console.error(erro);
-
                     alert('Salvo localmente, mas falhou no Firebase. Verifique firebase-env.js e o console.');
-
                 }
-
             };
-
         } catch (e) {
-
             console.info('Firebase não configurado — dados salvos apenas localmente.', e);
-
         }
-
     </script>
-
 </body>
-
 </html>
-
