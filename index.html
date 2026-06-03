@@ -10,9 +10,8 @@
     <meta name="apple-mobile-web-app-title" content="Paraná Peças">
     <meta name="description" content="Controle de veículos, clientes e atendimentos — Paraná Peças">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" href="icons/logo-empresa.png">
+    <link rel="apple-touch-icon" href="icons/logo-empresa.png">
     <title>PARANÁ PEÇAS - CONTROLE DE veículos</title>
     <style>
         :root {
@@ -519,7 +518,7 @@
         <p class="hint">Cole o link direto da sua logo (PNG/JPG/WebP, HTTPS). O app baixa e usa automaticamente — pode ser imagem grande.</p>
         <div class="form-group">
             <label for="logo_url_input">Link da imagem:</label>
-            <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png">
+            <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png" value="https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png">
         </div>
         <button type="button" class="btn btn-verde" id="btn_salvar_logo" style="margin-top:4px;">Salvar logo</button>
         <button type="button" class="btn btn-outline" id="btn_remover_logo" style="margin-top:8px;">Usar logo padrão</button>
@@ -776,7 +775,7 @@
         const PASTA_IDB = 'parana_pecas_pasta_v1';
         const LOGO_STORAGE_KEY = 'parana_pecas_logo_url';
         /* Link padrão da logo (opcional). Pode ser GitHub, Firebase Storage, Imgur, etc. */
-        const LOGO_EMPRESA_URL_PADRAO = 'icons/logo.png';
+        const LOGO_EMPRESA_URL_PADRAO = 'https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png';
         let fotoAtualBase64 = null;
         let clienteSelecionadoId = null;
         let atendimentoEditandoId = null;
@@ -1605,15 +1604,16 @@
         }
         function atualizarIconesNavegador(url) {
             if (!url) return;
-            ['icon', 'apple-touch-icon'].forEach(rel => {
-                let link = document.querySelector(`link[rel="${rel}"]`);
-                if (!link) {
-                    link = document.createElement('link');
-                    link.rel = rel;
-                    document.head.appendChild(link);
-                }
-                link.href = url;
-            });
+            document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(el => el.remove());
+            const png = document.createElement('link');
+            png.rel = 'icon';
+            png.type = 'image/png';
+            png.href = url;
+            document.head.appendChild(png);
+            const apple = document.createElement('link');
+            apple.rel = 'apple-touch-icon';
+            apple.href = url;
+            document.head.appendChild(apple);
         }
         function carregarLogoEmpresa(url, indiceFallback) {
             const urls = Array.isArray(url) ? url : [url];
@@ -1648,6 +1648,7 @@
             if (LOGO_EMPRESA_URL_PADRAO && !fila.includes(LOGO_EMPRESA_URL_PADRAO)) {
                 fila.push(LOGO_EMPRESA_URL_PADRAO);
             }
+            fila.push('icons/logo-empresa.png');
             carregarLogoEmpresa(fila);
         }
         function salvarLogoEmpresaUrl() {
