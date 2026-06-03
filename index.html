@@ -58,9 +58,21 @@
             flex-shrink: 0;
         }
         .app-logo svg { width: 100%; height: 100%; display: block; border-radius: 16px; }
+        .app-logo-img {
+            display: block;
+            max-width: min(320px, 92vw);
+            width: auto;
+            height: clamp(80px, 22vw, 140px);
+            object-fit: contain;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+        .app-logo-img.oculto, .app-logo.oculto { display: none !important; }
         .pwa-install-bar .pwa-icon-wrap {
             width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; background: #000;
         }
+        .pwa-install-bar .pwa-icon-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .pwa-install-bar .pwa-icon-wrap svg { width: 100%; height: 100%; display: block; }
         h1.main-title {
             text-align: center;
@@ -369,11 +381,34 @@
         .pasta-config p { flex: 1; min-width: 180px; color: #aaa; font-size: 0.8rem; line-height: 1.4; }
         .pasta-config p strong { color: #5dd879; }
         .pasta-config p.aviso { color: #ffcc80; }
+        .nuvem-config { border-color: #007bff; background: #0a1520; }
+        .nuvem-config.ok p strong { color: #5dd879; }
+        .nuvem-config.erro p strong { color: #ff6b6b; }
+        .nuvem-config .btn-sync {
+            padding: 10px 14px; background: #007bff; color: #fff; border: none;
+            border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; cursor: pointer;
+        }
+        .nuvem-config .btn-sync:disabled { opacity: 0.5; cursor: wait; }
         .btn-pasta-config {
             padding: 10px 14px; background: #333; color: #fff; border: 1px solid #555;
             border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; cursor: pointer;
         }
         .btn-pasta-config:hover { background: #444; border-color: #6f42c1; }
+        .logo-config {
+            width: 100%; max-width: var(--app-max); margin-bottom: 15px;
+            background: #1a1a1a; border: 1px solid #28a745; border-radius: 8px;
+            padding: 12px 14px;
+        }
+        .logo-config summary {
+            cursor: pointer; color: #5dd879; font-weight: bold; font-size: 0.85rem;
+            text-transform: uppercase; list-style: none;
+        }
+        .logo-config summary::-webkit-details-marker { display: none; }
+        .logo-config .form-group { margin-top: 12px; margin-bottom: 8px; }
+        .logo-config p.hint { color: #888; font-size: 0.75rem; margin-top: 8px; line-height: 1.4; }
+        .logo-preview-wrap { text-align: center; margin-top: 10px; padding: 10px; background: #111; border-radius: 8px; }
+        .logo-preview-wrap img { max-height: 100px; max-width: 100%; object-fit: contain; }
+        .oculto { display: none !important; }
         @media (max-width: 400px) {
             .cliente-item { flex-direction: column; align-items: stretch; gap: 10px; }
             .cliente-item-acoes { justify-content: space-between; flex-wrap: wrap; }
@@ -436,7 +471,8 @@
 </head>
 <body>
     <header class="app-header">
-        <div class="app-logo" aria-hidden="true">
+        <img id="logo_empresa" class="app-logo-img oculto" alt="Paraná Peças">
+        <div id="logo_empresa_fallback" class="app-logo" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Paraná Peças">
                 <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#111"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
                 <rect width="512" height="512" rx="96" fill="url(#lg)"/>
@@ -449,8 +485,9 @@
         <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
     </header>
     <div id="pwa_install_bar" class="pwa-install-bar" hidden>
-        <div class="pwa-icon-wrap" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
+        <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
+            <img id="pwa_logo_img" alt="" class="oculto">
+            <svg id="pwa_logo_fallback" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
         </div>
         <div class="pwa-texto">
             <strong>Instalar aplicativo</strong>
@@ -469,10 +506,27 @@
         <button type="button" class="nav-tab" data-panel="panelHistorico">2. Histórico</button>
         <button type="button" class="nav-tab" data-panel="panelVeiculo">3. Atendimento</button>
     </div>
+    <div class="pasta-config nuvem-config" id="nuvem_config_box">
+        <p id="nuvem_status_texto"><strong>Nuvem:</strong> conectando celular e PC…</p>
+        <button type="button" class="btn-sync" id="btn_sync_nuvem">Sincronizar agora</button>
+    </div>
     <div class="pasta-config">
         <p id="pasta_status_texto">Pasta no PC: não configurada</p>
         <button type="button" class="btn-pasta-config" id="btn_config_pasta">Escolher pasta no PC</button>
     </div>
+    <details class="logo-config">
+        <summary>Logo da empresa (link da imagem)</summary>
+        <p class="hint">Cole o link direto da sua logo (PNG/JPG/WebP, HTTPS). O app baixa e usa automaticamente — pode ser imagem grande.</p>
+        <div class="form-group">
+            <label for="logo_url_input">Link da imagem:</label>
+            <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png">
+        </div>
+        <button type="button" class="btn btn-verde" id="btn_salvar_logo" style="margin-top:4px;">Salvar logo</button>
+        <button type="button" class="btn btn-outline" id="btn_remover_logo" style="margin-top:8px;">Usar logo padrão</button>
+        <div class="logo-preview-wrap" id="logo_preview_wrap" style="display:none;">
+            <img id="logo_preview_img" alt="Preview logo">
+        </div>
+    </details>
     <!-- PAINEL CLIENTES -->
     <div id="panelClientes" class="panel active">
         <div class="screen-container">
@@ -720,6 +774,9 @@
     <script>
         const STORAGE_KEY = 'parana_pecas_dados';
         const PASTA_IDB = 'parana_pecas_pasta_v1';
+        const LOGO_STORAGE_KEY = 'parana_pecas_logo_url';
+        /* Link padrão da logo (opcional). Pode ser GitHub, Firebase Storage, Imgur, etc. */
+        const LOGO_EMPRESA_URL_PADRAO = 'icons/logo.png';
         let fotoAtualBase64 = null;
         let clienteSelecionadoId = null;
         let atendimentoEditandoId = null;
@@ -943,6 +1000,85 @@
         function salvarDados(dados) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
         }
+        function mesclarClientes(local, nuvem) {
+            const map = new Map();
+            (local || []).forEach(c => { if (c && c.id) map.set(c.id, c); });
+            (nuvem || []).forEach(c => {
+                if (!c || !c.id) return;
+                const existente = map.get(c.id);
+                if (!existente) { map.set(c.id, c); return; }
+                const tLocal = new Date(existente.atualizadoEm || existente.criadoEm || 0).getTime();
+                const tNuvem = new Date(c.atualizadoEm || c.criadoEm || 0).getTime();
+                map.set(c.id, tNuvem >= tLocal ? c : existente);
+            });
+            return Array.from(map.values());
+        }
+        function atualizarStatusNuvem(texto, ok) {
+            const el = document.getElementById('nuvem_status_texto');
+            const box = document.getElementById('nuvem_config_box');
+            if (!el) return;
+            el.innerHTML = texto;
+            if (box) {
+                box.classList.toggle('ok', ok === true);
+                box.classList.toggle('erro', ok === false);
+            }
+        }
+        function atualizarTelaAposSync() {
+            const dados = carregarDados();
+            if (clienteSelecionadoId) {
+                const c = dados.clientes.find(x => x.id === clienteSelecionadoId);
+                if (c) document.getElementById('in_cliente').value = c.nome;
+                else {
+                    clienteSelecionadoId = null;
+                    document.getElementById('in_cliente').value = '';
+                }
+            }
+            renderListaClientes();
+            renderHistoricoCliente();
+            atualizarAlertaCliente();
+        }
+        async function executarSincronizacaoNuvem(silencioso) {
+            const btn = document.getElementById('btn_sync_nuvem');
+            if (!window.sincronizarComNuvem) {
+                atualizarStatusNuvem('<strong>Nuvem:</strong> offline — aguarde o deploy ou configure firebase-env.js local.', false);
+                return { ok: false };
+            }
+            if (btn) btn.disabled = true;
+            atualizarStatusNuvem('<strong>Nuvem:</strong> sincronizando…', null);
+            try {
+                const r = await window.sincronizarComNuvem();
+                atualizarTelaAposSync();
+                const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                atualizarStatusNuvem(`<strong>Nuvem:</strong> OK — ${r.total} cliente(s) · ${hora}`, true);
+                if (!silencioso && r.subiu > 0) {
+                    console.info('Enviados ao Firebase:', r.subiu);
+                }
+                return r;
+            } catch (e) {
+                console.error(e);
+                atualizarStatusNuvem('<strong>Nuvem:</strong> erro — ' + (e.message || 'falha na sync'), false);
+                return { ok: false };
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+        async function enviarClienteParaNuvem(cliente) {
+            if (!window.salvarClienteNuvem || !cliente) return { ok: false, motivo: 'Nuvem indisponível' };
+            cliente.atualizadoEm = new Date().toISOString();
+            const r = await window.salvarClienteNuvem(cliente);
+            if (r.ok && r.cliente) {
+                const dados = carregarDados();
+                const idx = dados.clientes.findIndex(c => c.id === cliente.id);
+                if (idx >= 0) {
+                    dados.clientes[idx] = r.cliente;
+                    salvarDados(dados);
+                }
+            }
+            return r;
+        }
+        window.mesclarClientes = mesclarClientes;
+        window.atualizarStatusNuvem = atualizarStatusNuvem;
+        window.executarSincronizacaoNuvem = executarSincronizacaoNuvem;
         function getClienteAtivo() {
             const dados = carregarDados();
             return dados.clientes.find(c => c.id === clienteSelecionadoId) || null;
@@ -1454,6 +1590,86 @@
             updatePlate();
             cancelarEdicaoAtendimento();
         }
+        function obterUrlLogoSalva() {
+            return (localStorage.getItem(LOGO_STORAGE_KEY) || LOGO_EMPRESA_URL_PADRAO || '').trim();
+        }
+        function mostrarLogoFallback(mostrar) {
+            document.getElementById('logo_empresa_fallback').classList.toggle('oculto', !mostrar);
+            document.getElementById('logo_empresa').classList.toggle('oculto', mostrar);
+            const pwaImg = document.getElementById('pwa_logo_img');
+            const pwaFb = document.getElementById('pwa_logo_fallback');
+            if (pwaImg && pwaFb) {
+                pwaImg.classList.toggle('oculto', mostrar);
+                pwaFb.style.display = mostrar ? 'block' : 'none';
+            }
+        }
+        function atualizarIconesNavegador(url) {
+            if (!url) return;
+            ['icon', 'apple-touch-icon'].forEach(rel => {
+                let link = document.querySelector(`link[rel="${rel}"]`);
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = rel;
+                    document.head.appendChild(link);
+                }
+                link.href = url;
+            });
+        }
+        function carregarLogoEmpresa(url, indiceFallback) {
+            const urls = Array.isArray(url) ? url : [url];
+            const idx = indiceFallback || 0;
+            if (idx >= urls.length || !urls[idx]) {
+                mostrarLogoFallback(true);
+                return;
+            }
+            const alvo = urls[idx];
+            const img = document.getElementById('logo_empresa');
+            const pwaImg = document.getElementById('pwa_logo_img');
+            const preview = document.getElementById('logo_preview_img');
+            const previewWrap = document.getElementById('logo_preview_wrap');
+            const teste = new Image();
+            teste.onload = () => {
+                img.src = alvo;
+                img.classList.remove('oculto');
+                if (pwaImg) { pwaImg.src = alvo; pwaImg.classList.remove('oculto'); }
+                if (preview) { preview.src = alvo; previewWrap.style.display = 'block'; }
+                mostrarLogoFallback(false);
+                atualizarIconesNavegador(alvo);
+            };
+            teste.onerror = () => carregarLogoEmpresa(urls, idx + 1);
+            teste.src = alvo + (alvo.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        }
+        function aplicarLogoEmpresa() {
+            const input = document.getElementById('logo_url_input');
+            const salva = obterUrlLogoSalva();
+            if (input && salva) input.value = salva;
+            const fila = [];
+            if (salva) fila.push(salva);
+            if (LOGO_EMPRESA_URL_PADRAO && !fila.includes(LOGO_EMPRESA_URL_PADRAO)) {
+                fila.push(LOGO_EMPRESA_URL_PADRAO);
+            }
+            carregarLogoEmpresa(fila);
+        }
+        function salvarLogoEmpresaUrl() {
+            const url = document.getElementById('logo_url_input').value.trim();
+            if (!url) {
+                alert('Cole o link da imagem (deve começar com https://).');
+                return;
+            }
+            if (!/^https?:\/\//i.test(url)) {
+                alert('Use um link completo, ex: https://seusite.com/logo.png');
+                return;
+            }
+            localStorage.setItem(LOGO_STORAGE_KEY, url);
+            aplicarLogoEmpresa();
+            alert('Logo salva! Se não aparecer, confira se o link abre a imagem direto no navegador.');
+        }
+        function removerLogoEmpresaUrl() {
+            localStorage.removeItem(LOGO_STORAGE_KEY);
+            document.getElementById('logo_url_input').value = '';
+            document.getElementById('logo_preview_wrap').style.display = 'none';
+            aplicarLogoEmpresa();
+        }
         function configurarPWA() {
             let deferredPrompt = null;
             const bar = document.getElementById('pwa_install_bar');
@@ -1513,13 +1729,17 @@
                 atendimento.dataRegistro = new Date().toISOString();
                 vg.atendimentos.push(atendimento);
             }
+            cliente.atualizadoEm = new Date().toISOString();
         }
         document.addEventListener('DOMContentLoaded', () => {
             preencherDataHoje();
             updatePlate();
             atualizarStatusPastaUI();
             configurarPWA();
+            aplicarLogoEmpresa();
             document.getElementById('btn_config_pasta').addEventListener('click', configurarPastaRaiz);
+            document.getElementById('btn_salvar_logo').addEventListener('click', salvarLogoEmpresaUrl);
+            document.getElementById('btn_remover_logo').addEventListener('click', removerLogoEmpresaUrl);
             const dados = carregarDados();
             if (dados.clienteAtivoId) {
                 const existe = dados.clientes.some(c => c.id === dados.clienteAtivoId);
@@ -1574,20 +1794,21 @@
                     carregarAtendimentoNoForm(placa, atendimentoId);
                 }
             });
-            document.getElementById('clienteForm').addEventListener('submit', (e) => {
+            document.getElementById('clienteForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const nome = document.getElementById('novo_cliente_nome').value.trim();
                 const telefone = document.getElementById('novo_cliente_tel').value.trim();
                 if (!nome) return;
                 const dados = carregarDados();
-                const novo = { id: gerarId(), nome, telefone, veiculos: [], criadoEm: new Date().toISOString() };
+                const novo = { id: gerarId(), nome, telefone, veiculos: [], criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() };
                 dados.clientes.push(novo);
                 salvarDados(dados);
                 document.getElementById('novo_cliente_nome').value = '';
                 document.getElementById('novo_cliente_tel').value = '';
                 renderListaClientes();
                 selecionarCliente(novo.id);
-                alert(`Cliente "${nome}" cadastrado!`);
+                const nuvem = await enviarClienteParaNuvem(novo);
+                alert(nuvem.ok ? `Cliente "${nome}" salvo (celular/PC na nuvem).` : `Cliente salvo no aparelho.\nNuvem: ${nuvem.motivo || 'verifique Firebase'}`);
             });
             document.getElementById('btn_tirar_foto').addEventListener('click', () => {
                 document.getElementById('in_foto_camera').click();
@@ -1623,33 +1844,39 @@
                 const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
                 renderListaClientes();
                 renderHistoricoCliente();
-                const partes = ['✓ Salvo no aparelho'];
+                const partes = ['✓ Salvo neste aparelho'];
+                const nuvem = await enviarClienteParaNuvem(clienteAtualizado);
+                if (nuvem.ok) partes.push('✓ Nuvem (celular + PC juntos)');
+                else partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
                 const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
                 if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
-                else if (pc.motivo) partes.push('⚠ ' + pc.motivo);
-                if (window.salvarAtendimentoNuvem) {
-                    const nuvem = await window.salvarAtendimentoNuvem(clienteAtualizado, atendimento, !!atendimentoEditandoId);
-                    if (nuvem.ok) {
-                        partes.push(`✓ Nuvem: ${nuvem.caminho}`);
-                        if (nuvem.fotoUrl) {
-                            const vg = clienteAtualizado.veiculos.find(v => v.placa === atendimento.placa);
-                            const at = vg?.atendimentos?.find(x => x.id === atendimento.id);
-                            if (at) { at.fotoUrl = nuvem.fotoUrl; salvarDados(dados); }
-                        }
-                    } else if (nuvem.motivo) partes.push('⚠ Nuvem: ' + nuvem.motivo);
-                } else {
-                    partes.push('⚠ Nuvem: configure firebase-env.js');
-                }
+                else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
                 alert(partes.join('\n'));
                 limparFormVeiculo();
                 irParaAba('panelHistorico');
             });
+            document.getElementById('btn_sync_nuvem').addEventListener('click', () => executarSincronizacaoNuvem(false));
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') executarSincronizacaoNuvem(true);
+            });
+            window.addEventListener('nuvem-pronta', () => executarSincronizacaoNuvem(true));
         });
     </script>
     <script type="module">
         try {
-            const { db, storage, doc, setDoc, deleteDoc, collection, getDocs } = await import('./firebase-env.js');
+            const mod = await import('./firebase-env.js');
+            const { db, storage, doc, setDoc, deleteDoc, collection, getDocs } = mod;
             const { ref, uploadString, getDownloadURL, listAll, deleteObject } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js');
+
+            const STORAGE_KEY = 'parana_pecas_dados';
+            /** Mesmo projeto Firebase do Gestão de Clientes; coleção separada para não misturar dados. */
+            const COLECAO_NUVEM = 'controle_veiculos_clientes';
+            const STORAGE_PREFIX = 'controle_veiculos';
+
+            function slugCliente(nome) {
+                return (nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'CLIENTE';
+            }
 
             async function apagarPastaStorageRecursiva(pastaRef) {
                 const lista = await listAll(pastaRef);
@@ -1657,71 +1884,108 @@
                 await Promise.all(lista.prefixes.map(sub => apagarPastaStorageRecursiva(sub)));
             }
 
-            window.salvarAtendimentoNuvem = async function(cliente, atendimento, isEdicao) {
-                try {
-                    const pastaSlug = cliente.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                        .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'CLIENTE';
-
-                    await setDoc(doc(db, 'clientes', cliente.id), {
-                        nome: cliente.nome,
-                        telefone: cliente.telefone || '',
-                        pastaSlug,
-                        atualizadoEm: new Date()
-                    }, { merge: true });
-
-                    const dados = { ...atendimento };
-                    const basePath = `clientes/${cliente.id}/${pastaSlug}/${atendimento.placa}/${atendimento.id}`;
-                    let fotoUrl = atendimento.fotoUrl || null;
-
-                    if (atendimento.foto && atendimento.foto.startsWith('data:')) {
-                        const fotoRef = ref(storage, `${basePath}/foto.jpg`);
-                        await uploadString(fotoRef, atendimento.foto, 'data_url');
-                        fotoUrl = await getDownloadURL(fotoRef);
+            async function uploadFotosCliente(cliente) {
+                const copia = JSON.parse(JSON.stringify(cliente));
+                const pastaSlug = slugCliente(cliente.nome);
+                for (const vg of copia.veiculos || []) {
+                    for (const a of vg.atendimentos || []) {
+                        if (a.foto && String(a.foto).startsWith('data:')) {
+                            try {
+                                const basePath = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${a.placa}/${a.id}`;
+                                const fotoRef = ref(storage, `${basePath}/foto.jpg`);
+                                await uploadString(fotoRef, a.foto, 'data_url');
+                                a.fotoUrl = await getDownloadURL(fotoRef);
+                                const orig = (cliente.veiculos || []).flatMap(v => v.atendimentos || []).find(x => x.id === a.id);
+                                if (orig) { orig.fotoUrl = a.fotoUrl; delete orig.foto; }
+                            } catch (fotoErr) {
+                                console.warn('Foto não enviada (Storage):', fotoErr.code || fotoErr.message);
+                            }
+                            delete a.foto;
+                        }
                     }
-
-                    if (fotoUrl) dados.fotoUrl = fotoUrl;
-                    delete dados.foto;
-
-                    const jsonRef = ref(storage, `${basePath}/dados.json`);
-                    await uploadString(jsonRef, JSON.stringify(dados, null, 2), 'raw');
-
-                    await setDoc(doc(db, 'clientes', cliente.id, 'atendimentos', atendimento.id), {
-                        ...dados,
-                        pastaNuvem: basePath,
-                        dataRegistroDB: atendimento.dataRegistro || new Date().toISOString(),
-                        atualizadoEm: new Date()
-                    }, { merge: true });
-
-                    const exportFn = window.exportarClienteSemFotosBase64;
-                    const clienteJson = exportFn ? exportFn(cliente) : { nome: cliente.nome, veiculos: cliente.veiculos };
-                    const clienteJsonRef = ref(storage, `clientes/${cliente.id}/${pastaSlug}/dados_cliente.json`);
-                    await uploadString(clienteJsonRef, JSON.stringify(clienteJson, null, 2), 'raw');
-
-                    return { ok: true, caminho: `${pastaSlug}/${atendimento.placa}`, fotoUrl };
-                } catch (erro) {
-                    console.error(erro);
-                    return { ok: false, motivo: erro.message || 'erro ao enviar' };
                 }
+                return copia;
+            }
+
+            function mensagemErroFirebase(erro) {
+                const code = erro.code || '';
+                if (code === 'permission-denied') {
+                    return 'PERMISSÃO NEGADA — ajuste as Regras do Firestore/Storage no Firebase Console.';
+                }
+                if (code === 'unavailable') return 'Firebase indisponível — verifique internet.';
+                if (code === 'unauthenticated') return 'Autenticação necessária nas regras do Firebase.';
+                return erro.message || String(erro);
+            }
+
+            window.salvarClienteNuvem = async function(cliente) {
+                try {
+                    const comUrls = await uploadFotosCliente(cliente);
+                    comUrls.pastaSlug = slugCliente(cliente.nome);
+                    comUrls.atualizadoEm = new Date().toISOString();
+                    await setDoc(doc(db, COLECAO_NUVEM, cliente.id), comUrls);
+                    return { ok: true, cliente: comUrls };
+                } catch (erro) {
+                    console.error('Firebase salvar:', erro);
+                    return { ok: false, motivo: mensagemErroFirebase(erro), code: erro.code };
+                }
+            };
+
+            window.sincronizarComNuvem = async function() {
+                let snap;
+                try {
+                    snap = await getDocs(collection(db, COLECAO_NUVEM));
+                } catch (erro) {
+                    throw new Error(mensagemErroFirebase(erro));
+                }
+                const nuvem = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (data && data.nome) {
+                        nuvem.push({ id: d.id, veiculos: [], ...data });
+                    }
+                });
+                let dados;
+                try { dados = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clientes: [], clienteAtivoId: null }; }
+                catch { dados = { clientes: [], clienteAtivoId: null }; }
+                const local = dados.clientes || [];
+                let subiu = 0;
+                for (const c of local) {
+                    const remoto = nuvem.find(n => n.id === c.id);
+                    const tLocal = new Date(c.atualizadoEm || c.criadoEm || 0).getTime();
+                    const tNuvem = remoto ? new Date(remoto.atualizadoEm || remoto.criadoEm || 0).getTime() : 0;
+                    if (!remoto || tLocal > tNuvem) {
+                        const r = await window.salvarClienteNuvem(c);
+                        if (!r.ok) throw new Error(r.motivo);
+                        subiu++;
+                    }
+                }
+                const mesclar = window.mesclarClientes || ((a, b) => b.length ? b : a);
+                dados.clientes = mesclar(local, nuvem);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+                return { ok: true, total: dados.clientes.length, subiu };
             };
 
             window.excluirClienteNuvem = async function(clienteId) {
                 try {
-                    const atendSnap = await getDocs(collection(db, 'clientes', clienteId, 'atendimentos'));
-                    await Promise.all(atendSnap.docs.map(d => deleteDoc(d.ref)));
-                    await deleteDoc(doc(db, 'clientes', clienteId));
                     try {
-                        await apagarPastaStorageRecursiva(ref(storage, `clientes/${clienteId}`));
+                        await apagarPastaStorageRecursiva(ref(storage, `${STORAGE_PREFIX}/${clienteId}`));
                     } catch (storageErr) {
-                        console.warn('Storage parcial:', storageErr);
+                        console.warn('Storage:', storageErr);
                     }
+                    await deleteDoc(doc(db, COLECAO_NUVEM, clienteId));
                     return { ok: true };
                 } catch (erro) {
                     console.error(erro);
-                    return { ok: false, motivo: erro.message || 'erro ao excluir na nuvem' };
+                    return { ok: false, motivo: erro.message || 'erro ao excluir' };
                 }
             };
+
+            window.dispatchEvent(new Event('nuvem-pronta'));
         } catch (e) {
             console.info('Firebase não configurado — nuvem desativada.', e);
+            if (window.atualizarStatusNuvem) {
+                window.atualizarStatusNuvem('<strong>Nuvem:</strong> offline — rode o GitHub Actions ou crie firebase-env.js local.', false);
+            }
         }
     </script>
 </body>
