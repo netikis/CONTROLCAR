@@ -355,8 +355,16 @@
             background: #1a3a5c; border: 1px solid #007bff; color: #9ec5fe;
             padding: 10px 14px; border-radius: 6px; font-size: 0.85rem;
             margin-bottom: 15px; display: none;
+            flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
         }
-        .modo-form-banner.visivel { display: block; }
+        .modo-form-banner.visivel { display: flex; }
+        .modo-form-banner span { flex: 1; min-width: 140px; line-height: 1.35; }
+        .btn-voltar-historico {
+            padding: 10px 14px; background: #333; color: #fff; border: 1px solid #666;
+            border-radius: 6px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; white-space: nowrap; flex-shrink: 0;
+        }
+        .btn-voltar-historico:hover { background: #444; border-color: #888; }
         .modal-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
             z-index: 1000; align-items: center; justify-content: center; padding: 15px;
@@ -407,6 +415,32 @@
         .logo-config p.hint { color: #888; font-size: 0.75rem; margin-top: 8px; line-height: 1.4; }
         .logo-preview-wrap { text-align: center; margin-top: 10px; padding: 10px; background: #111; border-radius: 8px; }
         .logo-preview-wrap img { max-height: 100px; max-width: 100%; object-fit: contain; }
+        .toast-salvar {
+            position: fixed;
+            bottom: calc(18px + var(--safe-b));
+            left: 50%;
+            transform: translateX(-50%) translateY(140%);
+            width: min(92vw, 420px);
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            text-align: center;
+            z-index: 3000;
+            transition: transform 0.35s ease, opacity 0.35s ease;
+            opacity: 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.55);
+            pointer-events: none;
+        }
+        .toast-salvar.visivel {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast-salvar.ok { background: #155724; border: 2px solid #28a745; color: #fff; }
+        .toast-salvar.aviso { background: #664d03; border: 2px solid #ffc107; color: #fff; }
+        .toast-salvar.erro { background: #721c24; border: 2px solid #dc3545; color: #fff; }
+        .btn-enviar:disabled { opacity: 0.65; cursor: wait; }
         .oculto { display: none !important; }
         @media (max-width: 400px) {
             .cliente-item { flex-direction: column; align-items: stretch; gap: 10px; }
@@ -578,7 +612,10 @@
             <div id="alerta_sem_cliente" class="alerta-cliente visivel">
                 Selecione um cliente na aba <strong>Clientes</strong> antes de preencher o atendimento.
             </div>
-            <div id="modo_form_banner" class="modo-form-banner"></div>
+            <div id="modo_form_banner" class="modo-form-banner">
+                <span id="modo_form_texto">Modo edição</span>
+                <button type="button" class="btn-voltar-historico" id="btn_voltar_historico">← Voltar ao Histórico</button>
+            </div>
             <form id="vehicleForm">
                 <div class="quadro quadro-azul">
                     <h2>Cliente Selecionado</h2>
@@ -677,7 +714,7 @@
                 </div>
                 <div class="button-zone">
                     <button type="submit" class="btn btn-enviar" id="btn_salvar_atendimento">Salvar Atendimento</button>
-                    <button type="button" class="btn btn-outline" id="btn_cancelar_edicao" style="display:none;">Cancelar Edição</button>
+                    <button type="button" class="btn btn-outline" id="btn_cancelar_edicao" style="display:none;">← Voltar ao Histórico</button>
                     <button type="button" class="btn btn-pasta" id="btn_exportar_pasta">Exportar Pasta do Cliente</button>
                     <button type="button" class="btn btn-pdf" id="btn_pdf">Salvar Espelho Colorido (PDF)</button>
                     <button type="button" class="btn btn-backup" id="btn_backup">Backup Desktop (.CSV)</button>
@@ -685,6 +722,7 @@
             </form>
         </div>
     </div>
+    <div id="toast_salvar" class="toast-salvar" role="status" aria-live="polite"></div>
     <div class="mirror-print-section">
         <div class="print-header">
             <h1>PARANÁ PEÇAS</h1>
@@ -780,6 +818,27 @@
         let clienteSelecionadoId = null;
         let atendimentoEditandoId = null;
         let modalAtendimentoAtual = null;
+        let toastSalvarTimer = null;
+        function mostrarToast(mensagem, tipo = 'ok', duracaoMs = 5000) {
+            const el = document.getElementById('toast_salvar');
+            if (!el) return;
+            clearTimeout(toastSalvarTimer);
+            el.textContent = mensagem;
+            el.className = 'toast-salvar visivel ' + (tipo || 'ok');
+            if (duracaoMs > 0) {
+                toastSalvarTimer = setTimeout(() => el.classList.remove('visivel'), duracaoMs);
+            }
+        }
+        async function enviarClienteParaNuvemComTimeout(cliente, timeoutMs = 12000) {
+            if (!window.salvarClienteNuvem || !cliente) return { ok: false, motivo: 'Nuvem indisponível' };
+            return Promise.race([
+                enviarClienteParaNuvem(cliente),
+                new Promise(resolve => setTimeout(
+                    () => resolve({ ok: false, motivo: 'Nuvem demorou — toque em Sincronizar' }),
+                    timeoutMs
+                ))
+            ]);
+        }
         function gerarId() {
             return 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
         }
@@ -1318,10 +1377,11 @@
         }
         function atualizarBannerModoForm() {
             const banner = document.getElementById('modo_form_banner');
+            const texto = document.getElementById('modo_form_texto');
             const btnSalvar = document.getElementById('btn_salvar_atendimento');
             const btnCancelar = document.getElementById('btn_cancelar_edicao');
             if (atendimentoEditandoId) {
-                banner.textContent = 'Modo edição: alterando um atendimento já registrado.';
+                if (texto) texto.textContent = 'Editando atendimento — altere e toque em Salvar Alterações.';
                 banner.classList.add('visivel');
                 btnSalvar.textContent = 'Salvar Alterações';
                 btnCancelar.style.display = 'block';
@@ -1330,6 +1390,11 @@
                 btnSalvar.textContent = 'Salvar Novo Atendimento';
                 btnCancelar.style.display = 'none';
             }
+        }
+        function voltarAoHistorico() {
+            cancelarEdicaoAtendimento();
+            limparFormVeiculo();
+            irParaAba('panelHistorico');
         }
         function carregarAtendimentoNoForm(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
@@ -1760,9 +1825,17 @@
                 tab.addEventListener('click', () => {
                     if (tab.dataset.panel === 'panelHistorico') renderHistoricoCliente();
                     if (tab.dataset.panel === 'panelVeiculo' && !clienteSelecionadoId) {
-                        alert('Selecione um cliente na aba Clientes.');
+                        mostrarToast('Selecione um cliente na aba Clientes.', 'aviso');
                         irParaAba('panelClientes');
                         return;
+                    }
+                    if (tab.dataset.panel === 'panelHistorico' && atendimentoEditandoId) {
+                        voltarAoHistorico();
+                        return;
+                    }
+                    if (tab.dataset.panel !== 'panelVeiculo' && atendimentoEditandoId) {
+                        cancelarEdicaoAtendimento();
+                        limparFormVeiculo();
                     }
                     irParaAba(tab.dataset.panel);
                 });
@@ -1776,11 +1849,8 @@
                 }
                 excluirCliente(clienteSelecionadoId);
             });
-            document.getElementById('btn_cancelar_edicao').addEventListener('click', () => {
-                cancelarEdicaoAtendimento();
-                limparFormVeiculo();
-                irParaAba('panelHistorico');
-            });
+            document.getElementById('btn_voltar_historico').addEventListener('click', voltarAoHistorico);
+            document.getElementById('btn_cancelar_edicao').addEventListener('click', voltarAoHistorico);
             document.getElementById('modal_btn_fechar').addEventListener('click', fecharModal);
             document.getElementById('modal_visualizar').addEventListener('click', (e) => {
                 if (e.target.id === 'modal_visualizar') fecharModal();
@@ -1808,8 +1878,12 @@
                 document.getElementById('novo_cliente_tel').value = '';
                 renderListaClientes();
                 selecionarCliente(novo.id);
-                const nuvem = await enviarClienteParaNuvem(novo);
-                alert(nuvem.ok ? `Cliente "${nome}" salvo (celular/PC na nuvem).` : `Cliente salvo no aparelho.\nNuvem: ${nuvem.motivo || 'verifique Firebase'}`);
+                const nuvem = await enviarClienteParaNuvemComTimeout(novo);
+                mostrarToast(
+                    nuvem.ok ? `Cliente "${nome}" salvo (aparelho + nuvem).` : `Cliente salvo no aparelho.\nNuvem: ${nuvem.motivo || 'indisponível'}`,
+                    nuvem.ok ? 'ok' : 'aviso',
+                    5000
+                );
             });
             document.getElementById('btn_tirar_foto').addEventListener('click', () => {
                 document.getElementById('in_foto_camera').click();
@@ -1830,31 +1904,44 @@
             document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!clienteSelecionadoId) {
-                    alert('Selecione um cliente na aba Clientes.');
+                    mostrarToast('Selecione um cliente na aba Clientes.', 'aviso');
                     return;
                 }
                 const atendimento = coletarDadosVeiculo();
                 if (!atendimento.placa) {
-                    alert('Informe a placa do veículo.');
+                    mostrarToast('Informe a placa do veículo.', 'aviso');
                     return;
                 }
-                const dados = carregarDados();
-                const cliente = dados.clientes.find(c => c.id === clienteSelecionadoId);
-                salvarAtendimentoNoCliente(cliente, atendimento);
-                salvarDados(dados);
-                const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
-                renderListaClientes();
-                renderHistoricoCliente();
-                const partes = ['✓ Salvo neste aparelho'];
-                const nuvem = await enviarClienteParaNuvem(clienteAtualizado);
-                if (nuvem.ok) partes.push('✓ Nuvem (celular + PC juntos)');
-                else partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
-                const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
-                if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
-                else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
-                alert(partes.join('\n'));
-                limparFormVeiculo();
-                irParaAba('panelHistorico');
+                const btnSalvar = document.getElementById('btn_salvar_atendimento');
+                btnSalvar.disabled = true;
+                const textoBtn = btnSalvar.textContent;
+                btnSalvar.textContent = 'Salvando…';
+                try {
+                    const dados = carregarDados();
+                    const cliente = dados.clientes.find(c => c.id === clienteSelecionadoId);
+                    salvarAtendimentoNoCliente(cliente, atendimento);
+                    salvarDados(dados);
+                    const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
+                    renderListaClientes();
+                    renderHistoricoCliente();
+                    mostrarToast('✓ Salvo no aparelho!\nSincronizando nuvem…', 'ok', 0);
+                    const partes = ['✓ Salvo no aparelho'];
+                    const nuvem = await enviarClienteParaNuvemComTimeout(clienteAtualizado);
+                    if (nuvem.ok) partes.push('✓ Nuvem (celular + PC)');
+                    else partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
+                    const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
+                    if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
+                    else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
+                    mostrarToast(partes.join('\n'), nuvem.ok ? 'ok' : 'aviso', 6000);
+                    limparFormVeiculo();
+                    irParaAba('panelHistorico');
+                } catch (err) {
+                    console.error(err);
+                    mostrarToast('Erro ao salvar. Tente de novo.', 'erro', 6000);
+                } finally {
+                    btnSalvar.disabled = false;
+                    atualizarBannerModoForm();
+                }
             });
             document.getElementById('btn_sync_nuvem').addEventListener('click', () => executarSincronizacaoNuvem(false));
             document.addEventListener('visibilitychange', () => {
@@ -1887,7 +1974,14 @@
 
             async function uploadFotosCliente(cliente) {
                 const copia = JSON.parse(JSON.stringify(cliente));
-                if (!storage) return copia;
+                if (!storage) {
+                    for (const vg of copia.veiculos || []) {
+                        for (const a of vg.atendimentos || []) {
+                            if (a.foto && String(a.foto).startsWith('data:')) delete a.foto;
+                        }
+                    }
+                    return copia;
+                }
                 const pastaSlug = slugCliente(cliente.nome);
                 for (const vg of copia.veiculos || []) {
                     for (const a of vg.atendimentos || []) {
