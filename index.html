@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="Paraná Peças">
     <meta name="description" content="Controle de veículos, clientes e atendimentos — Paraná Peças">
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
     <link rel="apple-touch-icon" href="icons/icon-512.png">
@@ -458,6 +459,52 @@
         .toast-salvar.aviso { background: #664d03; border: 2px solid #ffc107; color: #fff; }
         .toast-salvar.erro { background: #721c24; border: 2px solid #dc3545; color: #fff; }
         .btn-enviar:disabled { opacity: 0.65; cursor: wait; }
+        .login-screen {
+            position: fixed; inset: 0; z-index: 5000; background: #000;
+            display: flex; align-items: center; justify-content: center;
+            padding: calc(20px + var(--safe-t)) calc(16px + var(--safe-r)) calc(20px + var(--safe-b)) calc(16px + var(--safe-l));
+        }
+        .login-screen.oculto { display: none !important; }
+        .login-box {
+            width: min(100%, 400px); background: #111; border: 2px solid #007bff;
+            border-radius: 12px; padding: 24px 20px;
+        }
+        .login-box h2 { color: #007bff; text-align: center; margin-bottom: 6px; text-transform: uppercase; font-size: 1.1rem; }
+        .login-box .login-sub { color: #888; text-align: center; font-size: 0.8rem; margin-bottom: 18px; line-height: 1.4; }
+        .login-perfis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .login-perfil-card {
+            background: #1a1a1a; border: 1px solid #444; border-radius: 8px;
+            padding: 10px 8px; text-align: center; font-size: 0.72rem; color: #aaa; line-height: 1.35;
+        }
+        .login-perfil-card strong { display: block; color: #fff; font-size: 0.78rem; margin-bottom: 4px; }
+        .login-perfil-card.gestor strong { color: #5dd879; }
+        .login-perfil-card.atendente strong { color: #9ec5fe; }
+        .login-erro { color: #ff6b6b; font-size: 0.8rem; min-height: 1.2em; margin-top: 8px; text-align: center; }
+        .barra-usuario {
+            width: 100%; max-width: var(--app-max); margin: 0 auto 10px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+            background: #1a1a2e; border: 1px solid #444; border-radius: 8px; padding: 10px 14px;
+        }
+        .barra-usuario span { font-size: 0.82rem; color: #ccc; }
+        .barra-usuario .badge-perfil {
+            display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.65rem;
+            font-weight: bold; text-transform: uppercase; margin-left: 6px;
+        }
+        .badge-perfil.gestor { background: #155724; color: #5dd879; }
+        .badge-perfil.atendente { background: #1a3a5c; color: #9ec5fe; }
+        .btn-logout {
+            padding: 8px 12px; background: #333; color: #fff; border: 1px solid #555;
+            border-radius: 6px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; cursor: pointer;
+        }
+        .btn-logout:hover { background: #444; }
+        .painel-usuarios {
+            width: 100%; max-width: var(--app-max); margin-bottom: 15px;
+            background: #1a1520; border: 1px solid #6f42c1; border-radius: 8px; padding: 12px 14px;
+        }
+        .painel-usuarios summary { cursor: pointer; color: #c9b3ff; font-weight: bold; font-size: 0.85rem; text-transform: uppercase; }
+        .painel-usuarios .hint { color: #888; font-size: 0.75rem; margin-top: 8px; line-height: 1.4; }
+        body.perfil-atendente .so-gestor { display: none !important; }
+        .so-gestor.oculto-perfil { display: none !important; }
         .oculto { display: none !important; }
         @media (max-width: 400px) {
             .cliente-item { flex-direction: column; align-items: stretch; gap: 10px; }
@@ -490,7 +537,7 @@
         .mirror-print-section { display: none; }
         @media print {
             body { background: #f4f6f9 !important; color: #000000 !important; padding: 0; margin: 0; }
-            .nav-tabs, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config { display: none !important; }
+            .nav-tabs, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config, .login-screen, .barra-usuario, .painel-usuarios { display: none !important; }
             .mirror-print-section {
                 display: block !important; width: 100%; max-width: 800px;
                 margin: 0 auto; padding: 30px; background: #ffffff;
@@ -520,6 +567,34 @@
     </style>
 </head>
 <body>
+    <div id="login_screen" class="login-screen">
+        <div class="login-box">
+            <h2>Paraná Peças</h2>
+            <p class="login-sub">Controle de Veículos — entre com seu e-mail e senha</p>
+            <div class="login-perfis">
+                <div class="login-perfil-card gestor">
+                    <strong>Gestor</strong>
+                    Acesso total, incluindo excluir clientes e cadastrar usuários
+                </div>
+                <div class="login-perfil-card atendente">
+                    <strong>Atendente</strong>
+                    Cadastrar e editar clientes e atendimentos (sem excluir)
+                </div>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="login_email">E-mail:</label>
+                    <input type="email" id="login_email" required autocomplete="username" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="login_senha">Senha:</label>
+                    <input type="password" id="login_senha" required autocomplete="current-password" placeholder="••••••">
+                </div>
+                <button type="submit" class="btn btn-enviar" id="btn_login">Entrar</button>
+                <p id="login_erro" class="login-erro"></p>
+            </form>
+        </div>
+    </div>
     <header class="app-header">
         <img id="logo_empresa" class="app-logo-img oculto" alt="Paraná Peças">
         <div id="logo_empresa_fallback" class="app-logo" aria-hidden="true">
@@ -536,9 +611,11 @@
         <button type="button" class="btn-instalar-header" id="btn_instalar_header" hidden>Instalar no Desktop / Celular</button>
     </header>
     <div id="pwa_desktop_passos" class="pwa-desktop-passos">
-        <strong>Como instalar com ícone na Área de Trabalho:</strong><br>
-        <strong>Chrome:</strong> menu ⋮ (canto superior direito) → <strong>Instalar Paraná Peças…</strong> ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong><br>
-        <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>
+        <strong>Como instalar COM A LOGO na Área de Trabalho:</strong><br>
+        1. Apague o atalho antigo (ícone cinza/genérico) da Área de Trabalho.<br>
+        2. <strong>Chrome:</strong> menu ⋮ → <strong>Instalar Paraná Peças…</strong> (ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong>).<br>
+        3. <strong>Não use</strong> “Criar atalho…” — esse atalho fica sem a logo.<br>
+        4. <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>.
     </div>
     <div id="pwa_install_bar" class="pwa-install-bar" hidden>
         <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
@@ -558,6 +635,34 @@
     <p id="pwa_ios_hint" class="pwa-ios-hint">
         <strong>iPhone:</strong> toque em Compartilhar → <strong>Adicionar à Tela de Início</strong> para instalar o app com o ícone da Paraná Peças.
     </p>
+    <div id="barra_usuario" class="barra-usuario" hidden>
+        <span id="usuario_nome_perfil">Usuário</span>
+        <button type="button" class="btn-logout" id="btn_logout">Sair</button>
+    </div>
+    <details class="painel-usuarios so-gestor" id="painel_usuarios">
+        <summary>Usuários do sistema (Gestor)</summary>
+        <p class="hint">Cadastre atendentes ou outros gestores. O primeiro login vira gestor automaticamente se ainda não houver nenhum.</p>
+        <div class="form-group">
+            <label for="novo_user_nome">Nome:</label>
+            <input type="text" id="novo_user_nome" placeholder="Ex: Maria Atendente">
+        </div>
+        <div class="form-group">
+            <label for="novo_user_email">E-mail (login):</label>
+            <input type="email" id="novo_user_email" placeholder="atendente@empresa.com">
+        </div>
+        <div class="form-group">
+            <label for="novo_user_senha">Senha:</label>
+            <input type="password" id="novo_user_senha" placeholder="Mínimo 6 caracteres" minlength="6">
+        </div>
+        <div class="form-group">
+            <label for="novo_user_perfil">Perfil:</label>
+            <select id="novo_user_perfil">
+                <option value="atendente">Atendente (sem excluir)</option>
+                <option value="gestor">Gestor (acesso total)</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-verde" id="btn_criar_usuario">Cadastrar usuário</button>
+    </details>
     <div class="nav-tabs">
         <button type="button" class="nav-tab active" data-panel="panelClientes">1. Clientes</button>
         <button type="button" class="nav-tab" data-panel="panelHistorico">2. Histórico</button>
@@ -622,7 +727,7 @@
                     <div class="btn-row" style="margin-bottom:15px;">
                         <button type="button" class="btn btn-verde" id="btn_novo_atendimento" style="flex:1;">+ Novo Atendimento</button>
                         <button type="button" class="btn btn-pasta" id="btn_exportar_pasta_hist" style="flex:1;">Exportar Pasta</button>
-                        <button type="button" class="btn btn-excluir-geral" id="btn_excluir_cliente_hist" style="flex:1;">Excluir Cliente</button>
+                        <button type="button" class="btn btn-excluir-geral so-gestor" id="btn_excluir_cliente_hist" style="flex:1;">Excluir Cliente</button>
                     </div>
                     <div id="lista_veiculos_historico"></div>
                     <p id="historico_vazio" class="cliente-vazio" style="display:none;">Nenhum veículo registrado para este cliente.</p>
@@ -834,6 +939,7 @@
     </div>
     <script>
         const STORAGE_KEY = 'parana_pecas_dados';
+        const EXCLUIDOS_LOCAL_KEY = 'parana_pecas_excluidos';
         const PASTA_IDB = 'parana_pecas_pasta_v1';
         const LOGO_STORAGE_KEY = 'parana_pecas_logo_url';
         /* Link padrão da logo (opcional). Pode ser GitHub, Firebase Storage, Imgur, etc. */
@@ -1082,11 +1188,31 @@
         function salvarDados(dados) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
         }
-        function mesclarClientes(local, nuvem) {
+        function carregarExcluidosLocais() {
+            try { return JSON.parse(localStorage.getItem(EXCLUIDOS_LOCAL_KEY)) || {}; }
+            catch { return {}; }
+        }
+        function registrarExclusaoLocal(id) {
+            const exc = carregarExcluidosLocais();
+            exc[id] = new Date().toISOString();
+            localStorage.setItem(EXCLUIDOS_LOCAL_KEY, JSON.stringify(exc));
+        }
+        function limparExclusaoLocal(id) {
+            const exc = carregarExcluidosLocais();
+            delete exc[id];
+            localStorage.setItem(EXCLUIDOS_LOCAL_KEY, JSON.stringify(exc));
+        }
+        function idsExcluidosSet() {
+            return new Set(Object.keys(carregarExcluidosLocais()));
+        }
+        function mesclarClientes(local, nuvem, idsExcluidos) {
+            const excl = idsExcluidos || idsExcluidosSet();
             const map = new Map();
-            (local || []).forEach(c => { if (c && c.id) map.set(c.id, c); });
+            (local || []).forEach(c => {
+                if (c && c.id && !excl.has(c.id)) map.set(c.id, c);
+            });
             (nuvem || []).forEach(c => {
-                if (!c || !c.id) return;
+                if (!c || !c.id || excl.has(c.id)) return;
                 const existente = map.get(c.id);
                 if (!existente) { map.set(c.id, c); return; }
                 const tLocal = new Date(existente.atualizadoEm || existente.criadoEm || 0).getTime();
@@ -1159,8 +1285,25 @@
             return r;
         }
         window.mesclarClientes = mesclarClientes;
+        window.carregarExcluidosLocais = carregarExcluidosLocais;
+        window.limparExclusaoLocal = limparExclusaoLocal;
+        window.idsExcluidosSet = idsExcluidosSet;
         window.atualizarStatusNuvem = atualizarStatusNuvem;
         window.executarSincronizacaoNuvem = executarSincronizacaoNuvem;
+        function ehGestor() {
+            return window.usuarioPerfil === 'gestor';
+        }
+        function aplicarPermissoesUI() {
+            document.body.classList.toggle('perfil-gestor', ehGestor());
+            document.body.classList.toggle('perfil-atendente', window.usuarioPerfil === 'atendente');
+            document.querySelectorAll('.so-gestor').forEach(el => {
+                if (ehGestor()) el.classList.remove('oculto-perfil');
+                else el.classList.add('oculto-perfil');
+            });
+        }
+        window.ehGestor = ehGestor;
+        window.aplicarPermissoesUI = aplicarPermissoesUI;
+        window.mostrarToast = mostrarToast;
         function getClienteAtivo() {
             const dados = carregarDados();
             return dados.clientes.find(c => c.id === clienteSelecionadoId) || null;
@@ -1200,7 +1343,7 @@
                     </div>
                     <div class="cliente-item-acoes">
                         <span class="badge">${placas} carro${placas !== 1 ? 's' : ''} · ${atend} atend.</span>
-                        <button type="button" class="btn-excluir-cliente" data-excluir="${c.id}" title="Excluir cliente">Excluir</button>
+                        <button type="button" class="btn-excluir-cliente so-gestor" data-excluir="${c.id}" title="Excluir cliente">Excluir</button>
                     </div>
                 </div>`;
             }).join('');
@@ -1218,6 +1361,10 @@
             });
         }
         async function excluirCliente(id) {
+            if (!ehGestor()) {
+                mostrarToast('Somente o gestor pode excluir clientes.', 'aviso', 5000);
+                return;
+            }
             const dados = carregarDados();
             const cliente = dados.clientes.find(c => c.id === id);
             if (!cliente) return;
@@ -1227,6 +1374,7 @@
                 ? `Excluir "${cliente.nome}"?\n\nIsso apaga ${placas} veículo(s) e ${atend} atendimento(s). Não dá para desfazer.`
                 : `Excluir o cliente "${cliente.nome}"?\n\nNão dá para desfazer.`;
             if (!confirm(msg)) return;
+            registrarExclusaoLocal(id);
             dados.clientes = dados.clientes.filter(c => c.id !== id);
             if (dados.clienteAtivoId === id) dados.clienteAtivoId = null;
             salvarDados(dados);
@@ -1240,10 +1388,14 @@
             renderListaClientes();
             if (window.excluirClienteNuvem) {
                 const nuvem = await window.excluirClienteNuvem(id);
-                if (nuvem.ok) alert(`Cliente "${cliente.nome}" excluído (aparelho e nuvem).`);
-                else alert(`Cliente excluído no aparelho.\nNuvem: ${nuvem.motivo || 'não removido'}`);
+                if (nuvem.ok) {
+                    limparExclusaoLocal(id);
+                    mostrarToast(`Cliente "${cliente.nome}" excluído (aparelho e nuvem).`, 'ok', 5000);
+                } else {
+                    mostrarToast(`Excluído no aparelho.\nNuvem: ${nuvem.motivo || 'tente Sincronizar'}`, 'aviso', 6000);
+                }
             } else {
-                alert(`Cliente "${cliente.nome}" excluído.`);
+                mostrarToast(`Cliente "${cliente.nome}" excluído no aparelho.`, 'ok', 4000);
             }
             irParaAba('panelClientes');
         }
@@ -2004,21 +2156,45 @@
             });
             document.getElementById('btn_sync_nuvem').addEventListener('click', () => executarSincronizacaoNuvem(false));
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') executarSincronizacaoNuvem(true);
+                if (document.visibilityState === 'visible' && window.usuarioLogado) executarSincronizacaoNuvem(true);
             });
-            window.addEventListener('nuvem-pronta', () => executarSincronizacaoNuvem(true));
+            window.addEventListener('nuvem-pronta', () => {
+                if (window.usuarioLogado) executarSincronizacaoNuvem(true);
+            });
+            window.addEventListener('auth-pronta', () => {
+                if (window.usuarioLogado && window.executarSincronizacaoNuvem) {
+                    executarSincronizacaoNuvem(true);
+                }
+            });
         });
     </script>
     <script type="module">
         try {
             const mod = await import('./firebase-env.js');
-            const { db, storage, doc, setDoc, deleteDoc, collection, getDocs } = mod;
+            const { db, storage, auth, firebaseConfig, doc, setDoc, deleteDoc, collection, getDocs, getDoc, query, where } = mod;
             const { ref, uploadString, getDownloadURL, listAll, deleteObject } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js');
+            const {
+                getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+                createUserWithEmailAndPassword, setPersistence, browserSessionPersistence
+            } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
+            const { initializeApp, deleteApp } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js');
 
             const STORAGE_KEY = 'parana_pecas_dados';
             /** Mesmo projeto Firebase do Gestão de Clientes; coleção separada para não misturar dados. */
             const COLECAO_NUVEM = 'controle_veiculos_clientes';
+            const COLECAO_EXCLUIDOS = 'controle_veiculos_excluidos';
+            const COLECAO_USUARIOS = 'controle_veiculos_usuarios';
             const STORAGE_PREFIX = 'controle_veiculos';
+
+            function clientesDaNuvem(snap, idsExcluidos) {
+                const lista = [];
+                snap.forEach(d => {
+                    if (idsExcluidos.has(d.id)) return;
+                    const data = d.data();
+                    if (data && data.nome) lista.push({ id: d.id, veiculos: [], ...data });
+                });
+                return lista;
+            }
 
             function slugCliente(nome) {
                 return (nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -2086,25 +2262,40 @@
             };
 
             window.sincronizarComNuvem = async function() {
+                const idsExcluidos = window.idsExcluidosSet ? window.idsExcluidosSet() : new Set();
+                let excSnap;
+                try {
+                    excSnap = await getDocs(collection(db, COLECAO_EXCLUIDOS));
+                } catch (erro) {
+                    throw new Error(mensagemErroFirebase(erro));
+                }
+                excSnap.forEach(d => idsExcluidos.add(d.id));
+
                 let snap;
                 try {
                     snap = await getDocs(collection(db, COLECAO_NUVEM));
                 } catch (erro) {
                     throw new Error(mensagemErroFirebase(erro));
                 }
-                const nuvem = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    if (data && data.nome) {
-                        nuvem.push({ id: d.id, veiculos: [], ...data });
-                    }
-                });
+                let nuvem = clientesDaNuvem(snap, idsExcluidos);
+
+                for (const id of [...idsExcluidos]) {
+                    if (!nuvem.some(n => n.id === id)) continue;
+                    const r = await window.excluirClienteNuvem(id);
+                    if (r.ok) nuvem = nuvem.filter(n => n.id !== id);
+                }
+
                 let dados;
                 try { dados = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { clientes: [], clienteAtivoId: null }; }
                 catch { dados = { clientes: [], clienteAtivoId: null }; }
-                const local = dados.clientes || [];
+                let local = (dados.clientes || []).filter(c => !idsExcluidos.has(c.id));
+                if (dados.clienteAtivoId && idsExcluidos.has(dados.clienteAtivoId)) {
+                    dados.clienteAtivoId = null;
+                }
+
                 let subiu = 0;
                 for (const c of local) {
+                    if (idsExcluidos.has(c.id)) continue;
                     const remoto = nuvem.find(n => n.id === c.id);
                     const tLocal = new Date(c.atualizadoEm || c.criadoEm || 0).getTime();
                     const tNuvem = remoto ? new Date(remoto.atualizadoEm || remoto.criadoEm || 0).getTime() : 0;
@@ -2115,13 +2306,21 @@
                     }
                 }
                 const mesclar = window.mesclarClientes || ((a, b) => b.length ? b : a);
-                dados.clientes = mesclar(local, nuvem);
+                dados.clientes = mesclar(local, nuvem, idsExcluidos);
+                if (window.limparExclusaoLocal) {
+                    for (const id of Object.keys(window.carregarExcluidosLocais())) {
+                        if (idsExcluidos.has(id)) window.limparExclusaoLocal(id);
+                    }
+                }
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
                 return { ok: true, total: dados.clientes.length, subiu };
             };
 
             window.excluirClienteNuvem = async function(clienteId) {
                 try {
+                    await setDoc(doc(db, COLECAO_EXCLUIDOS, clienteId), {
+                        excluidoEm: new Date().toISOString()
+                    });
                     if (storage) {
                         try {
                             await apagarPastaStorageRecursiva(ref(storage, `${STORAGE_PREFIX}/${clienteId}`));
@@ -2133,13 +2332,150 @@
                     return { ok: true };
                 } catch (erro) {
                     console.error(erro);
-                    return { ok: false, motivo: erro.message || 'erro ao excluir' };
+                    return { ok: false, motivo: mensagemErroFirebase(erro) || 'erro ao excluir' };
                 }
             };
 
+            async function existeGestorCadastrado() {
+                const snap = await getDocs(query(collection(db, COLECAO_USUARIOS), where('perfil', '==', 'gestor')));
+                return !snap.empty;
+            }
+
+            async function carregarPerfilUsuario(uid) {
+                const snap = await getDoc(doc(db, COLECAO_USUARIOS, uid));
+                return snap.exists() ? snap.data() : null;
+            }
+
+            function atualizarBarraUsuario(perfil) {
+                const barra = document.getElementById('barra_usuario');
+                const el = document.getElementById('usuario_nome_perfil');
+                if (!barra || !el || !perfil) return;
+                const label = perfil.perfil === 'gestor' ? 'Gestor' : 'Atendente';
+                el.innerHTML = `${perfil.nome || perfil.email || 'Usuário'}<span class="badge-perfil ${perfil.perfil}">${label}</span>`;
+                barra.hidden = false;
+            }
+
+            function mostrarLogin(mostrar) {
+                const tela = document.getElementById('login_screen');
+                if (tela) tela.classList.toggle('oculto', !mostrar);
+            }
+
+            async function definirSessaoUsuario(user) {
+                let perfil = await carregarPerfilUsuario(user.uid);
+                if (!perfil) {
+                    const primeiroGestor = !(await existeGestorCadastrado());
+                    if (!primeiroGestor) {
+                        await signOut(auth);
+                        throw new Error('Usuário não cadastrado. Peça ao gestor para criar seu acesso.');
+                    }
+                    perfil = {
+                        email: user.email,
+                        nome: (user.email || '').split('@')[0],
+                        perfil: 'gestor',
+                        criadoEm: new Date().toISOString()
+                    };
+                    await setDoc(doc(db, COLECAO_USUARIOS, user.uid), perfil);
+                }
+                window.usuarioLogado = user;
+                window.usuarioPerfil = perfil.perfil;
+                window.usuarioDados = perfil;
+                mostrarLogin(false);
+                atualizarBarraUsuario(perfil);
+                if (window.aplicarPermissoesUI) window.aplicarPermissoesUI();
+                window.dispatchEvent(new Event('auth-pronta'));
+            }
+
+            await setPersistence(auth, browserSessionPersistence);
+
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const erroEl = document.getElementById('login_erro');
+                const btn = document.getElementById('btn_login');
+                erroEl.textContent = '';
+                btn.disabled = true;
+                btn.textContent = 'Entrando…';
+                try {
+                    const email = document.getElementById('login_email').value.trim();
+                    const senha = document.getElementById('login_senha').value;
+                    const cred = await signInWithEmailAndPassword(auth, email, senha);
+                    await definirSessaoUsuario(cred.user);
+                } catch (err) {
+                    const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+                        ? 'E-mail ou senha incorretos.'
+                        : (err.message || 'Falha no login.');
+                    erroEl.textContent = msg;
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Entrar';
+                }
+            });
+
+            document.getElementById('btn_logout').addEventListener('click', async () => {
+                await signOut(auth);
+            });
+
+            document.getElementById('btn_criar_usuario').addEventListener('click', async () => {
+                if (window.usuarioPerfil !== 'gestor') {
+                    if (window.mostrarToast) window.mostrarToast('Somente gestor cadastra usuários.', 'aviso');
+                    return;
+                }
+                const nome = document.getElementById('novo_user_nome').value.trim();
+                const email = document.getElementById('novo_user_email').value.trim();
+                const senha = document.getElementById('novo_user_senha').value;
+                const perfil = document.getElementById('novo_user_perfil').value;
+                if (!nome || !email || senha.length < 6) {
+                    if (window.mostrarToast) window.mostrarToast('Preencha nome, e-mail e senha (mín. 6).', 'aviso');
+                    return;
+                }
+                let secondaryApp;
+                try {
+                    secondaryApp = initializeApp(firebaseConfig, 'SecondaryAuth');
+                    const secondaryAuth = getAuth(secondaryApp);
+                    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, senha);
+                    await signOut(secondaryAuth);
+                    await setDoc(doc(db, COLECAO_USUARIOS, cred.user.uid), {
+                        email, nome, perfil,
+                        criadoEm: new Date().toISOString(),
+                        criadoPor: window.usuarioLogado?.uid || null
+                    });
+                    document.getElementById('novo_user_nome').value = '';
+                    document.getElementById('novo_user_email').value = '';
+                    document.getElementById('novo_user_senha').value = '';
+                    if (window.mostrarToast) window.mostrarToast(`Usuário "${nome}" cadastrado como ${perfil}.`, 'ok');
+                } catch (err) {
+                    const msg = err.code === 'auth/email-already-in-use'
+                        ? 'Este e-mail já está em uso.'
+                        : (err.message || 'Erro ao cadastrar.');
+                    if (window.mostrarToast) window.mostrarToast(msg, 'erro', 6000);
+                } finally {
+                    if (secondaryApp) try { await deleteApp(secondaryApp); } catch (_) {}
+                }
+            });
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    try {
+                        await definirSessaoUsuario(user);
+                    } catch (err) {
+                        window.usuarioLogado = null;
+                        window.usuarioPerfil = null;
+                        mostrarLogin(true);
+                        const erroEl = document.getElementById('login_erro');
+                        if (erroEl) erroEl.textContent = err.message || 'Acesso negado.';
+                    }
+                } else {
+                    window.usuarioLogado = null;
+                    window.usuarioPerfil = null;
+                    document.getElementById('barra_usuario').hidden = true;
+                    mostrarLogin(true);
+                }
+            });
+
             window.dispatchEvent(new Event('nuvem-pronta'));
         } catch (e) {
-            console.info('Firebase não configurado — nuvem desativada.', e);
+            console.info('Firebase não configurado — nuvem/login desativados.', e);
+            const loginErro = document.getElementById('login_erro');
+            if (loginErro) loginErro.textContent = 'Firebase não configurado. Configure firebase-env.js ou o deploy no GitHub.';
             if (window.atualizarStatusNuvem) {
                 window.atualizarStatusNuvem('<strong>Nuvem:</strong> offline — rode o GitHub Actions ou crie firebase-env.js local.', false);
             }
