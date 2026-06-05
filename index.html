@@ -10,8 +10,9 @@
     <meta name="apple-mobile-web-app-title" content="Paraná Peças">
     <meta name="description" content="Controle de veículos, clientes e atendimentos — Paraná Peças">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" type="image/png" href="icons/logo-empresa.png">
-    <link rel="apple-touch-icon" href="icons/logo-empresa.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <link rel="apple-touch-icon" href="icons/icon-512.png">
     <title>PARANÁ PEÇAS - CONTROLE DE veículos</title>
     <style>
         :root {
@@ -103,6 +104,22 @@
         .pwa-install-bar .pwa-texto strong { color: #fff; display: block; margin-bottom: 2px; }
         .pwa-install-bar .pwa-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
         .pwa-install-bar .btn-instalar { width: auto; padding: 10px 16px; font-size: 0.8rem; flex: none; }
+        .pwa-install-bar.pwa-desktop-visivel { border-color: #28a745; background: #0d1f12; }
+        .pwa-install-bar.pwa-desktop-visivel .pwa-texto strong { color: #5dd879; }
+        .pwa-desktop-passos {
+            width: 100%; max-width: var(--app-max); margin: 0 auto 12px;
+            background: #0d1f12; border: 1px solid #28a745; border-radius: 8px;
+            padding: 12px 14px; font-size: 0.78rem; color: #b8dfc4; line-height: 1.5;
+            display: none;
+        }
+        .pwa-desktop-passos.visivel { display: block; }
+        .pwa-desktop-passos strong { color: #5dd879; }
+        .btn-instalar-header {
+            margin-top: 8px; padding: 8px 14px; background: #28a745; color: #fff;
+            border: none; border-radius: 6px; font-size: 0.7rem; font-weight: bold;
+            text-transform: uppercase; cursor: pointer;
+        }
+        .btn-instalar-header:hover { background: #218838; }
         .pwa-ios-hint {
             width: 100%;
             max-width: var(--app-max);
@@ -516,18 +533,25 @@
             </svg>
         </div>
         <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
+        <button type="button" class="btn-instalar-header" id="btn_instalar_header" hidden>Instalar no Desktop / Celular</button>
     </header>
+    <div id="pwa_desktop_passos" class="pwa-desktop-passos">
+        <strong>Como instalar com ícone na Área de Trabalho:</strong><br>
+        <strong>Chrome:</strong> menu ⋮ (canto superior direito) → <strong>Instalar Paraná Peças…</strong> ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong><br>
+        <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>
+    </div>
     <div id="pwa_install_bar" class="pwa-install-bar" hidden>
         <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
-            <img id="pwa_logo_img" alt="" class="oculto">
-            <svg id="pwa_logo_fallback" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
+            <img id="pwa_logo_img" src="icons/icon-192.png" alt="Paraná Peças">
+            <svg id="pwa_logo_fallback" class="oculto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
         </div>
-        <div class="pwa-texto">
+        <div class="pwa-texto" id="pwa_install_texto">
             <strong>Instalar aplicativo</strong>
-            Atalho na tela do celular com ícone da empresa
+            Atalho com ícone da Paraná Peças na Área de Trabalho ou tela do celular
         </div>
         <div class="pwa-acoes">
             <button type="button" class="btn btn-verde btn-instalar" id="btn_instalar_app">Instalar</button>
+            <button type="button" class="btn btn-outline btn-instalar" id="btn_ver_como_instalar">Como instalar</button>
             <button type="button" class="btn btn-outline btn-instalar" id="btn_fechar_install">Depois</button>
         </div>
     </div>
@@ -1739,38 +1763,73 @@
         function configurarPWA() {
             let deferredPrompt = null;
             const bar = document.getElementById('pwa_install_bar');
+            const passos = document.getElementById('pwa_desktop_passos');
+            const btnHeader = document.getElementById('btn_instalar_header');
             const iosHint = document.getElementById('pwa_ios_hint');
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                || window.matchMedia('(display-mode: window-controls-overlay)').matches
                 || window.navigator.standalone === true;
+            const isDesktop = window.matchMedia('(pointer: fine)').matches && window.innerWidth >= 720;
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').catch(() => {});
             }
             if (isStandalone) {
                 if (bar) bar.hidden = true;
+                if (passos) passos.classList.remove('visivel');
+                if (btnHeader) btnHeader.hidden = true;
                 if (iosHint) iosHint.classList.remove('visivel');
                 return;
             }
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             if (isIOS && iosHint) iosHint.classList.add('visivel');
+            function mostrarPassosInstalar() {
+                if (passos) passos.classList.add('visivel');
+                passos.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            function mostrarBarraInstall() {
+                if (!bar) return;
+                bar.hidden = false;
+                if (isDesktop) bar.classList.add('pwa-desktop-visivel');
+                const texto = document.getElementById('pwa_install_texto');
+                if (texto) {
+                    texto.innerHTML = isDesktop
+                        ? '<strong>Instalar no Desktop</strong>Ícone da Paraná Peças na Área de Trabalho e barra de tarefas (como app no celular)'
+                        : '<strong>Instalar no Celular</strong>Atalho na tela inicial com ícone da Paraná Peças';
+                }
+            }
+            async function tentarInstalar() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    deferredPrompt = null;
+                    if (outcome === 'accepted' && bar) bar.hidden = true;
+                    if (outcome === 'accepted' && btnHeader) btnHeader.hidden = true;
+                    return;
+                }
+                mostrarPassosInstalar();
+                mostrarToast(
+                    isDesktop
+                        ? 'Veja as instruções acima ou use o menu ⋮ do Chrome → Instalar Paraná Peças'
+                        : 'iPhone: Compartilhar → Adicionar à Tela de Início',
+                    'aviso',
+                    7000
+                );
+            }
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                if (bar) bar.hidden = false;
+                mostrarBarraInstall();
             });
+            if (isDesktop) {
+                mostrarBarraInstall();
+                if (btnHeader) btnHeader.hidden = false;
+            }
             const btnInstalar = document.getElementById('btn_instalar_app');
             const btnFechar = document.getElementById('btn_fechar_install');
-            if (btnInstalar) {
-                btnInstalar.addEventListener('click', async () => {
-                    if (!deferredPrompt) {
-                        alert('Use o menu do navegador: Instalar aplicativo / Adicionar à tela inicial.');
-                        return;
-                    }
-                    deferredPrompt.prompt();
-                    await deferredPrompt.userChoice;
-                    deferredPrompt = null;
-                    if (bar) bar.hidden = true;
-                });
-            }
+            const btnComo = document.getElementById('btn_ver_como_instalar');
+            if (btnInstalar) btnInstalar.addEventListener('click', tentarInstalar);
+            if (btnHeader) btnHeader.addEventListener('click', tentarInstalar);
+            if (btnComo) btnComo.addEventListener('click', mostrarPassosInstalar);
             if (btnFechar) btnFechar.addEventListener('click', () => { if (bar) bar.hidden = true; });
         }
         function salvarAtendimentoNoCliente(cliente, atendimento) {
