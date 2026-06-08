@@ -341,6 +341,13 @@
         .btn-sm-ver { background: #17a2b8; color: #fff; }
         .btn-sm-edit { background: #ffc107; color: #000; }
         .btn-sm-print { background: #dc3545; color: #fff; }
+        .btn-sm-assinar { background: #6f42c1; color: #fff; }
+        .badge-assinado { background: #155724; color: #5dd879; font-size: 0.65rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
+        .badge-pendente { background: #664d03; color: #ffc107; font-size: 0.65rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
+        .modal-link-input {
+            width: 100%; padding: 10px; background: #222; border: 1px solid #555;
+            color: #fff; border-radius: 6px; font-size: 0.8rem; margin: 10px 0;
+        }
         .btn-sm-novo { background: #28a745; color: #fff; }
         .historico-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -553,8 +560,12 @@
             .print-value { font-size: 1.1rem; color: #111111; font-weight: 500; border-bottom: 1px solid #eeeeee; padding-bottom: 5px; min-height: 28px; }
             .full-width { grid-column: span 2; }
             .print-foto { max-width: 100%; max-height: 280px; border-radius: 6px; margin-top: 8px; }
-            .print-signatures { margin-top: 50px; display: flex; justify-content: space-around; padding: 0 20px; }
-            .sig-box { width: 40%; text-align: center; border-top: 1px solid #000000; padding-top: 8px; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: #333; }
+            .print-signatures { margin-top: 50px; display: flex; justify-content: space-around; padding: 0 20px; gap: 20px; }
+            .sig-box {
+                width: 42%; text-align: center; border-top: 1px solid #000000; padding-top: 8px;
+                font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: #333; min-height: 70px;
+            }
+            .sig-box img { max-width: 100%; max-height: 55px; display: block; margin: 4px auto 0; }
         }
     </style>
 </head>
@@ -905,7 +916,10 @@
         </div>
         <div class="print-signatures">
             <div class="sig-box">Assinatura do Responsável</div>
-            <div class="sig-box">Assinatura do Cliente</div>
+            <div class="sig-box">
+                <span id="p_sig_cliente_label">Assinatura do Cliente</span>
+                <img id="p_sig_cliente" alt="Assinatura do cliente" style="display:none;">
+            </div>
         </div>
     </div>
     <div id="modal_visualizar" class="modal-overlay">
@@ -913,9 +927,24 @@
             <h3 id="modal_titulo">Atendimento</h3>
             <div id="modal_corpo"></div>
             <div class="modal-acoes">
+                <button type="button" class="btn btn-sm-assinar btn-sm" id="modal_btn_link">Link p/ Cliente Assinar</button>
                 <button type="button" class="btn btn-sm-print btn-sm" id="modal_btn_imprimir">Reimprimir PDF</button>
                 <button type="button" class="btn btn-sm-edit btn-sm" id="modal_btn_editar">Editar</button>
                 <button type="button" class="btn btn-outline btn-sm" id="modal_btn_fechar">Fechar</button>
+            </div>
+        </div>
+    </div>
+    <div id="modal_link_assinatura" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Link para o cliente assinar</h3>
+            <p style="color:#aaa;font-size:0.85rem;line-height:1.45;margin-bottom:8px;">
+                Envie por WhatsApp, SMS ou e-mail. O cliente verá o espelho completo e assinará na tela.
+            </p>
+            <input type="text" id="input_link_assinatura" class="modal-link-input" readonly>
+            <div class="modal-acoes">
+                <button type="button" class="btn btn-verde btn-sm" id="btn_copiar_link">Copiar link</button>
+                <button type="button" class="btn btn-sm-assinar btn-sm" id="btn_whatsapp_link">WhatsApp</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn_fechar_link">Fechar</button>
             </div>
         </div>
     </div>
@@ -950,6 +979,51 @@
                     timeoutMs
                 ))
             ]);
+        }
+        function gerarTokenAssinatura() {
+            return 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+        }
+        function urlLinkAssinatura(token) {
+            const base = location.href.replace(/[^/]*$/, '');
+            return base + 'assinar.html?t=' + encodeURIComponent(token);
+        }
+        function badgeAssinatura(a) {
+            if (a.assinaturaCliente) return '<span class="badge-assinado">Assinado</span>';
+            if (a.tokenAssinatura) return '<span class="badge-pendente">Aguardando assinatura</span>';
+            return '';
+        }
+        async function abrirLinkAssinatura(placa, atendimentoId) {
+            const found = buscarAtendimento(placa, atendimentoId);
+            if (!found) return;
+            if (!window.criarLinkAssinatura) {
+                mostrarToast('Nuvem offline — sincronize antes de gerar o link.', 'aviso', 6000);
+                return;
+            }
+            mostrarToast('Gerando link…', 'ok', 0);
+            const r = await window.criarLinkAssinatura(found.cliente, found.atendimento);
+            if (!r.ok) {
+                mostrarToast('Erro: ' + (r.motivo || 'falha'), 'erro', 6000);
+                return;
+            }
+            const dados = carregarDados();
+            const cli = dados.clientes.find(c => c.id === found.cliente.id);
+            if (cli) {
+                const vg = (cli.veiculos || []).find(v => v.placa === placa);
+                const at = vg && (vg.atendimentos || []).find(x => x.id === atendimentoId);
+                if (at) at.tokenAssinatura = r.token;
+            }
+            salvarDados(dados);
+            renderHistoricoCliente();
+            document.getElementById('input_link_assinatura').value = r.link;
+            document.getElementById('modal_link_assinatura').classList.add('aberto');
+            if (r.jaAssinado) {
+                mostrarToast('Cliente já assinou este documento.', 'ok', 4000);
+            } else {
+                mostrarToast('Link pronto — envie ao cliente.', 'ok', 4000);
+            }
+        }
+        function fecharModalLink() {
+            document.getElementById('modal_link_assinatura').classList.remove('aberto');
         }
         function gerarId() {
             return 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -1430,11 +1504,12 @@
                 const itens = atendimentos.map(a => {
                     const resumo = a.servicosRealizados || a.estadoChegada || 'Sem descrição';
                     return `<div class="atendimento-item" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">
-                        <div class="data-linha">${escapeHtml(a.dataEntrada || '—')} · ${formatarDataRegistro(a.dataRegistro)}</div>
+                        <div class="data-linha">${escapeHtml(a.dataEntrada || '—')} · ${formatarDataRegistro(a.dataRegistro)} ${badgeAssinatura(a)}</div>
                         <div class="resumo"><strong>Resp:</strong> ${escapeHtml(a.responsavel || '—')}<br>${escapeHtml(resumo)}</div>
                         <div class="btn-row">
                             <button type="button" class="btn-sm btn-sm-ver" data-acao="ver" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Ver</button>
                             <button type="button" class="btn-sm btn-sm-edit" data-acao="editar" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Editar</button>
+                            <button type="button" class="btn-sm btn-sm-assinar" data-acao="link" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Link Assinar</button>
                             <button type="button" class="btn-sm btn-sm-print" data-acao="imprimir" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">PDF</button>
                         </div>
                     </div>`;
@@ -1465,6 +1540,7 @@
                     const acao = btn.dataset.acao;
                     if (acao === 'ver') abrirVisualizacaoAtendimento(placa, id);
                     else if (acao === 'editar') carregarAtendimentoNoForm(placa, id);
+                    else if (acao === 'link') abrirLinkAssinatura(placa, id);
                     else if (acao === 'imprimir') reimprimirAtendimento(placa, id);
                     else if (acao === 'nova-visita') iniciarNovaVisita(placa);
                 });
@@ -1503,6 +1579,11 @@
             ).join('');
             const foto = fotoAtendimento(a);
             if (foto) html += `<div class="modal-campo"><label>Foto</label><img src="${foto}" class="modal-foto" alt="Foto"></div>`;
+            if (a.assinaturaCliente) {
+                html += `<div class="modal-campo"><label>Assinatura do cliente</label><img src="${a.assinaturaCliente}" class="modal-foto" alt="Assinatura" style="background:#fff;max-height:100px;"><p style="color:#5dd879;font-size:0.8rem;margin-top:6px;">Assinado em ${escapeHtml(formatarDataRegistro(a.assinadoEm))}</p></div>`;
+            } else if (a.tokenAssinatura) {
+                html += `<div class="modal-campo"><label>Assinatura</label><p style="color:#ffc107;">Aguardando assinatura do cliente</p></div>`;
+            }
             document.getElementById('modal_corpo').innerHTML = html;
             document.getElementById('modal_visualizar').classList.add('aberto');
         }
@@ -1622,6 +1703,16 @@
                 wrapFoto.style.display = 'block';
             } else {
                 wrapFoto.style.display = 'none';
+            }
+            const sigImg = document.getElementById('p_sig_cliente');
+            const sigLabel = document.getElementById('p_sig_cliente_label');
+            if (a.assinaturaCliente && sigImg) {
+                sigImg.src = a.assinaturaCliente;
+                sigImg.style.display = 'block';
+                if (sigLabel) sigLabel.style.display = 'none';
+            } else if (sigImg) {
+                sigImg.style.display = 'none';
+                if (sigLabel) { sigLabel.style.display = 'block'; sigLabel.textContent = 'Assinatura do Cliente'; }
             }
             window.print();
         }
@@ -2058,6 +2149,32 @@
                     carregarAtendimentoNoForm(placa, atendimentoId);
                 }
             });
+            document.getElementById('modal_btn_link').addEventListener('click', () => {
+                if (modalAtendimentoAtual) {
+                    abrirLinkAssinatura(modalAtendimentoAtual.placa, modalAtendimentoAtual.atendimentoId);
+                }
+            });
+            document.getElementById('btn_copiar_link').addEventListener('click', async () => {
+                const v = document.getElementById('input_link_assinatura').value;
+                try {
+                    await navigator.clipboard.writeText(v);
+                    mostrarToast('Link copiado!', 'ok', 3000);
+                } catch {
+                    document.getElementById('input_link_assinatura').select();
+                    mostrarToast('Selecione e copie o link manualmente.', 'aviso', 4000);
+                }
+            });
+            document.getElementById('btn_whatsapp_link').addEventListener('click', () => {
+                const link = document.getElementById('input_link_assinatura').value;
+                const cliente = getClienteAtivo();
+                const nome = cliente ? cliente.nome : 'Cliente';
+                const texto = `Olá ${nome}! A Paraná Peças enviou o espelho de entrada do seu veículo para leitura e assinatura:\n${link}`;
+                window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+            });
+            document.getElementById('btn_fechar_link').addEventListener('click', fecharModalLink);
+            document.getElementById('modal_link_assinatura').addEventListener('click', (e) => {
+                if (e.target.id === 'modal_link_assinatura') fecharModalLink();
+            });
             document.getElementById('clienteForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const nome = document.getElementById('novo_cliente_nome').value.trim();
@@ -2153,7 +2270,7 @@
     <script type="module">
         try {
             const mod = await import('./firebase-env.js');
-            const { db, storage, auth, firebaseConfig, doc, setDoc, deleteDoc, collection, getDocs, getDoc, query, where } = mod;
+            const { db, storage, auth, firebaseConfig, doc, setDoc, deleteDoc, collection, getDocs, getDoc, query, where, updateDoc } = mod;
             const { ref, uploadString, getDownloadURL, listAll, deleteObject } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js');
             const {
                 getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
@@ -2166,6 +2283,7 @@
             const COLECAO_NUVEM = 'controle_veiculos_clientes';
             const COLECAO_EXCLUIDOS = 'controle_veiculos_excluidos';
             const COLECAO_USUARIOS = 'controle_veiculos_usuarios';
+            const COLECAO_ASSINATURAS = 'controle_veiculos_assinaturas';
             const STORAGE_PREFIX = 'controle_veiculos';
 
             function clientesDaNuvem(snap, idsExcluidos) {
@@ -2230,6 +2348,81 @@
                 return erro.message || String(erro);
             }
 
+            function documentoParaAssinatura(cliente, atendimento) {
+                const foto = atendimento.fotoUrl || (atendimento.foto && String(atendimento.foto).startsWith('http') ? atendimento.foto : null);
+                return {
+                    responsavel: atendimento.responsavel || '',
+                    carro: atendimento.carro || '',
+                    cidade: atendimento.cidade || '',
+                    placa: atendimento.placa || '',
+                    dataEntrada: atendimento.dataEntrada || '',
+                    chassi: atendimento.chassi || '',
+                    cor: atendimento.cor || '',
+                    km: atendimento.km || '',
+                    estadoChegada: atendimento.estadoChegada || '',
+                    servicosRealizados: atendimento.servicosRealizados || '',
+                    dataRegistro: atendimento.dataRegistro || '',
+                    fotoUrl: foto || null
+                };
+            }
+
+            async function aplicarAssinaturasDaNuvem(clientes) {
+                let alterou = false;
+                for (const cliente of clientes) {
+                    for (const vg of cliente.veiculos || []) {
+                        for (const a of vg.atendimentos || []) {
+                            if (!a.tokenAssinatura) continue;
+                            try {
+                                const snap = await getDoc(doc(db, COLECAO_ASSINATURAS, a.tokenAssinatura));
+                                if (!snap.exists()) continue;
+                                const d = snap.data();
+                                if (d.assinaturaCliente && a.assinaturaCliente !== d.assinaturaCliente) {
+                                    a.assinaturaCliente = d.assinaturaCliente;
+                                    a.assinadoEm = d.assinadoEm || null;
+                                    alterou = true;
+                                }
+                            } catch (e) { console.warn('Assinatura:', e); }
+                        }
+                    }
+                }
+                return alterou;
+            }
+
+            window.criarLinkAssinatura = async function(cliente, atendimento) {
+                try {
+                    if (!atendimento.tokenAssinatura) {
+                        atendimento.tokenAssinatura = 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
+                    }
+                    const token = atendimento.tokenAssinatura;
+                    const refDoc = doc(db, COLECAO_ASSINATURAS, token);
+                    const existente = await getDoc(refDoc);
+                    const prev = existente.exists() ? existente.data() : {};
+                    const payload = {
+                        clienteId: cliente.id,
+                        atendimentoId: atendimento.id,
+                        placa: atendimento.placa,
+                        nomeCliente: cliente.nome,
+                        documento: documentoParaAssinatura(cliente, atendimento),
+                        atualizadoEm: new Date().toISOString(),
+                        criadoEm: prev.criadoEm || new Date().toISOString()
+                    };
+                    if (prev.assinaturaCliente) {
+                        payload.assinaturaCliente = prev.assinaturaCliente;
+                        payload.assinadoEm = prev.assinadoEm;
+                    }
+                    await setDoc(refDoc, payload, { merge: true });
+                    cliente.atualizadoEm = new Date().toISOString();
+                    const r = await window.salvarClienteNuvem(cliente);
+                    if (!r.ok) return { ok: false, motivo: r.motivo };
+                    const base = location.href.replace(/[^/]*$/, '');
+                    const link = base + 'assinar.html?t=' + encodeURIComponent(token);
+                    return { ok: true, link, token, jaAssinado: !!prev.assinaturaCliente };
+                } catch (erro) {
+                    console.error(erro);
+                    return { ok: false, motivo: mensagemErroFirebase(erro) };
+                }
+            };
+
             window.salvarClienteNuvem = async function(cliente) {
                 try {
                     const comUrls = await uploadFotosCliente(cliente);
@@ -2289,6 +2482,7 @@
                 }
                 const mesclar = window.mesclarClientes || ((a, b) => b.length ? b : a);
                 dados.clientes = mesclar(local, nuvem, idsExcluidos);
+                await aplicarAssinaturasDaNuvem(dados.clientes);
                 if (window.limparExclusaoLocal) {
                     for (const id of Object.keys(window.carregarExcluidosLocais())) {
                         if (idsExcluidos.has(id)) window.limparExclusaoLocal(id);
