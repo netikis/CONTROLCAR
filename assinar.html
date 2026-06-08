@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Assinar documento — Paraná Peças</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { background: #111; color: #fff; min-height: 100vh; padding: 16px; }
+        .wrap { max-width: 720px; margin: 0 auto; }
+        .topo { text-align: center; margin-bottom: 16px; }
+        .topo h1 { font-size: 1.2rem; color: #007bff; text-transform: uppercase; }
+        .topo p { color: #aaa; font-size: 0.85rem; margin-top: 6px; }
+        .doc {
+            background: #fff; color: #111; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4); margin-bottom: 16px;
+        }
+        .doc-header {
+            text-align: center; background: #111; color: #fff; padding: 18px 14px;
+        }
+        .doc-header h2 { font-size: 1.3rem; text-transform: uppercase; }
+        .doc-header p { color: #a0b0c0; font-size: 0.85rem; margin-top: 4px; letter-spacing: 1px; }
+        .doc-block { border-bottom: 1px solid #e8e8e8; }
+        .doc-block:last-child { border-bottom: none; }
+        .block-title {
+            padding: 10px 14px; font-weight: bold; font-size: 0.85rem;
+            text-transform: uppercase; color: #fff;
+        }
+        .bg-blue { background: #0056b3; }
+        .bg-red { background: #cc0000; }
+        .block-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            padding: 14px 16px;
+        }
+        .field { display: flex; flex-direction: column; }
+        .field.full { grid-column: span 2; }
+        .field label { font-size: 0.68rem; color: #666; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; }
+        .field p { font-size: 0.95rem; color: #111; border-bottom: 1px solid #eee; padding-bottom: 4px; min-height: 22px; white-space: pre-wrap; line-height: 1.4; }
+        .field.servicos p { color: #0056b3; font-weight: 600; }
+        .doc-foto { max-width: 100%; border-radius: 6px; margin-top: 6px; }
+        .assinatura-area {
+            background: #1a1a1a; border: 2px solid #28a745; border-radius: 10px;
+            padding: 16px; margin-bottom: 16px;
+        }
+        .assinatura-area h3 { color: #5dd879; font-size: 0.9rem; margin-bottom: 10px; text-transform: uppercase; }
+        .canvas-wrap {
+            background: #fff; border: 2px dashed #555; border-radius: 8px;
+            margin-bottom: 10px; touch-action: none;
+        }
+        #canvas_assinatura { display: block; width: 100%; height: 180px; cursor: crosshair; }
+        .canvas-btns { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .btn {
+            padding: 12px 16px; border: none; border-radius: 6px; font-weight: bold;
+            text-transform: uppercase; font-size: 0.78rem; cursor: pointer; width: 100%;
+        }
+        .btn-verde { background: #28a745; color: #fff; }
+        .btn-outline { background: transparent; color: #ccc; border: 1px solid #555; width: auto; flex: 1; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .aceite {
+            display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px;
+            font-size: 0.82rem; color: #ccc; line-height: 1.45;
+        }
+        .aceite input { margin-top: 3px; flex-shrink: 0; width: 18px; height: 18px; }
+        .msg { text-align: center; padding: 40px 20px; color: #aaa; }
+        .msg.erro { color: #ff6b6b; }
+        .msg.ok { color: #5dd879; }
+        .ja-assinado {
+            background: #0d1f12; border: 2px solid #28a745; border-radius: 10px;
+            padding: 20px; text-align: center; margin-bottom: 16px;
+        }
+        .ja-assinado img { max-width: 100%; max-height: 120px; background: #fff; border-radius: 6px; margin-top: 10px; }
+        @media (max-width: 480px) { .block-grid { grid-template-columns: 1fr; } .field.full { grid-column: span 1; } }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="topo">
+            <h1>Paraná Peças</h1>
+            <p>Espelho de entrada e serviços — leia e assine abaixo</p>
+        </div>
+        <div id="estado_carregando" class="msg">Carregando documento…</div>
+        <div id="estado_erro" class="msg erro" hidden></div>
+        <div id="conteudo" hidden>
+            <div class="doc" id="doc_espelho"></div>
+            <div id="painel_ja_assinado" class="ja-assinado" hidden>
+                <strong style="color:#5dd879;">Documento já assinado</strong>
+                <p id="data_assinatura" style="color:#aaa;font-size:0.85rem;margin-top:8px;"></p>
+                <img id="img_assinatura_salva" alt="Assinatura do cliente">
+            </div>
+            <div id="painel_assinar" class="assinatura-area">
+                <h3>Assinatura do Cliente</h3>
+                <p style="color:#aaa;font-size:0.8rem;margin-bottom:10px;">Desenhe sua assinatura com o dedo ou mouse na caixa branca.</p>
+                <div class="canvas-wrap">
+                    <canvas id="canvas_assinatura"></canvas>
+                </div>
+                <div class="canvas-btns">
+                    <button type="button" class="btn btn-outline" id="btn_limpar">Limpar</button>
+                </div>
+                <label class="aceite">
+                    <input type="checkbox" id="chk_aceite">
+                    <span>Li e concordo com o espelho de entrada e serviços descrito acima, autorizando os serviços e registrando minha anuência.</span>
+                </label>
+                <button type="button" class="btn btn-verde" id="btn_enviar_assinatura">Confirmar assinatura</button>
+                <p id="msg_assinar" style="color:#ff6b6b;font-size:0.8rem;margin-top:10px;text-align:center;min-height:1.2em;"></p>
+            </div>
+        </div>
+        <div id="estado_sucesso" class="msg ok" hidden>
+            <strong>Assinatura registrada com sucesso!</strong><br>
+            Obrigado. A oficina já pode visualizar sua assinatura no sistema.
+        </div>
+    </div>
+    <script type="module">
+        const params = new URLSearchParams(location.search);
+        const token = params.get('t');
+        const elCarregando = document.getElementById('estado_carregando');
+        const elErro = document.getElementById('estado_erro');
+        const elConteudo = document.getElementById('conteudo');
+        const elSucesso = document.getElementById('estado_sucesso');
+        const COLECAO = 'controle_veiculos_assinaturas';
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t ?? '';
+            return d.innerHTML;
+        }
+        function formatarData(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            return isNaN(d) ? iso : d.toLocaleString('pt-BR');
+        }
+        function renderDoc(data) {
+            const d = data.documento || {};
+            const foto = d.fotoUrl ? `<img src="${escapeHtml(d.fotoUrl)}" class="doc-foto" alt="Foto">` : '';
+            document.getElementById('doc_espelho').innerHTML = `
+                <div class="doc-header">
+                    <h2>Paraná Peças</h2>
+                    <p>Espelho de entrada e serviços</p>
+                    <p style="font-size:0.75rem;color:#ccc;margin-top:6px;">${escapeHtml(data.nomeCliente || '')} · ${escapeHtml(d.placa || '')} · ${escapeHtml(d.dataEntrada || '')}</p>
+                </div>
+                <div class="doc-block">
+                    <div class="block-title bg-blue">Dados do cliente e oficina</div>
+                    <div class="block-grid">
+                        <div class="field full"><label>Nome do cliente</label><p>${escapeHtml(data.nomeCliente)}</p></div>
+                        <div class="field"><label>Responsável</label><p>${escapeHtml(d.responsavel || '—')}</p></div>
+                        <div class="field"><label>Data de entrada</label><p>${escapeHtml(d.dataEntrada || '—')}</p></div>
+                    </div>
+                </div>
+                <div class="doc-block">
+                    <div class="block-title bg-red">Veículo</div>
+                    <div class="block-grid">
+                        <div class="field"><label>Modelo</label><p>${escapeHtml(d.carro || '—')}</p></div>
+                        <div class="field"><label>Placa</label><p>${escapeHtml(d.placa || '—')}</p></div>
+                        <div class="field"><label>Cidade / UF</label><p>${escapeHtml(d.cidade || '—')}</p></div>
+                        <div class="field"><label>Km</label><p>${d.km ? escapeHtml(d.km) + ' Km' : '—'}</p></div>
+                        <div class="field"><label>Cor</label><p>${escapeHtml(d.cor || '—')}</p></div>
+                        <div class="field"><label>Chassi</label><p>${escapeHtml(d.chassi || '—')}</p></div>
+                    </div>
+                </div>
+                <div class="doc-block">
+                    <div class="block-title bg-blue">Chegada e serviços</div>
+                    <div class="block-grid">
+                        <div class="field full"><label>Estado de chegada</label><p>${escapeHtml(d.estadoChegada || 'Sem observações.')}</p></div>
+                        <div class="field full servicos"><label>Serviços</label><p>${escapeHtml(d.servicosRealizados || '—')}</p></div>
+                        ${foto ? `<div class="field full"><label>Foto do veículo</label>${foto}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        let canvas, ctx, desenhando = false, lastX = 0, lastY = 0;
+        function setupCanvas() {
+            canvas = document.getElementById('canvas_assinatura');
+            ctx = canvas.getContext('2d');
+            const resize = () => {
+                const r = canvas.parentElement.getBoundingClientRect();
+                canvas.width = Math.floor(r.width - 4);
+                canvas.height = 180;
+                ctx.strokeStyle = '#111';
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            };
+            resize();
+            window.addEventListener('resize', resize);
+            const pos = (e) => {
+                const r = canvas.getBoundingClientRect();
+                const t = e.touches ? e.touches[0] : e;
+                return { x: t.clientX - r.left, y: t.clientY - r.top };
+            };
+            const start = (e) => { e.preventDefault(); desenhando = true; const p = pos(e); lastX = p.x; lastY = p.y; };
+            const move = (e) => {
+                e.preventDefault();
+                if (!desenhando) return;
+                const p = pos(e);
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(p.x, p.y);
+                ctx.stroke();
+                lastX = p.x; lastY = p.y;
+            };
+            const end = () => { desenhando = false; };
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mousemove', move);
+            canvas.addEventListener('mouseup', end);
+            canvas.addEventListener('mouseout', end);
+            canvas.addEventListener('touchstart', start, { passive: false });
+            canvas.addEventListener('touchmove', move, { passive: false });
+            canvas.addEventListener('touchend', end);
+            document.getElementById('btn_limpar').onclick = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            };
+        }
+        function canvasVazio() {
+            const px = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            for (let i = 3; i < px.length; i += 4) if (px[i] !== 0) return false;
+            return true;
+        }
+
+        async function main() {
+            if (!token) {
+                elCarregando.hidden = true;
+                elErro.hidden = false;
+                elErro.textContent = 'Link inválido. Peça um novo link à oficina.';
+                return;
+            }
+            let db, doc, getDoc, updateDoc;
+            try {
+                const mod = await import('./firebase-env.js');
+                db = mod.db;
+                ({ doc, getDoc, updateDoc } = mod);
+            } catch {
+                elCarregando.hidden = true;
+                elErro.hidden = false;
+                elErro.textContent = 'Sistema indisponível. Tente novamente mais tarde.';
+                return;
+            }
+            let snap;
+            try {
+                snap = await getDoc(doc(db, COLECAO, token));
+            } catch (e) {
+                elCarregando.hidden = true;
+                elErro.hidden = false;
+                elErro.textContent = 'Não foi possível carregar o documento.';
+                return;
+            }
+            if (!snap.exists()) {
+                elCarregando.hidden = true;
+                elErro.hidden = false;
+                elErro.textContent = 'Documento não encontrado ou link expirado.';
+                return;
+            }
+            const data = snap.data();
+            elCarregando.hidden = true;
+            elConteudo.hidden = false;
+            renderDoc(data);
+            if (data.assinaturaCliente) {
+                document.getElementById('painel_assinar').hidden = true;
+                document.getElementById('painel_ja_assinado').hidden = false;
+                document.getElementById('img_assinatura_salva').src = data.assinaturaCliente;
+                document.getElementById('data_assinatura').textContent = 'Assinado em ' + formatarData(data.assinadoEm);
+                return;
+            }
+            setupCanvas();
+            document.getElementById('btn_enviar_assinatura').onclick = async () => {
+                const msg = document.getElementById('msg_assinar');
+                msg.textContent = '';
+                if (!document.getElementById('chk_aceite').checked) {
+                    msg.textContent = 'Marque que leu e concorda com o documento.';
+                    return;
+                }
+                if (canvasVazio()) {
+                    msg.textContent = 'Desenhe sua assinatura na caixa branca.';
+                    return;
+                }
+                const btn = document.getElementById('btn_enviar_assinatura');
+                btn.disabled = true;
+                btn.textContent = 'Enviando…';
+                try {
+                    const assinatura = canvas.toDataURL('image/png');
+                    await updateDoc(doc(db, COLECAO, token), {
+                        assinaturaCliente: assinatura,
+                        assinadoEm: new Date().toISOString(),
+                        aceiteEm: new Date().toISOString()
+                    });
+                    elConteudo.hidden = true;
+                    elSucesso.hidden = false;
+                } catch (e) {
+                    msg.textContent = 'Erro ao salvar. Verifique a internet e tente de novo.';
+                    btn.disabled = false;
+                    btn.textContent = 'Confirmar assinatura';
+                }
+            };
+        }
+        main();
+    </script>
+</body>
+</html>
