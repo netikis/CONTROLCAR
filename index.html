@@ -987,7 +987,7 @@
                 toastSalvarTimer = setTimeout(() => el.classList.remove('visivel'), duracaoMs);
             }
         }
-        async function enviarClienteParaNuvemComTimeout(cliente, timeoutMs = 12000) {
+        async function enviarClienteParaNuvemComTimeout(cliente, timeoutMs = 30000) {
             if (!window.salvarClienteNuvem || !cliente) return { ok: false, motivo: 'Nuvem indisponível' };
             return Promise.race([
                 enviarClienteParaNuvem(cliente),
@@ -1315,6 +1315,69 @@
         function idsExcluidosSet() {
             return new Set(Object.keys(carregarExcluidosLocais()));
         }
+        function mesclarFotoAtendimento(fa, fb) {
+            if (!fa) return fb;
+            if (!fb) return fa;
+            return {
+                id: fa.id || fb.id,
+                data: fa.data || fb.data || null,
+                url: fa.url || fb.url || null
+            };
+        }
+        function mesclarAtendimentoProfundo(a, b) {
+            if (!a) return b;
+            if (!b) return a;
+            normalizarFotosAtendimento(a);
+            normalizarFotosAtendimento(b);
+            const tA = new Date(a.dataRegistro || 0).getTime();
+            const tB = new Date(b.dataRegistro || 0).getTime();
+            const base = tB >= tA ? { ...a, ...b } : { ...b, ...a };
+            const fotosMap = new Map();
+            (a.fotos || []).forEach(f => { if (f.id) fotosMap.set(f.id, f); });
+            (b.fotos || []).forEach(f => {
+                if (!f.id) return;
+                fotosMap.set(f.id, mesclarFotoAtendimento(fotosMap.get(f.id), f));
+            });
+            base.fotos = Array.from(fotosMap.values()).filter(f => f.data || f.url);
+            base.assinaturaCliente = a.assinaturaCliente || b.assinaturaCliente || null;
+            base.assinadoEm = a.assinadoEm || b.assinadoEm || null;
+            base.tokenAssinatura = a.tokenAssinatura || b.tokenAssinatura || null;
+            return base;
+        }
+        function mesclarVeiculosProfundo(va, vb) {
+            const map = new Map();
+            (va || []).forEach(v => {
+                if (v.placa) map.set(v.placa.toUpperCase(), v);
+            });
+            (vb || []).forEach(v => {
+                const placa = (v.placa || '').toUpperCase();
+                if (!placa) return;
+                const ex = map.get(placa);
+                if (!ex) { map.set(placa, v); return; }
+                const atendMap = new Map();
+                (ex.atendimentos || []).forEach(a => { if (a.id) atendMap.set(a.id, a); });
+                (v.atendimentos || []).forEach(a => {
+                    if (!a.id) return;
+                    atendMap.set(a.id, mesclarAtendimentoProfundo(atendMap.get(a.id), a));
+                });
+                map.set(placa, {
+                    placa,
+                    carro: v.carro || ex.carro || '',
+                    atendimentos: Array.from(atendMap.values())
+                });
+            });
+            return Array.from(map.values());
+        }
+        function mesclarClienteProfundo(local, nuvem) {
+            if (!local) return nuvem;
+            if (!nuvem) return local;
+            const tLocal = new Date(local.atualizadoEm || local.criadoEm || 0).getTime();
+            const tNuvem = new Date(nuvem.atualizadoEm || nuvem.criadoEm || 0).getTime();
+            const base = tNuvem >= tLocal ? { ...local, ...nuvem } : { ...nuvem, ...local };
+            base.veiculos = mesclarVeiculosProfundo(local.veiculos, nuvem.veiculos);
+            base.atualizadoEm = new Date(Math.max(tLocal, tNuvem)).toISOString();
+            return base;
+        }
         function mesclarClientes(local, nuvem, idsExcluidos) {
             const excl = idsExcluidos || idsExcluidosSet();
             const map = new Map();
@@ -1325,9 +1388,7 @@
                 if (!c || !c.id || excl.has(c.id)) return;
                 const existente = map.get(c.id);
                 if (!existente) { map.set(c.id, c); return; }
-                const tLocal = new Date(existente.atualizadoEm || existente.criadoEm || 0).getTime();
-                const tNuvem = new Date(c.atualizadoEm || c.criadoEm || 0).getTime();
-                map.set(c.id, tNuvem >= tLocal ? c : existente);
+                map.set(c.id, mesclarClienteProfundo(existente, c));
             });
             return Array.from(map.values());
         }
@@ -1388,13 +1449,15 @@
                 const dados = carregarDados();
                 const idx = dados.clientes.findIndex(c => c.id === cliente.id);
                 if (idx >= 0) {
-                    dados.clientes[idx] = r.cliente;
+                    dados.clientes[idx] = mesclarClienteProfundo(dados.clientes[idx], r.cliente);
                     salvarDados(dados);
                 }
             }
             return r;
         }
         window.mesclarClientes = mesclarClientes;
+        window.mesclarClienteProfundo = mesclarClienteProfundo;
+        window.contarAtendimentosCliente = contarAtendimentos;
         window.carregarExcluidosLocais = carregarExcluidosLocais;
         window.limparExclusaoLocal = limparExclusaoLocal;
         window.idsExcluidosSet = idsExcluidosSet;
@@ -1825,7 +1888,7 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const max = 1200;
+                        const max = 960;
                         let w = img.width, h = img.height;
                         if (w > max || h > max) {
                             if (w > h) { h = (h * max) / w; w = max; }
@@ -1835,7 +1898,7 @@
                         canvas.width = w;
                         canvas.height = h;
                         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.75));
+                        resolve(canvas.toDataURL('image/jpeg', 0.62));
                     };
                     img.onerror = reject;
                     img.src = e.target.result;
@@ -2399,7 +2462,61 @@
             const COLECAO_EXCLUIDOS = 'controle_veiculos_excluidos';
             const COLECAO_USUARIOS = 'controle_veiculos_usuarios';
             const COLECAO_ASSINATURAS = 'controle_veiculos_assinaturas';
+            const COLECAO_MIDIA = 'controle_veiculos_midia';
             const STORAGE_PREFIX = 'controle_veiculos';
+
+            function idDocMidia(clienteId, atendimentoId, fotoId) {
+                return `${clienteId}_${atendimentoId}_${fotoId}`;
+            }
+
+            async function enviarFotosParaMidia(cliente, copia) {
+                for (const vg of copia.veiculos || []) {
+                    for (const a of vg.atendimentos || []) {
+                        for (const f of a.fotos || []) {
+                            if (!f.data || !String(f.data).startsWith('data:') || !f.id) continue;
+                            try {
+                                await setDoc(doc(db, COLECAO_MIDIA, idDocMidia(cliente.id, a.id, f.id)), {
+                                    clienteId: cliente.id,
+                                    atendimentoId: a.id,
+                                    fotoId: f.id,
+                                    data: f.data,
+                                    atualizadoEm: new Date().toISOString()
+                                });
+                                delete f.data;
+                            } catch (midiaErr) {
+                                console.warn('Foto na nuvem (midia):', midiaErr.code || midiaErr.message);
+                            }
+                        }
+                    }
+                }
+            }
+
+            async function hidratarFotosMidia(clientes) {
+                for (const cliente of clientes || []) {
+                    for (const vg of cliente.veiculos || []) {
+                        for (const a of vg.atendimentos || []) {
+                            for (const f of a.fotos || []) {
+                                if (f.data || f.url || !f.id || !a.id) continue;
+                                try {
+                                    const snap = await getDoc(doc(db, COLECAO_MIDIA, idDocMidia(cliente.id, a.id, f.id)));
+                                    if (snap.exists() && snap.data().data) f.data = snap.data().data;
+                                } catch (e) {
+                                    console.warn('Baixar foto:', e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            async function apagarMidiaCliente(clienteId) {
+                try {
+                    const midiaSnap = await getDocs(query(collection(db, COLECAO_MIDIA), where('clienteId', '==', clienteId)));
+                    await Promise.all(midiaSnap.docs.map(d => deleteDoc(d.ref)));
+                } catch (e) {
+                    console.warn('Apagar midia:', e);
+                }
+            }
 
             function clientesDaNuvem(snap, idsExcluidos) {
                 const lista = [];
@@ -2422,24 +2539,6 @@
                 await Promise.all(lista.prefixes.map(sub => apagarPastaStorageRecursiva(sub)));
             }
 
-            function stripBase64FotosCliente(cliente) {
-                const copia = JSON.parse(JSON.stringify(cliente));
-                for (const vg of copia.veiculos || []) {
-                    for (const a of vg.atendimentos || []) {
-                        if (a.foto && String(a.foto).startsWith('data:')) delete a.foto;
-                        if (a.fotos) {
-                            a.fotos = a.fotos.map(f => {
-                                const n = { id: f.id };
-                                if (f.url && String(f.url).startsWith('http')) n.url = f.url;
-                                return n;
-                            }).filter(f => f.url);
-                        }
-                        delete a.fotoUrl;
-                    }
-                }
-                return copia;
-            }
-
             async function uploadFotosCliente(cliente) {
                 const copia = JSON.parse(JSON.stringify(cliente));
                 for (const vg of copia.veiculos || []) {
@@ -2457,13 +2556,7 @@
                     }
                 }
                 if (!storage) {
-                    for (const vg of copia.veiculos || []) {
-                        for (const a of vg.atendimentos || []) {
-                            for (const f of a.fotos || []) {
-                                if (f.data && String(f.data).startsWith('data:')) delete f.data;
-                            }
-                        }
-                    }
+                    await enviarFotosParaMidia(cliente, copia);
                     return copia;
                 }
                 const pastaSlug = slugCliente(cliente.nome);
@@ -2570,14 +2663,6 @@
                     }
                     await setDoc(refDoc, payload, { merge: true });
                     atendimento.tokenAssinatura = token;
-                    try {
-                        const leve = stripBase64FotosCliente(cliente);
-                        leve.pastaSlug = slugCliente(cliente.nome);
-                        leve.atualizadoEm = new Date().toISOString();
-                        await setDoc(doc(db, COLECAO_NUVEM, cliente.id), leve, { merge: true });
-                    } catch (syncErr) {
-                        console.warn('Sync leve após link:', syncErr);
-                    }
                     const base = location.href.replace(/[^/]*$/, '');
                     const link = base + 'assinar.html?t=' + encodeURIComponent(token);
                     return { ok: true, link, token, jaAssinado: !!prev.assinaturaCliente };
@@ -2617,6 +2702,7 @@
                     throw new Error(mensagemErroFirebase(erro));
                 }
                 let nuvem = clientesDaNuvem(snap, idsExcluidos);
+                await hidratarFotosMidia(nuvem);
 
                 for (const id of [...idsExcluidos]) {
                     if (!nuvem.some(n => n.id === id)) continue;
@@ -2633,12 +2719,14 @@
                 }
 
                 let subiu = 0;
+                const contarAt = window.contarAtendimentosCliente || (c => (c.veiculos || []).reduce((t, v) => t + (v.atendimentos || []).length, 0));
                 for (const c of local) {
                     if (idsExcluidos.has(c.id)) continue;
                     const remoto = nuvem.find(n => n.id === c.id);
                     const tLocal = new Date(c.atualizadoEm || c.criadoEm || 0).getTime();
                     const tNuvem = remoto ? new Date(remoto.atualizadoEm || remoto.criadoEm || 0).getTime() : 0;
-                    if (!remoto || tLocal > tNuvem) {
+                    const maisConteudo = remoto && contarAt(c) > contarAt(remoto);
+                    if (!remoto || tLocal > tNuvem || maisConteudo) {
                         const r = await window.salvarClienteNuvem(c);
                         if (!r.ok) throw new Error(r.motivo);
                         subiu++;
@@ -2646,6 +2734,7 @@
                 }
                 const mesclar = window.mesclarClientes || ((a, b) => b.length ? b : a);
                 dados.clientes = mesclar(local, nuvem, idsExcluidos);
+                await hidratarFotosMidia(dados.clientes);
                 await aplicarAssinaturasDaNuvem(dados.clientes);
                 if (window.limparExclusaoLocal) {
                     for (const id of Object.keys(window.carregarExcluidosLocais())) {
@@ -2661,6 +2750,7 @@
                     await setDoc(doc(db, COLECAO_EXCLUIDOS, clienteId), {
                         excluidoEm: new Date().toISOString()
                     });
+                    await apagarMidiaCliente(clienteId);
                     if (storage) {
                         try {
                             await apagarPastaStorageRecursiva(ref(storage, `${STORAGE_PREFIX}/${clienteId}`));
