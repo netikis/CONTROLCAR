@@ -305,6 +305,22 @@
             border: 2px solid #333;
             background: #111;
         }
+        .fotos-galeria {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;
+        }
+        .foto-thumb {
+            position: relative; width: 88px; height: 88px; flex-shrink: 0;
+        }
+        .foto-thumb img {
+            width: 100%; height: 100%; object-fit: cover; border-radius: 6px;
+            border: 2px solid #444; background: #111;
+        }
+        .foto-thumb button {
+            position: absolute; top: 2px; right: 2px; width: 22px; height: 22px;
+            border: none; border-radius: 50%; background: #dc3545; color: #fff;
+            font-size: 0.7rem; font-weight: bold; cursor: pointer; line-height: 1;
+        }
+        .fotos-contador { color: #888; font-size: 0.75rem; margin-top: 4px; }
         .photo-preview.visivel { display: block; }
         input[type="file"] { display: none; }
         .button-zone {
@@ -823,15 +839,16 @@
                         <textarea id="in_servicos" rows="4" placeholder="Descreva os serviços executados, peças trocadas, etc..."></textarea>
                     </div>
                     <div class="form-group photo-zone">
-                        <label>Foto do Veículo:</label>
+                        <label>Fotos do Veículo:</label>
                         <div class="photo-buttons">
                             <button type="button" class="btn-foto" id="btn_tirar_foto">Tirar Foto</button>
                             <button type="button" class="btn-foto" id="btn_galeria">Galeria / Arquivo</button>
-                            <button type="button" class="btn-foto" id="btn_remover_foto" style="display:none;">Remover Foto</button>
+                            <button type="button" class="btn-foto" id="btn_limpar_fotos" style="display:none;">Limpar todas</button>
                         </div>
                         <input type="file" id="in_foto_camera" accept="image/*" capture="environment">
-                        <input type="file" id="in_foto_galeria" accept="image/*">
-                        <img id="foto_preview" class="photo-preview" alt="Preview da foto">
+                        <input type="file" id="in_foto_galeria" accept="image/*" multiple>
+                        <p class="fotos-contador" id="fotos_contador">Nenhuma foto</p>
+                        <div id="fotos_galeria" class="fotos-galeria"></div>
                     </div>
                 </div>
                 <div class="button-zone">
@@ -908,9 +925,9 @@
                     <span class="print-label">Serviços Realizados</span>
                     <span class="print-value" id="p_servicos" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.4; color: #0056b3; font-weight: bold;">--</span>
                 </div>
-                <div class="print-field full-width" id="p_foto_wrap" style="display:none;">
-                    <span class="print-label">Foto do Veículo</span>
-                    <img id="p_foto" class="print-foto" alt="Foto do veículo">
+                <div class="print-field full-width" id="p_fotos_wrap" style="display:none;">
+                    <span class="print-label">Fotos do Veículo</span>
+                    <div id="p_fotos_galeria" class="fotos-galeria" style="margin-top:8px;"></div>
                 </div>
             </div>
         </div>
@@ -955,7 +972,7 @@
         const LOGO_STORAGE_KEY = 'parana_pecas_logo_url';
         /* Link padrão da logo (opcional). Pode ser GitHub, Firebase Storage, Imgur, etc. */
         const LOGO_EMPRESA_URL_PADRAO = 'https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png';
-        let fotoAtualBase64 = null;
+        let fotosAtuais = [];
         let clienteSelecionadoId = null;
         let atendimentoEditandoId = null;
         let modalAtendimentoAtual = null;
@@ -999,27 +1016,34 @@
                 mostrarToast('Nuvem offline — sincronize antes de gerar o link.', 'aviso', 6000);
                 return;
             }
+            const btns = document.querySelectorAll('[data-acao="link"]');
+            btns.forEach(b => { b.disabled = true; b.textContent = 'Gerando…'; });
             mostrarToast('Gerando link…', 'ok', 0);
-            const r = await window.criarLinkAssinatura(found.cliente, found.atendimento);
-            if (!r.ok) {
-                mostrarToast('Erro: ' + (r.motivo || 'falha'), 'erro', 6000);
-                return;
-            }
-            const dados = carregarDados();
-            const cli = dados.clientes.find(c => c.id === found.cliente.id);
-            if (cli) {
-                const vg = (cli.veiculos || []).find(v => v.placa === placa);
-                const at = vg && (vg.atendimentos || []).find(x => x.id === atendimentoId);
-                if (at) at.tokenAssinatura = r.token;
-            }
-            salvarDados(dados);
-            renderHistoricoCliente();
-            document.getElementById('input_link_assinatura').value = r.link;
-            document.getElementById('modal_link_assinatura').classList.add('aberto');
-            if (r.jaAssinado) {
-                mostrarToast('Cliente já assinou este documento.', 'ok', 4000);
-            } else {
-                mostrarToast('Link pronto — envie ao cliente.', 'ok', 4000);
+            try {
+                const r = await Promise.race([
+                    window.criarLinkAssinatura(found.cliente, found.atendimento),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('Demorou demais — tente de novo')), 20000))
+                ]);
+                if (!r.ok) {
+                    mostrarToast('Erro: ' + (r.motivo || 'falha'), 'erro', 6000);
+                    return;
+                }
+                const dados = carregarDados();
+                const cli = dados.clientes.find(c => c.id === found.cliente.id);
+                if (cli) {
+                    const vg = (cli.veiculos || []).find(v => v.placa === placa);
+                    const at = vg && (vg.atendimentos || []).find(x => x.id === atendimentoId);
+                    if (at) at.tokenAssinatura = r.token;
+                }
+                salvarDados(dados);
+                renderHistoricoCliente();
+                document.getElementById('input_link_assinatura').value = r.link;
+                document.getElementById('modal_link_assinatura').classList.add('aberto');
+                mostrarToast(r.jaAssinado ? 'Cliente já assinou — link reenviado.' : 'Link pronto — envie ao cliente.', 'ok', 5000);
+            } catch (e) {
+                mostrarToast(e.message || 'Falha ao gerar link', 'erro', 6000);
+            } finally {
+                btns.forEach(b => { b.disabled = false; b.textContent = 'Link Assinar'; });
             }
         }
         function fecharModalLink() {
@@ -1032,8 +1056,27 @@
             return nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '').toUpperCase() || 'CLIENTE';
         }
+        function normalizarFotosAtendimento(a) {
+            if (!a) return;
+            if (!a.fotos) a.fotos = [];
+            if (a.foto) {
+                const leg = { id: 'f' + Date.now(), data: String(a.foto).startsWith('data:') ? a.foto : null, url: String(a.foto).startsWith('http') ? a.foto : (a.fotoUrl || null) };
+                if (leg.data || leg.url) a.fotos.push(leg);
+                delete a.foto;
+            }
+            if (a.fotoUrl && !a.fotos.some(f => f.url === a.fotoUrl)) {
+                a.fotos.push({ id: 'fu' + Date.now(), url: a.fotoUrl });
+            }
+            delete a.fotoUrl;
+        }
+        function listarFotosAtendimento(a) {
+            if (!a) return [];
+            normalizarFotosAtendimento(a);
+            return (a.fotos || []).map(f => f.url || f.data).filter(Boolean);
+        }
         function fotoAtendimento(a) {
-            return a.foto || a.fotoUrl || null;
+            const lista = listarFotosAtendimento(a);
+            return lista[0] || null;
         }
         function nomeBaseArquivo(atendimento) {
             const data = (atendimento.dataEntrada || 'sem-data').replace(/\//g, '-');
@@ -1042,9 +1085,10 @@
         function clienteParaExportJson(cliente) {
             const c = JSON.parse(JSON.stringify(cliente));
             (c.veiculos || []).forEach(vg => (vg.atendimentos || []).forEach(a => {
-                if (a.foto) {
-                    a.fotoArquivo = nomeBaseArquivo(a) + '_foto.jpg';
-                    delete a.foto;
+                normalizarFotosAtendimento(a);
+                if (a.fotos && a.fotos.length) {
+                    a.fotosArquivos = a.fotos.map((f, i) => nomeBaseArquivo(a) + '_foto_' + (i + 1) + '.jpg');
+                    a.fotos.forEach(f => { delete f.data; });
                 }
             }));
             return c;
@@ -1139,15 +1183,25 @@
         }
         async function salvarAtendimentoArquivoNaPasta(pastaClienteHandle, atendimento) {
             const base = nomeBaseArquivo(atendimento);
-            const dadosExport = { ...atendimento };
-            if (dadosExport.foto) {
-                const nomeFoto = base + '_foto.jpg';
-                dadosExport.fotoArquivo = nomeFoto;
-                const fh = await pastaClienteHandle.getFileHandle(nomeFoto, { create: true });
-                const w = await fh.createWritable();
-                await w.write(base64ParaBlob(dadosExport.foto));
-                await w.close();
-                delete dadosExport.foto;
+            const dadosExport = JSON.parse(JSON.stringify(atendimento));
+            normalizarFotosAtendimento(dadosExport);
+            delete dadosExport.foto;
+            if (dadosExport.fotos && dadosExport.fotos.length) {
+                dadosExport.fotosArquivos = [];
+                for (let i = 0; i < dadosExport.fotos.length; i++) {
+                    const f = dadosExport.fotos[i];
+                    const src = f.data || f.url;
+                    if (!src) continue;
+                    const nomeFoto = base + '_foto_' + (i + 1) + '.jpg';
+                    dadosExport.fotosArquivos.push(nomeFoto);
+                    if (f.data && String(f.data).startsWith('data:')) {
+                        const fh = await pastaClienteHandle.getFileHandle(nomeFoto, { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(base64ParaBlob(f.data));
+                        await w.close();
+                    }
+                    delete f.data;
+                }
             }
             await escreverTextoNoArquivo(pastaClienteHandle, base + '.json', JSON.stringify(dadosExport, null, 2));
             const csv = 'Chave,Valor\n' + Object.entries(dadosExport)
@@ -1215,7 +1269,7 @@
                     km: v.km || '',
                     estadoChegada: v.estadoChegada || '',
                     servicosRealizados: v.servicosRealizados || '',
-                    foto: v.foto || null,
+                    fotos: v.foto ? [{ id: 'legacy', data: String(v.foto).startsWith('data:') ? v.foto : null, url: String(v.foto).startsWith('http') ? v.foto : null }] : [],
                     dataRegistro: v.dataRegistro || new Date().toISOString()
                 });
                 if (v.carro) grupos[placa].carro = v.carro;
@@ -1577,8 +1631,10 @@
             let html = campos.map(([l, v]) =>
                 `<div class="modal-campo"><label>${escapeHtml(l)}</label><p>${escapeHtml(String(v))}</p></div>`
             ).join('');
-            const foto = fotoAtendimento(a);
-            if (foto) html += `<div class="modal-campo"><label>Foto</label><img src="${foto}" class="modal-foto" alt="Foto"></div>`;
+            const fotos = listarFotosAtendimento(a);
+            if (fotos.length) {
+                html += `<div class="modal-campo"><label>Fotos (${fotos.length})</label><div class="fotos-galeria">${fotos.map(src => `<img src="${src}" class="modal-foto" alt="Foto">`).join('')}</div></div>`;
+            }
             if (a.assinaturaCliente) {
                 html += `<div class="modal-campo"><label>Assinatura do cliente</label><img src="${a.assinaturaCliente}" class="modal-foto" alt="Assinatura" style="background:#fff;max-height:100px;"><p style="color:#5dd879;font-size:0.8rem;margin-top:6px;">Assinado em ${escapeHtml(formatarDataRegistro(a.assinadoEm))}</p></div>`;
             } else if (a.tokenAssinatura) {
@@ -1610,9 +1666,47 @@
             document.getElementById('in_km').value = a.km || '';
             document.getElementById('in_estado').value = a.estadoChegada || '';
             document.getElementById('in_servicos').value = a.servicosRealizados || '';
-            if (fotoAtendimento(a)) mostrarFotoPreview(fotoAtendimento(a));
-            else removerFoto();
+            carregarFotosNoForm(a);
             updatePlate();
+        }
+        function gerarIdFoto() {
+            return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        }
+        function renderizarGaleriaFotos() {
+            const galeria = document.getElementById('fotos_galeria');
+            const contador = document.getElementById('fotos_contador');
+            const btnLimpar = document.getElementById('btn_limpar_fotos');
+            if (!galeria) return;
+            galeria.innerHTML = '';
+            fotosAtuais.forEach((f, idx) => {
+                const src = f.data || f.url;
+                if (!src) return;
+                const div = document.createElement('div');
+                div.className = 'foto-thumb';
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = 'Foto ' + (idx + 1);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = '×';
+                btn.setAttribute('aria-label', 'Remover foto');
+                btn.addEventListener('click', () => removerFotoPorIndice(idx));
+                div.appendChild(img);
+                div.appendChild(btn);
+                galeria.appendChild(div);
+            });
+            const n = fotosAtuais.length;
+            if (contador) contador.textContent = n ? `${n} foto${n > 1 ? 's' : ''}` : 'Nenhuma foto';
+            if (btnLimpar) btnLimpar.style.display = n ? 'block' : 'none';
+        }
+        function carregarFotosNoForm(a) {
+            normalizarFotosAtendimento(a);
+            fotosAtuais = (a.fotos || []).map(f => ({
+                id: f.id || gerarIdFoto(),
+                data: f.data || (f.url && String(f.url).startsWith('data:') ? f.url : null),
+                url: f.url && String(f.url).startsWith('http') ? f.url : null
+            })).filter(f => f.data || f.url);
+            renderizarGaleriaFotos();
         }
         function atualizarBannerModoForm() {
             const banner = document.getElementById('modo_form_banner');
@@ -1696,13 +1790,22 @@
             document.getElementById('p_data').textContent = a.dataEntrada || '—';
             document.getElementById('p_registro_atendimento').textContent =
                 'Registro: ' + formatarDataRegistro(a.dataRegistro) + (a.id ? ' · ID: ' + a.id.slice(-6) : '');
-            const wrapFoto = document.getElementById('p_foto_wrap');
-            const foto = fotoAtendimento(a);
-            if (foto) {
-                document.getElementById('p_foto').src = foto;
-                wrapFoto.style.display = 'block';
-            } else {
-                wrapFoto.style.display = 'none';
+            const wrapFotos = document.getElementById('p_fotos_wrap');
+            const galeriaPrint = document.getElementById('p_fotos_galeria');
+            const fotos = listarFotosAtendimento(a);
+            if (galeriaPrint) galeriaPrint.innerHTML = '';
+            if (fotos.length && wrapFotos && galeriaPrint) {
+                fotos.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.className = 'print-foto';
+                    img.style.cssText = 'width:140px;height:105px;object-fit:cover;border-radius:4px;border:1px solid #ccc;';
+                    img.alt = 'Foto do veículo';
+                    galeriaPrint.appendChild(img);
+                });
+                wrapFotos.style.display = 'block';
+            } else if (wrapFotos) {
+                wrapFotos.style.display = 'none';
             }
             const sigImg = document.getElementById('p_sig_cliente');
             const sigLabel = document.getElementById('p_sig_cliente_label');
@@ -1741,29 +1844,36 @@
                 reader.readAsDataURL(file);
             });
         }
-        function mostrarFotoPreview(base64) {
-            fotoAtualBase64 = base64;
-            const img = document.getElementById('foto_preview');
-            img.src = base64;
-            img.classList.add('visivel');
-            document.getElementById('btn_remover_foto').style.display = 'block';
+        function adicionarFoto(base64) {
+            fotosAtuais.push({ id: gerarIdFoto(), data: base64, url: null });
+            renderizarGaleriaFotos();
         }
-        function removerFoto() {
-            fotoAtualBase64 = null;
-            document.getElementById('foto_preview').classList.remove('visivel');
-            document.getElementById('foto_preview').src = '';
-            document.getElementById('in_foto_camera').value = '';
-            document.getElementById('in_foto_galeria').value = '';
-            document.getElementById('btn_remover_foto').style.display = 'none';
+        function removerFotoPorIndice(idx) {
+            fotosAtuais.splice(idx, 1);
+            renderizarGaleriaFotos();
         }
-        async function processarArquivoFoto(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            try {
-                const base64 = await comprimirImagem(file);
-                mostrarFotoPreview(base64);
-            } catch {
-                alert('Não foi possível processar a imagem.');
+        function limparTodasFotos() {
+            fotosAtuais = [];
+            const cam = document.getElementById('in_foto_camera');
+            const gal = document.getElementById('in_foto_galeria');
+            if (cam) cam.value = '';
+            if (gal) gal.value = '';
+            renderizarGaleriaFotos();
+        }
+        async function processarArquivosFoto(fileList) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            let erros = 0;
+            for (const file of files) {
+                if (!file || !file.type.startsWith('image/')) continue;
+                try {
+                    const base64 = await comprimirImagem(file);
+                    adicionarFoto(base64);
+                } catch {
+                    erros++;
+                }
             }
+            if (erros) mostrarToast('Algumas imagens não puderam ser processadas.', 'aviso', 4000);
         }
         function coletarDadosVeiculo() {
             return {
@@ -1778,7 +1888,7 @@
                 km: document.getElementById('in_km').value,
                 estadoChegada: document.getElementById('in_estado').value.trim(),
                 servicosRealizados: document.getElementById('in_servicos').value.trim(),
-                foto: fotoAtualBase64,
+                fotos: fotosAtuais.map(f => ({ id: f.id, data: f.data || null, url: f.url || null })).filter(f => f.data || f.url),
                 dataRegistro: atendimentoEditandoId ? undefined : new Date().toISOString()
             };
         }
@@ -1874,15 +1984,15 @@
             downloadArquivo(`${pastaNome}_dados_cliente.json`, JSON.stringify(cliente, null, 2), 'application/json');
             for (const vg of (cliente.veiculos || [])) {
                 for (const a of (vg.atendimentos || [])) {
-                    const foto = fotoAtendimento(a);
-                    if (foto) {
+                    const fotos = listarFotosAtendimento(a);
+                    fotos.forEach((foto, i) => {
                         const link = document.createElement('a');
                         link.href = foto;
-                        link.download = `${pastaNome}_${nomeBaseArquivo(a)}_foto.jpg`;
+                        link.download = `${pastaNome}_${nomeBaseArquivo(a)}_foto_${i + 1}.jpg`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                    }
+                    });
                 }
             }
             alert(`Download iniciado com prefixo "${pastaNome}_". No PC use Chrome/Edge para pasta fixa.`);
@@ -1898,7 +2008,7 @@
             document.getElementById('in_km').value = '';
             document.getElementById('in_estado').value = '';
             document.getElementById('in_servicos').value = '';
-            removerFoto();
+            limparTodasFotos();
             preencherDataHoje();
             updatePlate();
             cancelarEdicaoAtendimento();
@@ -2072,6 +2182,9 @@
                     const antigo = vg.atendimentos[idx];
                     atendimento.dataRegistro = antigo.dataRegistro;
                     atendimento.id = antigo.id;
+                    atendimento.tokenAssinatura = antigo.tokenAssinatura;
+                    atendimento.assinaturaCliente = antigo.assinaturaCliente;
+                    atendimento.assinadoEm = antigo.assinadoEm;
                     vg.atendimentos[idx] = atendimento;
                 }
             } else {
@@ -2202,12 +2315,14 @@
                 document.getElementById('in_foto_galeria').click();
             });
             document.getElementById('in_foto_camera').addEventListener('change', (e) => {
-                if (e.target.files[0]) processarArquivoFoto(e.target.files[0]);
+                if (e.target.files[0]) processarArquivosFoto(e.target.files);
+                e.target.value = '';
             });
             document.getElementById('in_foto_galeria').addEventListener('change', (e) => {
-                if (e.target.files[0]) processarArquivoFoto(e.target.files[0]);
+                if (e.target.files.length) processarArquivosFoto(e.target.files);
+                e.target.value = '';
             });
-            document.getElementById('btn_remover_foto').addEventListener('click', removerFoto);
+            document.getElementById('btn_limpar_fotos').addEventListener('click', limparTodasFotos);
             document.getElementById('btn_pdf').addEventListener('click', gerarEspelhoPDF);
             document.getElementById('btn_backup').addEventListener('click', gerarBackupLocal);
             document.getElementById('btn_exportar_pasta').addEventListener('click', exportarPastaCliente);
@@ -2307,12 +2422,46 @@
                 await Promise.all(lista.prefixes.map(sub => apagarPastaStorageRecursiva(sub)));
             }
 
+            function stripBase64FotosCliente(cliente) {
+                const copia = JSON.parse(JSON.stringify(cliente));
+                for (const vg of copia.veiculos || []) {
+                    for (const a of vg.atendimentos || []) {
+                        if (a.foto && String(a.foto).startsWith('data:')) delete a.foto;
+                        if (a.fotos) {
+                            a.fotos = a.fotos.map(f => {
+                                const n = { id: f.id };
+                                if (f.url && String(f.url).startsWith('http')) n.url = f.url;
+                                return n;
+                            }).filter(f => f.url);
+                        }
+                        delete a.fotoUrl;
+                    }
+                }
+                return copia;
+            }
+
             async function uploadFotosCliente(cliente) {
                 const copia = JSON.parse(JSON.stringify(cliente));
+                for (const vg of copia.veiculos || []) {
+                    for (const a of vg.atendimentos || []) {
+                        if (a.foto && String(a.foto).startsWith('data:')) {
+                            if (!a.fotos) a.fotos = [];
+                            a.fotos.push({ id: 'legacy', data: a.foto });
+                            delete a.foto;
+                        }
+                        if (a.fotoUrl && !(a.fotos || []).some(f => f.url === a.fotoUrl)) {
+                            if (!a.fotos) a.fotos = [];
+                            a.fotos.push({ id: 'legacyu', url: a.fotoUrl });
+                        }
+                        delete a.fotoUrl;
+                    }
+                }
                 if (!storage) {
                     for (const vg of copia.veiculos || []) {
                         for (const a of vg.atendimentos || []) {
-                            if (a.foto && String(a.foto).startsWith('data:')) delete a.foto;
+                            for (const f of a.fotos || []) {
+                                if (f.data && String(f.data).startsWith('data:')) delete f.data;
+                            }
                         }
                     }
                     return copia;
@@ -2320,18 +2469,20 @@
                 const pastaSlug = slugCliente(cliente.nome);
                 for (const vg of copia.veiculos || []) {
                     for (const a of vg.atendimentos || []) {
-                        if (a.foto && String(a.foto).startsWith('data:')) {
+                        const basePath = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${a.placa}/${a.id}`;
+                        for (const f of a.fotos || []) {
+                            if (!f.data || !String(f.data).startsWith('data:')) continue;
                             try {
-                                const basePath = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${a.placa}/${a.id}`;
-                                const fotoRef = ref(storage, `${basePath}/foto.jpg`);
-                                await uploadString(fotoRef, a.foto, 'data_url');
-                                a.fotoUrl = await getDownloadURL(fotoRef);
-                                const orig = (cliente.veiculos || []).flatMap(v => v.atendimentos || []).find(x => x.id === a.id);
-                                if (orig) { orig.fotoUrl = a.fotoUrl; delete orig.foto; }
+                                const fotoRef = ref(storage, `${basePath}/foto_${f.id || 'x'}.jpg`);
+                                await uploadString(fotoRef, f.data, 'data_url');
+                                f.url = await getDownloadURL(fotoRef);
+                                const origAt = (cliente.veiculos || []).flatMap(v => v.atendimentos || []).find(x => x.id === a.id);
+                                const origF = origAt && (origAt.fotos || []).find(x => x.id === f.id);
+                                if (origF) { origF.url = f.url; delete origF.data; }
                             } catch (fotoErr) {
                                 console.warn('Foto não enviada (Storage):', fotoErr.code || fotoErr.message);
                             }
-                            delete a.foto;
+                            delete f.data;
                         }
                     }
                 }
@@ -2349,7 +2500,13 @@
             }
 
             function documentoParaAssinatura(cliente, atendimento) {
-                const foto = atendimento.fotoUrl || (atendimento.foto && String(atendimento.foto).startsWith('http') ? atendimento.foto : null);
+                const urls = [];
+                if (atendimento.fotoUrl && String(atendimento.fotoUrl).startsWith('http')) urls.push(atendimento.fotoUrl);
+                if (atendimento.foto && String(atendimento.foto).startsWith('http')) urls.push(atendimento.foto);
+                for (const f of atendimento.fotos || []) {
+                    if (f.url && String(f.url).startsWith('http')) urls.push(f.url);
+                }
+                const fotosUrls = [...new Set(urls)];
                 return {
                     responsavel: atendimento.responsavel || '',
                     carro: atendimento.carro || '',
@@ -2362,7 +2519,8 @@
                     estadoChegada: atendimento.estadoChegada || '',
                     servicosRealizados: atendimento.servicosRealizados || '',
                     dataRegistro: atendimento.dataRegistro || '',
-                    fotoUrl: foto || null
+                    fotoUrl: fotosUrls[0] || null,
+                    fotosUrls
                 };
             }
 
@@ -2411,9 +2569,15 @@
                         payload.assinadoEm = prev.assinadoEm;
                     }
                     await setDoc(refDoc, payload, { merge: true });
-                    cliente.atualizadoEm = new Date().toISOString();
-                    const r = await window.salvarClienteNuvem(cliente);
-                    if (!r.ok) return { ok: false, motivo: r.motivo };
+                    atendimento.tokenAssinatura = token;
+                    try {
+                        const leve = stripBase64FotosCliente(cliente);
+                        leve.pastaSlug = slugCliente(cliente.nome);
+                        leve.atualizadoEm = new Date().toISOString();
+                        await setDoc(doc(db, COLECAO_NUVEM, cliente.id), leve, { merge: true });
+                    } catch (syncErr) {
+                        console.warn('Sync leve após link:', syncErr);
+                    }
                     const base = location.href.replace(/[^/]*$/, '');
                     const link = base + 'assinar.html?t=' + encodeURIComponent(token);
                     return { ok: true, link, token, jaAssinado: !!prev.assinaturaCliente };
@@ -2649,9 +2813,18 @@
 
             window.dispatchEvent(new Event('nuvem-pronta'));
         } catch (e) {
-            console.info('Firebase não configurado — nuvem/login desativados.', e);
+            console.error('Firebase não carregou:', e);
             const loginErro = document.getElementById('login_erro');
-            if (loginErro) loginErro.textContent = 'Firebase não configurado. Configure firebase-env.js ou o deploy no GitHub.';
+            const viaArquivo = location.protocol === 'file:';
+            let msg = 'Firebase não carregou. ';
+            if (viaArquivo) {
+                msg += 'Abra pelo site https://netikis.github.io/CONTROLCAR/ ou use Live Server na pasta do projeto.';
+            } else if (!e.message?.includes('fetch')) {
+                msg += 'Atualize firebase-env.js local ou rode o deploy no GitHub Actions.';
+            } else {
+                msg += 'Verifique internet e tente de novo.';
+            }
+            if (loginErro) loginErro.textContent = msg;
             if (window.atualizarStatusNuvem) {
                 window.atualizarStatusNuvem('<strong>Nuvem:</strong> offline — rode o GitHub Actions ou crie firebase-env.js local.', false);
             }
