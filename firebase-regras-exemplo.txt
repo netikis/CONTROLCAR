@@ -1,0 +1,90 @@
+// Regras para o projeto gestaodeclientes-7f8f0 (mesmo Firebase do Gestão de Clientes).
+
+// NÃO apague as regras que já existem — ADICIONE estes blocos dentro delas.
+
+
+
+// ========== FIRESTORE ==========
+
+// Firebase Console → Firestore Database → Regras
+
+
+
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+
+
+    // ... suas regras atuais (clientes, usuarios, catalogo, config, etc.) ...
+
+
+
+    // Controle de Veículos (app separado — não mistura com clientes do balcão)
+
+    match /controle_veiculos_clientes/{clienteId} {
+
+      allow read, write: if true;
+
+    }
+
+    match /controle_veiculos_excluidos/{clienteId} {
+
+      allow read, write: if true;
+
+    }
+
+    match /controle_veiculos_usuarios/{userId} {
+
+      allow read, write: if true;
+
+    }
+
+    match /controle_veiculos_assinaturas/{token} {
+
+      allow read, write: if true;
+
+    }
+
+  }
+
+}
+
+
+
+// ========== STORAGE ==========
+
+// Firebase Console → Storage → Regras
+
+// (Storage precisa estar ATIVADO no projeto)
+
+
+
+rules_version = '2';
+
+service firebase.storage {
+
+  match /b/{bucket}/o {
+
+
+
+    // ... suas regras atuais ...
+
+
+
+    match /controle_veiculos/{allPaths=**} {
+
+      allow read, write: if true;
+
+    }
+
+  }
+
+}
+
+
+
+// Depois de testar, restrinja por login (auth != null) se quiser mais segurança.
+
