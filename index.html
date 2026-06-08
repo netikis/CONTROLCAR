@@ -51,6 +51,98 @@
             margin-top: 4px;
             margin-bottom: 10px;
         }
+        .app-header-compact {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #222;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: min(100%, 220px);
+        }
+        .app-header-compact .app-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+        }
+        .app-header-compact .app-logo-img {
+            height: 52px;
+            max-width: 160px;
+            width: auto;
+        }
+        .app-header-compact .main-title {
+            text-align: left;
+            font-size: clamp(0.85rem, 2.5vw, 1.15rem);
+            width: auto;
+            flex: 1;
+        }
+        .header-acoes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .barra-usuario.barra-compact {
+            width: auto;
+            max-width: none;
+            margin: 0;
+            padding: 6px 12px;
+        }
+        .config-rodape-wrap {
+            width: 100%;
+            max-width: 1480px;
+            margin: 20px auto 16px;
+            padding-top: 12px;
+            border-top: 2px solid #333;
+        }
+        .config-rodape-wrap > summary {
+            cursor: pointer;
+            color: #888;
+            font-size: 0.78rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 4px;
+            list-style: none;
+        }
+        .config-rodape-wrap > summary::-webkit-details-marker { display: none; }
+        .config-rodape-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .config-rodape-grid .pasta-config,
+        .config-rodape-grid .logo-config,
+        .config-rodape-grid .painel-usuarios,
+        .config-rodape-grid .pwa-install-bar,
+        .config-rodape-grid .pwa-ios-hint {
+            width: 100%;
+            max-width: none;
+            margin-bottom: 0;
+            padding: 10px 12px;
+        }
+        .config-rodape-grid .pasta-config p { font-size: 0.72rem; min-width: 0; }
+        .config-rodape-grid .nuvem-config .btn-sync,
+        .config-rodape-grid .btn-pasta-config {
+            padding: 8px 10px;
+            font-size: 0.68rem;
+        }
+        .config-rodape-grid .pwa-install-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .config-rodape-grid .pwa-install-bar .pwa-texto { min-width: 0; font-size: 0.72rem; }
+        .config-card-full { grid-column: 1 / -1; }
         .app-logo {
             width: 72px;
             height: 72px;
@@ -121,6 +213,7 @@
             text-transform: uppercase; cursor: pointer;
         }
         .btn-instalar-header:hover { background: #218838; }
+        .app-header-compact .btn-instalar-header { margin-top: 0; }
         .pwa-ios-hint {
             width: 100%;
             max-width: var(--app-max);
@@ -321,6 +414,94 @@
             font-size: 0.7rem; font-weight: bold; cursor: pointer; line-height: 1;
         }
         .fotos-contador { color: #888; font-size: 0.75rem; margin-top: 4px; }
+        .valores-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .item-valor-row {
+            display: grid; grid-template-columns: 1fr minmax(88px, 110px) 32px; gap: 6px; align-items: center;
+        }
+        .item-valor-row input { padding: 8px; border-radius: 5px; border: 1px solid #555; background: #111; color: #fff; font-size: 0.85rem; }
+        .btn-remover-item {
+            width: 32px; height: 32px; border: none; border-radius: 5px; background: #dc3545; color: #fff;
+            font-size: 1.1rem; cursor: pointer; line-height: 1;
+        }
+        .valores-total {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 12px; padding: 12px 14px; background: #0d2818; border: 1px solid #28a745;
+            border-radius: 6px; font-size: 1rem;
+        }
+        .valores-total strong { color: #5dd879; font-size: 1.15rem; }
+        .valores-resumo-hist { color: #5dd879; font-size: 0.75rem; margin-top: 4px; }
+        .atendimento-item.selecionado { border-color: #007bff; background: #0a1520; }
+        .app-shell {
+            display: flex;
+            gap: 14px;
+            width: 100%;
+            max-width: 1480px;
+            align-items: flex-start;
+        }
+        .menu-lateral {
+            width: min(300px, 36%);
+            flex-shrink: 0;
+            background: #0d0d0d;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 10px;
+            max-height: calc(100dvh - 110px);
+            overflow-y: auto;
+            position: sticky;
+            top: 8px;
+        }
+        .menu-nav { display: flex; flex-direction: column; gap: 4px; }
+        .menu-item {
+            display: block; width: 100%; text-align: left;
+            padding: 11px 12px; border: 1px solid #333; border-radius: 6px;
+            background: #1a1a1a; color: #ddd; font-size: 0.78rem; font-weight: bold;
+            text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+        }
+        .menu-item:hover { border-color: #007bff; color: #fff; }
+        .menu-item.ativo { background: #007bff; border-color: #007bff; color: #fff; }
+        .menu-item.menu-sub { padding-left: 18px; font-size: 0.72rem; font-weight: 600; text-transform: none; }
+        .menu-divisor {
+            margin: 10px 0 6px; padding: 6px 8px 2px;
+            font-size: 0.7rem; font-weight: bold; color: #5dd879;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .menu-acoes {
+            margin-top: 12px; padding-top: 12px; border-top: 1px solid #333;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .menu-acoes .btn { font-size: 0.72rem; padding: 11px; min-height: 42px; }
+        .menu-lista-titulo {
+            font-size: 0.65rem; color: #888; text-transform: uppercase;
+            margin: 12px 0 6px; font-weight: bold;
+        }
+        .menu-lateral .cliente-lista { max-height: min(200px, 28vh); margin-top: 0; }
+        .painel-direito {
+            flex: 1; min-width: 0;
+            max-height: calc(100dvh - 110px);
+            overflow-y: auto;
+        }
+        .secao-painel { display: none; animation: fadeSec 0.2s ease; }
+        .secao-painel.ativa { display: block; }
+        @keyframes fadeSec { from { opacity: 0; } to { opacity: 1; } }
+        .secao-titulo {
+            font-size: 1.15rem; color: #007bff; text-transform: uppercase;
+            margin-bottom: 14px; letter-spacing: 0.5px; padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+        .nav-tabs { display: none !important; }
+        .layout-dica { display: none !important; }
+        @media (min-width: 769px) {
+            .painel-direito .button-zone { display: none; }
+        }
+        @media (max-width: 768px) {
+            .app-shell { flex-direction: column; }
+            .menu-lateral {
+                width: 100%; max-height: none; position: static;
+                max-height: 45vh;
+            }
+            .painel-direito { max-height: none; min-height: 50vh; }
+            .menu-lateral .cliente-lista { max-height: 120px; }
+        }
         .photo-preview.visivel { display: block; }
         input[type="file"] { display: none; }
         .button-zone {
@@ -358,6 +539,7 @@
         .btn-sm-edit { background: #ffc107; color: #000; }
         .btn-sm-print { background: #dc3545; color: #fff; }
         .btn-sm-assinar { background: #6f42c1; color: #fff; }
+        .btn-sm-excluir { background: #dc3545; color: #fff; }
         .badge-assinado { background: #155724; color: #5dd879; font-size: 0.65rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
         .badge-pendente { background: #664d03; color: #ffc107; font-size: 0.65rem; padding: 2px 6px; border-radius: 8px; margin-left: 6px; }
         .modal-link-input {
@@ -430,6 +612,8 @@
         .pasta-config p strong { color: #5dd879; }
         .pasta-config p.aviso { color: #ffcc80; }
         .nuvem-config { border-color: #007bff; background: #0a1520; }
+        .nuvem-config.modo-local { border-color: #ffc107; background: #2a2200; }
+        .nuvem-config.modo-local p { color: #ffe082; }
         .nuvem-config.ok p strong { color: #5dd879; }
         .nuvem-config.erro p strong { color: #ff6b6b; }
         .nuvem-config .btn-sync {
@@ -552,10 +736,18 @@
         .mirror-print-section { display: none; }
         @media print {
             body { background: #f4f6f9 !important; color: #000000 !important; padding: 0; margin: 0; }
-            .nav-tabs, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config, .login-screen, .barra-usuario, .painel-usuarios { display: none !important; }
+            .nav-tabs, .menu-lateral, .menu-acoes, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config, .logo-config, .toast-salvar, .login-screen, .barra-usuario, .painel-usuarios, .pwa-desktop-passos, .config-rodape-wrap { display: none !important; }
             .mirror-print-section {
                 display: block !important; width: 100%; max-width: 800px;
                 margin: 0 auto; padding: 30px; background: #ffffff;
+            }
+            .print-logo-wrap {
+                text-align: center; background: #ffffff; padding: 12px 20px 0;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .print-logo-empresa {
+                max-height: 90px; max-width: 320px; width: auto; height: auto;
+                object-fit: contain; display: block; margin: 0 auto 8px;
             }
             .print-header {
                 text-align: center; background: #111; color: #fff;
@@ -604,134 +796,76 @@
             </form>
         </div>
     </div>
-    <header class="app-header">
-        <img id="logo_empresa" class="app-logo-img oculto" alt="Paraná Peças">
-        <div id="logo_empresa_fallback" class="app-logo" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Paraná Peças">
-                <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#111"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
-                <rect width="512" height="512" rx="96" fill="url(#lg)"/>
-                <circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/>
-                <circle cx="256" cy="230" r="58" fill="#007bff"/>
-                <rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/>
-                <text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text>
-            </svg>
+    <header class="app-header app-header-compact">
+        <div class="header-brand">
+            <img id="logo_empresa" class="app-logo-img oculto" alt="Paraná Peças">
+            <div id="logo_empresa_fallback" class="app-logo" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Paraná Peças">
+                    <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#111"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
+                    <rect width="512" height="512" rx="96" fill="url(#lg)"/>
+                    <circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/>
+                    <circle cx="256" cy="230" r="58" fill="#007bff"/>
+                    <rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/>
+                    <text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text>
+                </svg>
+            </div>
+            <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
         </div>
-        <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
-        <button type="button" class="btn-instalar-header" id="btn_instalar_header" hidden>Instalar no Desktop / Celular</button>
+        <div class="header-acoes">
+            <div id="barra_usuario" class="barra-usuario barra-compact" hidden>
+                <span id="usuario_nome_perfil">Usuário</span>
+                <button type="button" class="btn-logout" id="btn_logout">Sair</button>
+            </div>
+            <button type="button" class="btn-instalar-header" id="btn_instalar_header" hidden>Instalar app</button>
+        </div>
     </header>
-    <div id="pwa_desktop_passos" class="pwa-desktop-passos">
-        <strong>Como instalar COM A LOGO na Área de Trabalho:</strong><br>
-        1. Apague o atalho antigo (ícone cinza/genérico) da Área de Trabalho.<br>
-        2. <strong>Chrome:</strong> menu ⋮ → <strong>Instalar Paraná Peças…</strong> (ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong>).<br>
-        3. <strong>Não use</strong> “Criar atalho…” — esse atalho fica sem a logo.<br>
-        4. <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>.
-    </div>
-    <div id="pwa_install_bar" class="pwa-install-bar" hidden>
-        <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
-            <img id="pwa_logo_img" src="icons/icon-192.png" alt="Paraná Peças">
-            <svg id="pwa_logo_fallback" class="oculto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
-        </div>
-        <div class="pwa-texto" id="pwa_install_texto">
-            <strong>Instalar aplicativo</strong>
-            Atalho com ícone da Paraná Peças na Área de Trabalho ou tela do celular
-        </div>
-        <div class="pwa-acoes">
-            <button type="button" class="btn btn-verde btn-instalar" id="btn_instalar_app">Instalar</button>
-            <button type="button" class="btn btn-outline btn-instalar" id="btn_ver_como_instalar">Como instalar</button>
-            <button type="button" class="btn btn-outline btn-instalar" id="btn_fechar_install">Depois</button>
-        </div>
-    </div>
-    <p id="pwa_ios_hint" class="pwa-ios-hint">
-        <strong>iPhone:</strong> toque em Compartilhar → <strong>Adicionar à Tela de Início</strong> para instalar o app com o ícone da Paraná Peças.
-    </p>
-    <div id="barra_usuario" class="barra-usuario" hidden>
-        <span id="usuario_nome_perfil">Usuário</span>
-        <button type="button" class="btn-logout" id="btn_logout">Sair</button>
-    </div>
-    <details class="painel-usuarios so-gestor" id="painel_usuarios">
-        <summary>Usuários do sistema (Gestor)</summary>
-        <p class="hint">Cadastre atendentes ou outros gestores. O primeiro login vira gestor automaticamente se ainda não houver nenhum.</p>
-        <div class="form-group">
-            <label for="novo_user_nome">Nome:</label>
-            <input type="text" id="novo_user_nome" placeholder="Ex: Maria Atendente">
-        </div>
-        <div class="form-group">
-            <label for="novo_user_email">E-mail (login):</label>
-            <input type="email" id="novo_user_email" placeholder="atendente@empresa.com">
-        </div>
-        <div class="form-group">
-            <label for="novo_user_senha">Senha:</label>
-            <input type="password" id="novo_user_senha" placeholder="Mínimo 6 caracteres" minlength="6">
-        </div>
-        <div class="form-group">
-            <label for="novo_user_perfil">Perfil:</label>
-            <select id="novo_user_perfil">
-                <option value="atendente">Atendente (sem excluir)</option>
-                <option value="gestor">Gestor (acesso total)</option>
-            </select>
-        </div>
-        <button type="button" class="btn btn-verde" id="btn_criar_usuario">Cadastrar usuário</button>
-    </details>
-    <div class="nav-tabs">
-        <button type="button" class="nav-tab active" data-panel="panelClientes">1. Clientes</button>
-        <button type="button" class="nav-tab" data-panel="panelHistorico">2. Histórico</button>
-        <button type="button" class="nav-tab" data-panel="panelVeiculo">3. Atendimento</button>
-    </div>
-    <div class="pasta-config nuvem-config" id="nuvem_config_box">
-        <p id="nuvem_status_texto"><strong>Nuvem:</strong> conectando celular e PC…</p>
-        <button type="button" class="btn-sync" id="btn_sync_nuvem">Sincronizar agora</button>
-    </div>
-    <div class="pasta-config">
-        <p id="pasta_status_texto">Pasta no PC: não configurada</p>
-        <button type="button" class="btn-pasta-config" id="btn_config_pasta">Escolher pasta no PC</button>
-    </div>
-    <details class="logo-config">
-        <summary>Logo da empresa (link da imagem)</summary>
-        <p class="hint">Cole o link direto da sua logo (PNG/JPG/WebP, HTTPS). O app baixa e usa automaticamente — pode ser imagem grande.</p>
-        <div class="form-group">
-            <label for="logo_url_input">Link da imagem:</label>
-            <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png" value="https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png">
-        </div>
-        <button type="button" class="btn btn-verde" id="btn_salvar_logo" style="margin-top:4px;">Salvar logo</button>
-        <button type="button" class="btn btn-outline" id="btn_remover_logo" style="margin-top:8px;">Usar logo padrão</button>
-        <div class="logo-preview-wrap" id="logo_preview_wrap" style="display:none;">
-            <img id="logo_preview_img" alt="Preview logo">
-        </div>
-    </details>
-    <!-- PAINEL CLIENTES -->
-    <div id="panelClientes" class="panel active">
-        <div class="screen-container">
-            <div class="quadro quadro-verde">
-                <h2>Cadastro de Cliente</h2>
-                <form id="clienteForm">
-                    <div class="form-group">
-                        <label>Nome do Cliente:</label>
-                        <input type="text" id="novo_cliente_nome" placeholder="Ex: Carlos Souza" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone (opcional):</label>
-                        <input type="tel" id="novo_cliente_tel" placeholder="Ex: (43) 99999-9999">
-                    </div>
-                    <button type="submit" class="btn btn-verde">Cadastrar Cliente</button>
-                </form>
+    <div class="app-shell" id="app_shell">
+        <aside class="menu-lateral" id="menu_lateral">
+            <nav class="menu-nav" id="menu_nav">
+                <button type="button" class="menu-item ativo" data-secao="sec_cadastro">Paraná — Cadastro de Cliente</button>
+                <button type="button" class="menu-item" data-secao="sec_historico">Histórico do Cliente</button>
+                <div class="menu-divisor">Serviço a Realizar</div>
+                <button type="button" class="menu-item menu-sub" data-secao="sec_cliente">Cliente e Responsável</button>
+                <button type="button" class="menu-item menu-sub" data-secao="sec_veiculo">Especificações do Veículo</button>
+                <button type="button" class="menu-item menu-sub" data-secao="sec_chegada">Chegada do Veículo</button>
+                <button type="button" class="menu-item menu-sub" data-secao="sec_servicos">Serviços Realizados</button>
+                <button type="button" class="menu-item menu-sub" data-secao="sec_fotos">Fotos e Registro</button>
+                <button type="button" class="menu-item menu-sub" data-secao="sec_valores">Valores — Peças e Mão de Obra</button>
+            </nav>
+            <div class="menu-acoes">
+                <button type="submit" form="vehicleForm" class="btn btn-enviar" id="btn_salvar_menu">Salvar Atendimento</button>
+                <button type="button" class="btn btn-pasta" id="btn_exportar_pasta_menu">Exportar Pasta do Cliente</button>
+                <button type="button" class="btn btn-pdf" id="btn_pdf_menu">Salvar Espelho Colorido (PDF)</button>
+                <button type="button" class="btn btn-backup" id="btn_backup_menu">Backup Desktop (.CSV)</button>
             </div>
-            <div class="quadro quadro-azul">
-                <h2>Clientes Cadastrados</h2>
-                <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">Toque no cliente para ver histórico, editar ou registrar novo atendimento.</p>
-                <div id="lista_clientes" class="cliente-lista">
-                    <div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>
-                </div>
+            <p class="menu-lista-titulo">Clientes cadastrados</p>
+            <div id="lista_clientes" class="cliente-lista">
+                <div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>
             </div>
-        </div>
-    </div>
-    <!-- PAINEL HISTÓRICO DO CLIENTE -->
-    <div id="panelHistorico" class="panel">
-        <div class="screen-container">
-            <div class="quadro quadro-azul">
-                <div class="historico-header">
-                    <h2 id="historico_titulo_cliente">Histórico do Cliente</h2>
+        </aside>
+        <main class="painel-direito" id="painel_direito">
+            <!-- CADASTRO -->
+            <div id="sec_cadastro" class="secao-painel ativa">
+                <h2 class="secao-titulo">Paraná — Cadastro de Cliente</h2>
+                <div class="quadro quadro-verde">
+                    <form id="clienteForm">
+                        <div class="form-group">
+                            <label>Nome do Cliente:</label>
+                            <input type="text" id="novo_cliente_nome" placeholder="Ex: Carlos Souza" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone (opcional):</label>
+                            <input type="tel" id="novo_cliente_tel" placeholder="Ex: (43) 99999-9999">
+                        </div>
+                        <button type="submit" class="btn btn-verde">Cadastrar Cliente</button>
+                    </form>
                 </div>
-                <p id="historico_sem_cliente" style="color:#888;">Selecione um cliente na aba Clientes.</p>
+                <p style="color:#888;font-size:0.8rem;margin-top:12px;">Toque em um cliente na lista à esquerda para ver histórico e registrar atendimento.</p>
+            </div>
+            <!-- HISTÓRICO -->
+            <div id="sec_historico" class="secao-painel">
+                <h2 class="secao-titulo" id="historico_titulo_cliente">Histórico do Cliente</h2>
+                <p id="historico_sem_cliente" style="color:#888;">Selecione um cliente na lista à esquerda.</p>
                 <div id="historico_conteudo" style="display:none;">
                     <div class="btn-row" style="margin-bottom:15px;">
                         <button type="button" class="btn btn-verde" id="btn_novo_atendimento" style="flex:1;">+ Novo Atendimento</button>
@@ -742,113 +876,141 @@
                     <p id="historico_vazio" class="cliente-vazio" style="display:none;">Nenhum veículo registrado para este cliente.</p>
                 </div>
             </div>
-        </div>
-    </div>
-    <!-- PAINEL VEÍCULO / ATENDIMENTO -->
-    <div id="panelVeiculo" class="panel">
-        <div class="screen-container">
-            <div id="alerta_sem_cliente" class="alerta-cliente visivel">
-                Selecione um cliente na aba <strong>Clientes</strong> antes de preencher o atendimento.
-            </div>
-            <div id="modo_form_banner" class="modo-form-banner">
-                <span id="modo_form_texto">Modo edição</span>
-                <button type="button" class="btn-voltar-historico" id="btn_voltar_historico">← Voltar ao Histórico</button>
-            </div>
+            <!-- ATENDIMENTO (formulário único — seções separadas no menu) -->
             <form id="vehicleForm">
-                <div class="quadro quadro-azul">
-                    <h2>Cliente Selecionado</h2>
-                    <div class="form-group">
-                        <label>Nome do Cliente:</label>
-                        <input type="text" id="in_cliente" readonly placeholder="Selecione na aba Clientes">
-                    </div>
-                    <div class="form-group">
-                        <label>Responsável pelo conserto:</label>
-                        <input type="text" id="in_responsavel" placeholder="Quem vai executar o serviço?" required>
+                <div id="alerta_sem_cliente" class="alerta-cliente visivel">
+                    Selecione um cliente na lista à esquerda antes de preencher o atendimento.
+                </div>
+                <div id="modo_form_banner" class="modo-form-banner">
+                    <span id="modo_form_texto">Modo edição</span>
+                    <button type="button" class="btn-voltar-historico" id="btn_voltar_historico">← Voltar ao Histórico</button>
+                </div>
+                <div id="sec_cliente" class="secao-painel">
+                    <h2 class="secao-titulo">Cliente e Responsável</h2>
+                    <div class="quadro quadro-azul">
+                        <div class="form-group">
+                            <label>Nome do Cliente:</label>
+                            <input type="text" id="in_cliente" readonly placeholder="Selecione na lista">
+                        </div>
+                        <div class="form-group">
+                            <label>Responsável pelo conserto:</label>
+                            <input type="text" id="in_responsavel" placeholder="Quem vai executar o serviço?" required>
+                        </div>
                     </div>
                 </div>
-                <div class="quadro quadro-vermelho">
-                    <h2>Especificações do Veículo</h2>
-                    <div class="form-group">
-                        <label>Carro (Modelo / Marca):</label>
-                        <input type="text" id="in_carro" placeholder="Ex: Chevrolet Onix" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Cidade / UF (Para a Placa):</label>
-                        <input type="text" id="in_cidade" placeholder="Ex: Ibaiti / PR">
-                    </div>
-                    <div class="form-group">
-                        <label>Placa (Mercosul):</label>
-                        <input type="text" id="in_placa" placeholder="ABC1D23" maxlength="7" style="text-transform: uppercase;" required>
-                        <div class="mini-plate-wrapper">
-                            <div class="mercosul-plate-mini">
-                                <div class="plate-header-mini">
-                                    <span style="color:#fff; font-size:0.4rem;">★★★★★</span>
-                                    <span class="brasil-text-mini">BRASIL</span>
-                                    <div style="width:10px; height:7px; background:#009c3b; border:0.5px solid #fff;"></div>
-                                </div>
-                                <div class="plate-body-mini">
-                                    <div class="plate-location-mini" id="plate_loc_mini">CIDADE / UF</div>
-                                    <div class="plate-number-mini" id="plate_num_mini">PLACA</div>
+                <div id="sec_veiculo" class="secao-painel">
+                    <h2 class="secao-titulo">Especificações do Veículo</h2>
+                    <div class="quadro quadro-vermelho">
+                        <div class="form-group">
+                            <label>Carro (Modelo / Marca):</label>
+                            <input type="text" id="in_carro" placeholder="Ex: Chevrolet Onix" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade / UF (Para a Placa):</label>
+                            <input type="text" id="in_cidade" placeholder="Ex: Ibaiti / PR">
+                        </div>
+                        <div class="form-group">
+                            <label>Placa (Mercosul):</label>
+                            <input type="text" id="in_placa" placeholder="ABC1D23" maxlength="7" style="text-transform: uppercase;" required>
+                            <div class="mini-plate-wrapper">
+                                <div class="mercosul-plate-mini">
+                                    <div class="plate-header-mini">
+                                        <span style="color:#fff; font-size:0.4rem;">★★★★★</span>
+                                        <span class="brasil-text-mini">BRASIL</span>
+                                        <div style="width:10px; height:7px; background:#009c3b; border:0.5px solid #fff;"></div>
+                                    </div>
+                                    <div class="plate-body-mini">
+                                        <div class="plate-location-mini" id="plate_loc_mini">CIDADE / UF</div>
+                                        <div class="plate-number-mini" id="plate_num_mini">PLACA</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Data de Entrada:</label>
-                        <div class="date-group">
-                            <input type="text" id="in_dia" placeholder="Dia" maxlength="2">
-                            <select id="in_mes">
-                                <option value="">Mês</option>
-                                <option value="01">Janeiro</option>
-                                <option value="02">Fevereiro</option>
-                                <option value="03">Março</option>
-                                <option value="04">Abril</option>
-                                <option value="05">Maio</option>
-                                <option value="06">Junho</option>
-                                <option value="07">Julho</option>
-                                <option value="08">Agosto</option>
-                                <option value="09">Setembro</option>
-                                <option value="10">Outubro</option>
-                                <option value="11">Novembro</option>
-                                <option value="12">Dezembro</option>
-                            </select>
-                            <input type="text" id="in_ano" placeholder="Ano" maxlength="4">
+                        <div class="form-group">
+                            <label>Data de Entrada:</label>
+                            <div class="date-group">
+                                <input type="text" id="in_dia" placeholder="Dia" maxlength="2">
+                                <select id="in_mes">
+                                    <option value="">Mês</option>
+                                    <option value="01">Janeiro</option>
+                                    <option value="02">Fevereiro</option>
+                                    <option value="03">Março</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Maio</option>
+                                    <option value="06">Junho</option>
+                                    <option value="07">Julho</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                                <input type="text" id="in_ano" placeholder="Ano" maxlength="4">
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Chassi:</label>
-                        <input type="text" id="in_chassi" placeholder="Número do Chassi">
-                    </div>
-                    <div class="form-group">
-                        <label>Cor:</label>
-                        <input type="text" id="in_cor" placeholder="Ex: Vermelho Metálico">
-                    </div>
-                    <div class="form-group">
-                        <label>Quilometragem (Km):</label>
-                        <input type="number" id="in_km" placeholder="Ex: 85000">
+                        <div class="form-group">
+                            <label>Chassi:</label>
+                            <input type="text" id="in_chassi" placeholder="Número do Chassi">
+                        </div>
+                        <div class="form-group">
+                            <label>Cor:</label>
+                            <input type="text" id="in_cor" placeholder="Ex: Vermelho Metálico">
+                        </div>
+                        <div class="form-group">
+                            <label>Quilometragem (Km):</label>
+                            <input type="number" id="in_km" placeholder="Ex: 85000">
+                        </div>
                     </div>
                 </div>
-                <div class="quadro quadro-branco">
-                    <h2>Quadro de Chegada & Serviços</h2>
-                    <div class="form-group">
-                        <label>Como o carro veio? (Checklist de Chegada):</label>
-                        <textarea id="in_estado" rows="3" placeholder="Especifique arranhões, peças soltas, nível de combustível..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Serviços Realizados (Ou a realizar):</label>
-                        <textarea id="in_servicos" rows="4" placeholder="Descreva os serviços executados, peças trocadas, etc..."></textarea>
-                    </div>
-                    <div class="form-group photo-zone">
-                        <label>Fotos do Veículo:</label>
-                        <div class="photo-buttons">
-                            <button type="button" class="btn-foto" id="btn_tirar_foto">Tirar Foto</button>
-                            <button type="button" class="btn-foto" id="btn_galeria">Galeria / Arquivo</button>
-                            <button type="button" class="btn-foto" id="btn_limpar_fotos" style="display:none;">Limpar todas</button>
+                <div id="sec_chegada" class="secao-painel">
+                    <h2 class="secao-titulo">Chegada do Veículo</h2>
+                    <div class="quadro quadro-branco">
+                        <div class="form-group">
+                            <label>Como o carro veio? (Checklist de Chegada):</label>
+                            <textarea id="in_estado" rows="6" placeholder="Especifique arranhões, peças soltas, nível de combustível, estado dos pneus..."></textarea>
                         </div>
-                        <input type="file" id="in_foto_camera" accept="image/*" capture="environment">
-                        <input type="file" id="in_foto_galeria" accept="image/*" multiple>
-                        <p class="fotos-contador" id="fotos_contador">Nenhuma foto</p>
-                        <div id="fotos_galeria" class="fotos-galeria"></div>
+                    </div>
+                </div>
+                <div id="sec_servicos" class="secao-painel">
+                    <h2 class="secao-titulo">Serviços Realizados</h2>
+                    <div class="quadro quadro-branco">
+                        <div class="form-group">
+                            <label>Serviços Realizados (Ou a realizar):</label>
+                            <textarea id="in_servicos" rows="8" placeholder="Descreva os serviços executados, peças trocadas, observações..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div id="sec_fotos" class="secao-painel">
+                    <h2 class="secao-titulo">Fotos e Registro do Veículo</h2>
+                    <div class="quadro quadro-branco">
+                        <div class="form-group photo-zone">
+                            <label>Fotos do Veículo:</label>
+                            <div class="photo-buttons">
+                                <button type="button" class="btn-foto" id="btn_tirar_foto">Tirar Foto</button>
+                                <button type="button" class="btn-foto" id="btn_galeria">Galeria / Arquivo</button>
+                                <button type="button" class="btn-foto" id="btn_limpar_fotos" style="display:none;">Limpar todas</button>
+                            </div>
+                            <input type="file" id="in_foto_camera" accept="image/*" capture="environment">
+                            <input type="file" id="in_foto_galeria" accept="image/*" multiple>
+                            <p class="fotos-contador" id="fotos_contador">Nenhuma foto</p>
+                            <div id="fotos_galeria" class="fotos-galeria"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="sec_valores" class="secao-painel">
+                    <h2 class="secao-titulo">Valores — Peças e Mão de Obra</h2>
+                    <div class="quadro quadro-verde">
+                        <p style="color:#aaa;font-size:0.75rem;margin-bottom:10px;">Liste o que foi trocado com valor. O total soma peças + mão de obra.</p>
+                        <div id="lista_itens_valores" class="valores-lista"></div>
+                        <button type="button" class="btn btn-outline" id="btn_add_item_valor" style="width:100%;margin-bottom:12px;">+ Adicionar peça / item</button>
+                        <div class="form-group">
+                            <label>Mão de obra (R$):</label>
+                            <input type="text" id="in_mao_obra" inputmode="decimal" placeholder="0,00" autocomplete="off">
+                        </div>
+                        <div class="valores-total">
+                            <span>Valor total</span>
+                            <strong id="lbl_valor_total">R$ 0,00</strong>
+                        </div>
                     </div>
                 </div>
                 <div class="button-zone">
@@ -859,10 +1021,88 @@
                     <button type="button" class="btn btn-backup" id="btn_backup">Backup Desktop (.CSV)</button>
                 </div>
             </form>
-        </div>
+        </main>
     </div>
+    <details class="config-rodape-wrap" id="config_rodape">
+        <summary>Configurações — nuvem, pasta, logo, usuários e instalação</summary>
+        <div class="config-rodape-grid">
+            <div class="pasta-config nuvem-config" id="nuvem_config_box">
+                <p id="nuvem_status_texto"><strong>Nuvem:</strong> conectando celular e PC…</p>
+                <button type="button" class="btn-sync" id="btn_sync_nuvem">Sincronizar agora</button>
+            </div>
+            <div class="pasta-config">
+                <p id="pasta_status_texto">Pasta no PC: não configurada</p>
+                <button type="button" class="btn-pasta-config" id="btn_config_pasta">Escolher pasta no PC</button>
+            </div>
+            <details class="logo-config">
+                <summary>Logo da empresa (link da imagem)</summary>
+                <p class="hint">Cole o link direto da sua logo (PNG/JPG/WebP, HTTPS). O app baixa e usa automaticamente — pode ser imagem grande.</p>
+                <div class="form-group">
+                    <label for="logo_url_input">Link da imagem:</label>
+                    <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png" value="https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png">
+                </div>
+                <button type="button" class="btn btn-verde" id="btn_salvar_logo" style="margin-top:4px;">Salvar logo</button>
+                <button type="button" class="btn btn-outline" id="btn_remover_logo" style="margin-top:8px;">Usar logo padrão</button>
+                <div class="logo-preview-wrap" id="logo_preview_wrap" style="display:none;">
+                    <img id="logo_preview_img" alt="Preview logo">
+                </div>
+            </details>
+            <details class="painel-usuarios so-gestor" id="painel_usuarios">
+                <summary>Usuários do sistema (Gestor)</summary>
+                <p class="hint">Cadastre atendentes ou outros gestores. O primeiro login vira gestor automaticamente se ainda não houver nenhum.</p>
+                <div class="form-group">
+                    <label for="novo_user_nome">Nome:</label>
+                    <input type="text" id="novo_user_nome" placeholder="Ex: Maria Atendente">
+                </div>
+                <div class="form-group">
+                    <label for="novo_user_email">E-mail (login):</label>
+                    <input type="email" id="novo_user_email" placeholder="atendente@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label for="novo_user_senha">Senha:</label>
+                    <input type="password" id="novo_user_senha" placeholder="Mínimo 6 caracteres" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="novo_user_perfil">Perfil:</label>
+                    <select id="novo_user_perfil">
+                        <option value="atendente">Atendente (sem excluir)</option>
+                        <option value="gestor">Gestor (acesso total)</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-verde" id="btn_criar_usuario">Cadastrar usuário</button>
+            </details>
+            <div id="pwa_install_bar" class="pwa-install-bar" hidden>
+                <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
+                    <img id="pwa_logo_img" src="icons/icon-192.png" alt="Paraná Peças">
+                    <svg id="pwa_logo_fallback" class="oculto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
+                </div>
+                <div class="pwa-texto" id="pwa_install_texto">
+                    <strong>Instalar aplicativo</strong>
+                    Atalho com ícone da Paraná Peças na Área de Trabalho ou tela do celular
+                </div>
+                <div class="pwa-acoes">
+                    <button type="button" class="btn btn-verde btn-instalar" id="btn_instalar_app">Instalar</button>
+                    <button type="button" class="btn btn-outline btn-instalar" id="btn_ver_como_instalar">Como instalar</button>
+                    <button type="button" class="btn btn-outline btn-instalar" id="btn_fechar_install">Depois</button>
+                </div>
+            </div>
+            <div id="pwa_desktop_passos" class="pwa-desktop-passos config-card-full">
+                <strong>Como instalar COM A LOGO na Área de Trabalho:</strong><br>
+                1. Apague o atalho antigo (ícone cinza/genérico) da Área de Trabalho.<br>
+                2. <strong>Chrome:</strong> menu ⋮ → <strong>Instalar Paraná Peças…</strong> (ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong>).<br>
+                3. <strong>Não use</strong> “Criar atalho…” — esse atalho fica sem a logo.<br>
+                4. <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>.
+            </div>
+            <p id="pwa_ios_hint" class="pwa-ios-hint config-card-full">
+                <strong>iPhone:</strong> toque em Compartilhar → <strong>Adicionar à Tela de Início</strong> para instalar o app com o ícone da Paraná Peças.
+            </p>
+        </div>
+    </details>
     <div id="toast_salvar" class="toast-salvar" role="status" aria-live="polite"></div>
     <div class="mirror-print-section">
+        <div class="print-logo-wrap" id="p_logo_wrap">
+            <img id="p_logo_empresa" class="print-logo-empresa" alt="Paraná Peças">
+        </div>
         <div class="print-header">
             <h1>PARANÁ PEÇAS</h1>
             <p>ESPELHO DE ENTRADA E SERVIÇOS</p>
@@ -925,6 +1165,10 @@
                     <span class="print-label">Serviços Realizados</span>
                     <span class="print-value" id="p_servicos" style="white-space: pre-wrap; font-size: 1rem; line-height: 1.4; color: #0056b3; font-weight: bold;">--</span>
                 </div>
+                <div class="print-field full-width" id="p_valores_wrap" style="display:none;">
+                    <span class="print-label">Valores</span>
+                    <div id="p_valores_conteudo" style="margin-top:8px;font-size:0.95rem;"></div>
+                </div>
                 <div class="print-field full-width" id="p_fotos_wrap" style="display:none;">
                     <span class="print-label">Fotos do Veículo</span>
                     <div id="p_fotos_galeria" class="fotos-galeria" style="margin-top:8px;"></div>
@@ -973,6 +1217,7 @@
         /* Link padrão da logo (opcional). Pode ser GitHub, Firebase Storage, Imgur, etc. */
         const LOGO_EMPRESA_URL_PADRAO = 'https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png';
         let fotosAtuais = [];
+        let itensValorAtuais = [];
         let clienteSelecionadoId = null;
         let atendimentoEditandoId = null;
         let modalAtendimentoAtual = null;
@@ -1288,12 +1533,152 @@
             if (isNaN(d)) return iso;
             return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
-        function irParaAba(panelId) {
-            document.querySelectorAll('.nav-tab').forEach(t => {
-                t.classList.toggle('active', t.dataset.panel === panelId);
+        const SECOES_SERVICO = ['sec_cliente', 'sec_veiculo', 'sec_chegada', 'sec_servicos', 'sec_fotos', 'sec_valores'];
+        const MAPA_ABA_SECAO = {
+            panelClientes: 'sec_cadastro',
+            panelHistorico: 'sec_historico',
+            panelVeiculo: 'sec_cliente'
+        };
+        function abrirSecao(secId) {
+            document.querySelectorAll('.secao-painel').forEach(s => s.classList.remove('ativa'));
+            const el = document.getElementById(secId);
+            if (el) el.classList.add('ativa');
+            document.querySelectorAll('.menu-item[data-secao]').forEach(m => {
+                m.classList.toggle('ativo', m.dataset.secao === secId);
             });
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(panelId).classList.add('active');
+            if (SECOES_SERVICO.includes(secId)) {
+                const alerta = document.getElementById('alerta_sem_cliente');
+                if (alerta) alerta.classList.toggle('visivel', !clienteSelecionadoId);
+            }
+            const painel = document.getElementById('painel_direito');
+            if (painel && window.innerWidth < 769) {
+                painel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        function irParaAba(panelId) {
+            abrirSecao(MAPA_ABA_SECAO[panelId] || panelId);
+        }
+        function parseMoeda(val) {
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            if (!val) return 0;
+            const s = String(val).trim().replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+            const n = parseFloat(s);
+            return isNaN(n) ? 0 : n;
+        }
+        function formatarMoeda(val) {
+            return (Number(val) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        function gerarIdItemValor() {
+            return 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        }
+        function normalizarOrcamento(a) {
+            if (!a) return;
+            if (a.orcamento) return;
+            if (a.valorPecas != null || a.valorMaoObra != null || a.valorTotal != null) {
+                a.orcamento = {
+                    itens: a.valorPecas ? [{ id: 'legado', descricao: 'Peças / itens', valor: parseMoeda(a.valorPecas) }] : [],
+                    valorMaoObra: parseMoeda(a.valorMaoObra),
+                    valorTotal: parseMoeda(a.valorTotal)
+                };
+            } else {
+                a.orcamento = { itens: [], valorMaoObra: 0, valorTotal: 0 };
+            }
+        }
+        function calcularTotalOrcamento(itens, maoObra) {
+            const somaItens = (itens || []).reduce((t, i) => t + parseMoeda(i.valor), 0);
+            return somaItens + parseMoeda(maoObra);
+        }
+        function resumoOrcamento(a) {
+            normalizarOrcamento(a);
+            const o = a.orcamento;
+            if (!o || (!o.itens.length && !o.valorMaoObra && !o.valorTotal)) return '';
+            return formatarMoeda(o.valorTotal || calcularTotalOrcamento(o.itens, o.valorMaoObra));
+        }
+        function renderizarItensValor() {
+            const lista = document.getElementById('lista_itens_valores');
+            if (!lista) return;
+            lista.innerHTML = '';
+            itensValorAtuais.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'item-valor-row';
+                row.innerHTML = `
+                    <input type="text" class="item-valor-desc" placeholder="Ex: Para-choque traseiro">
+                    <input type="text" class="item-valor-preco" inputmode="decimal" placeholder="0,00">
+                    <button type="button" class="btn-remover-item" title="Remover item">×</button>`;
+                row.querySelector('.item-valor-desc').value = item.descricao || '';
+                row.querySelector('.item-valor-preco').value = item.valor ? formatarMoeda(item.valor).replace(/^R\$\s?/, '') : '';
+                row.querySelector('.item-valor-desc').addEventListener('input', e => {
+                    item.descricao = e.target.value;
+                });
+                row.querySelector('.item-valor-preco').addEventListener('input', e => {
+                    item.valor = parseMoeda(e.target.value);
+                    atualizarTotalValores();
+                });
+                row.querySelector('.btn-remover-item').addEventListener('click', () => {
+                    itensValorAtuais.splice(idx, 1);
+                    renderizarItensValor();
+                    atualizarTotalValores();
+                });
+                lista.appendChild(row);
+            });
+            atualizarTotalValores();
+        }
+        function adicionarItemValor(descricao, valor) {
+            itensValorAtuais.push({
+                id: gerarIdItemValor(),
+                descricao: descricao || '',
+                valor: parseMoeda(valor)
+            });
+            renderizarItensValor();
+        }
+        function atualizarTotalValores() {
+            const mao = parseMoeda(document.getElementById('in_mao_obra')?.value);
+            const total = calcularTotalOrcamento(itensValorAtuais, mao);
+            const lbl = document.getElementById('lbl_valor_total');
+            if (lbl) lbl.textContent = formatarMoeda(total);
+            return total;
+        }
+        function carregarOrcamentoNoForm(a) {
+            normalizarOrcamento(a);
+            const o = a.orcamento || { itens: [], valorMaoObra: 0, valorTotal: 0 };
+            itensValorAtuais = (o.itens || []).map(i => ({
+                id: i.id || gerarIdItemValor(),
+                descricao: i.descricao || '',
+                valor: parseMoeda(i.valor)
+            }));
+            const inpMao = document.getElementById('in_mao_obra');
+            if (inpMao) inpMao.value = o.valorMaoObra ? formatarMoeda(o.valorMaoObra).replace(/^R\$\s?/, '') : '';
+            renderizarItensValor();
+        }
+        function limparOrcamentoForm() {
+            itensValorAtuais = [];
+            const inpMao = document.getElementById('in_mao_obra');
+            if (inpMao) inpMao.value = '';
+            renderizarItensValor();
+        }
+        function coletarOrcamento() {
+            const valorMaoObra = parseMoeda(document.getElementById('in_mao_obra')?.value);
+            const itens = itensValorAtuais.map(i => ({
+                id: i.id,
+                descricao: (i.descricao || '').trim(),
+                valor: parseMoeda(i.valor)
+            })).filter(i => i.descricao || i.valor);
+            const valorTotal = calcularTotalOrcamento(itens, valorMaoObra);
+            return { itens, valorMaoObra, valorTotal };
+        }
+        function htmlOrcamento(a) {
+            normalizarOrcamento(a);
+            const o = a.orcamento;
+            if (!o || (!o.itens.length && !o.valorMaoObra)) return '';
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.9rem;">';
+            (o.itens || []).forEach(i => {
+                html += `<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;">${escapeHtml(i.descricao || 'Item')}</td><td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right;">${formatarMoeda(i.valor)}</td></tr>`;
+            });
+            if (o.valorMaoObra) {
+                html += `<tr><td style="padding:4px 8px;border-bottom:1px solid #eee;"><strong>Mão de obra</strong></td><td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right;">${formatarMoeda(o.valorMaoObra)}</td></tr>`;
+            }
+            html += `<tr><td style="padding:8px;"><strong>Total</strong></td><td style="padding:8px;text-align:right;font-weight:bold;color:#0056b3;">${formatarMoeda(o.valorTotal || calcularTotalOrcamento(o.itens, o.valorMaoObra))}</td></tr></table>`;
+            return html;
         }
         function salvarDados(dados) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
@@ -1342,6 +1727,24 @@
             base.assinaturaCliente = a.assinaturaCliente || b.assinaturaCliente || null;
             base.assinadoEm = a.assinadoEm || b.assinadoEm || null;
             base.tokenAssinatura = a.tokenAssinatura || b.tokenAssinatura || null;
+            normalizarOrcamento(a);
+            normalizarOrcamento(b);
+            if (a.orcamento || b.orcamento) {
+                const ia = a.orcamento || { itens: [], valorMaoObra: 0 };
+                const ib = b.orcamento || { itens: [], valorMaoObra: 0 };
+                const mapItens = new Map();
+                ia.itens.forEach(i => { if (i.id) mapItens.set(i.id, i); });
+                ib.itens.forEach(i => {
+                    if (!i.id) return;
+                    const ex = mapItens.get(i.id);
+                    mapItens.set(i.id, ex ? { ...ex, ...i } : i);
+                });
+                base.orcamento = {
+                    itens: Array.from(mapItens.values()),
+                    valorMaoObra: ia.valorMaoObra || ib.valorMaoObra || 0,
+                    valorTotal: Math.max(ia.valorTotal || 0, ib.valorTotal || 0) || calcularTotalOrcamento(Array.from(mapItens.values()), ia.valorMaoObra || ib.valorMaoObra)
+                };
+            }
             return base;
         }
         function mesclarVeiculosProfundo(va, vb) {
@@ -1391,6 +1794,19 @@
                 map.set(c.id, mesclarClienteProfundo(existente, c));
             });
             return Array.from(map.values());
+        }
+        function ehModoLocalDev() {
+            const h = location.hostname;
+            return h === 'localhost' || h === '127.0.0.1';
+        }
+        function indicarModoLocalDev() {
+            if (!ehModoLocalDev()) return;
+            const box = document.getElementById('nuvem_config_box');
+            if (box) box.classList.add('modo-local');
+            atualizarStatusNuvem(
+                '<strong>Modo local (PC):</strong> arquivos desta pasta — edite, salve e F5. Publique no GitHub só quando estiver ok.',
+                true
+            );
         }
         function atualizarStatusNuvem(texto, ok) {
             const el = document.getElementById('nuvem_status_texto');
@@ -1570,7 +1986,7 @@
             } else {
                 mostrarToast(`Cliente "${cliente.nome}" excluído no aparelho.`, 'ok', 4000);
             }
-            irParaAba('panelClientes');
+            irParaAba('sec_cadastro');
         }
         function escapeHtml(text) {
             const d = document.createElement('div');
@@ -1587,9 +2003,11 @@
             document.getElementById('in_cliente').value = cliente.nome;
             cancelarEdicaoAtendimento();
             atualizarAlertaCliente();
+            const alerta = document.getElementById('alerta_sem_cliente');
+            if (alerta) alerta.classList.remove('visivel');
             renderListaClientes();
             renderHistoricoCliente();
-            irParaAba('panelHistorico');
+            abrirSecao('sec_historico');
         }
         function renderHistoricoCliente() {
             const semCliente = document.getElementById('historico_sem_cliente');
@@ -1620,12 +2038,15 @@
                 );
                 const itens = atendimentos.map(a => {
                     const resumo = a.servicosRealizados || a.estadoChegada || 'Sem descrição';
-                    return `<div class="atendimento-item" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">
+                    const val = resumoOrcamento(a);
+                    const sel = atendimentoEditandoId === a.id ? ' selecionado' : '';
+                    return `<div class="atendimento-item${sel}" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">
                         <div class="data-linha">${escapeHtml(a.dataEntrada || '—')} · ${formatarDataRegistro(a.dataRegistro)} ${badgeAssinatura(a)}</div>
-                        <div class="resumo"><strong>Resp:</strong> ${escapeHtml(a.responsavel || '—')}<br>${escapeHtml(resumo)}</div>
+                        <div class="resumo"><strong>Resp:</strong> ${escapeHtml(a.responsavel || '—')}<br>${escapeHtml(resumo)}${val ? `<div class="valores-resumo-hist">Total: ${val}</div>` : ''}</div>
                         <div class="btn-row">
                             <button type="button" class="btn-sm btn-sm-ver" data-acao="ver" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Ver</button>
                             <button type="button" class="btn-sm btn-sm-edit" data-acao="editar" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Editar</button>
+                            <button type="button" class="btn-sm btn-sm-excluir" data-acao="excluir" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Excluir</button>
                             <button type="button" class="btn-sm btn-sm-assinar" data-acao="link" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Link Assinar</button>
                             <button type="button" class="btn-sm btn-sm-print" data-acao="imprimir" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">PDF</button>
                         </div>
@@ -1659,6 +2080,7 @@
                     else if (acao === 'editar') carregarAtendimentoNoForm(placa, id);
                     else if (acao === 'link') abrirLinkAssinatura(placa, id);
                     else if (acao === 'imprimir') reimprimirAtendimento(placa, id);
+                    else if (acao === 'excluir') excluirAtendimento(placa, id);
                     else if (acao === 'nova-visita') iniciarNovaVisita(placa);
                 });
             });
@@ -1670,6 +2092,35 @@
             if (!vg) return null;
             const at = (vg.atendimentos || []).find(a => a.id === atendimentoId);
             return at ? { cliente, vg, atendimento: at } : null;
+        }
+        async function excluirAtendimento(placa, atendimentoId) {
+            const found = buscarAtendimento(placa, atendimentoId);
+            if (!found) return;
+            if (!confirm(`Excluir o atendimento de ${found.atendimento.dataEntrada || '—'} (${placa})?\n\nNão dá para desfazer.`)) return;
+            const dados = carregarDados();
+            const cliente = dados.clientes.find(c => c.id === found.cliente.id);
+            if (!cliente) return;
+            const vg = (cliente.veiculos || []).find(v => v.placa === placa);
+            if (!vg) return;
+            vg.atendimentos = (vg.atendimentos || []).filter(a => a.id !== atendimentoId);
+            if (!vg.atendimentos.length) {
+                cliente.veiculos = (cliente.veiculos || []).filter(v => v.placa !== placa);
+            }
+            cliente.atualizadoEm = new Date().toISOString();
+            salvarDados(dados);
+            if (atendimentoEditandoId === atendimentoId) {
+                cancelarEdicaoAtendimento();
+                limparFormVeiculo();
+            }
+            renderListaClientes();
+            renderHistoricoCliente();
+            mostrarToast('Excluindo… sincronizando nuvem', 'ok', 0);
+            const nuvem = await enviarClienteParaNuvemComTimeout(cliente);
+            mostrarToast(
+                nuvem.ok ? 'Atendimento excluído (aparelho + nuvem).' : `Excluído no aparelho.\nNuvem: ${nuvem.motivo || 'toque em Sincronizar'}`,
+                nuvem.ok ? 'ok' : 'aviso',
+                5000
+            );
         }
         function abrirVisualizacaoAtendimento(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
@@ -1690,10 +2141,16 @@
                 ['Estado de Chegada', a.estadoChegada || '—'],
                 ['Serviços Realizados', a.servicosRealizados || '—']
             ];
+            normalizarOrcamento(a);
+            if (a.orcamento && (a.orcamento.itens.length || a.orcamento.valorMaoObra)) {
+                campos.push(['Valores', resumoOrcamento(a)]);
+            }
             document.getElementById('modal_titulo').textContent = `Atendimento — ${a.placa} (${a.dataEntrada})`;
             let html = campos.map(([l, v]) =>
                 `<div class="modal-campo"><label>${escapeHtml(l)}</label><p>${escapeHtml(String(v))}</p></div>`
             ).join('');
+            const orcHtml = htmlOrcamento(a);
+            if (orcHtml) html += `<div class="modal-campo"><label>Detalhamento</label>${orcHtml}</div>`;
             const fotos = listarFotosAtendimento(a);
             if (fotos.length) {
                 html += `<div class="modal-campo"><label>Fotos (${fotos.length})</label><div class="fotos-galeria">${fotos.map(src => `<img src="${src}" class="modal-foto" alt="Foto">`).join('')}</div></div>`;
@@ -1730,6 +2187,7 @@
             document.getElementById('in_estado').value = a.estadoChegada || '';
             document.getElementById('in_servicos').value = a.servicosRealizados || '';
             carregarFotosNoForm(a);
+            carregarOrcamentoNoForm(a);
             updatePlate();
         }
         function gerarIdFoto() {
@@ -1780,17 +2238,21 @@
                 if (texto) texto.textContent = 'Editando atendimento — altere e toque em Salvar Alterações.';
                 banner.classList.add('visivel');
                 btnSalvar.textContent = 'Salvar Alterações';
+                const btnMenu = document.getElementById('btn_salvar_menu');
+                if (btnMenu) btnMenu.textContent = 'Salvar Alterações';
                 btnCancelar.style.display = 'block';
             } else {
                 banner.classList.remove('visivel');
                 btnSalvar.textContent = 'Salvar Novo Atendimento';
+                const btnMenu = document.getElementById('btn_salvar_menu');
+                if (btnMenu) btnMenu.textContent = 'Salvar Atendimento';
                 btnCancelar.style.display = 'none';
             }
         }
         function voltarAoHistorico() {
             cancelarEdicaoAtendimento();
             limparFormVeiculo();
-            irParaAba('panelHistorico');
+            abrirSecao('sec_historico');
         }
         function carregarAtendimentoNoForm(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
@@ -1799,7 +2261,8 @@
             preencherFormComAtendimento(found.atendimento, placa);
             document.getElementById('in_placa').readOnly = true;
             atualizarBannerModoForm();
-            irParaAba('panelVeiculo');
+            renderHistoricoCliente();
+            abrirSecao('sec_cliente');
         }
         function iniciarNovaVisita(placa) {
             const cliente = getClienteAtivo();
@@ -1818,16 +2281,17 @@
             }
             document.getElementById('in_placa').readOnly = true;
             updatePlate();
-            irParaAba('panelVeiculo');
+            abrirSecao('sec_cliente');
         }
         function iniciarNovoAtendimento() {
             if (!clienteSelecionadoId) {
-                alert('Selecione um cliente na aba Clientes.');
+                mostrarToast('Selecione um cliente na lista à esquerda.', 'aviso');
+                abrirSecao('sec_cadastro');
                 return;
             }
             cancelarEdicaoAtendimento();
             limparFormVeiculo();
-            irParaAba('panelVeiculo');
+            abrirSecao('sec_cliente');
         }
         function cancelarEdicaoAtendimento() {
             atendimentoEditandoId = null;
@@ -1870,6 +2334,15 @@
             } else if (wrapFotos) {
                 wrapFotos.style.display = 'none';
             }
+            const wrapValores = document.getElementById('p_valores_wrap');
+            const contValores = document.getElementById('p_valores_conteudo');
+            const orcHtml = htmlOrcamento(a);
+            if (orcHtml && wrapValores && contValores) {
+                contValores.innerHTML = orcHtml;
+                wrapValores.style.display = 'block';
+            } else if (wrapValores) {
+                wrapValores.style.display = 'none';
+            }
             const sigImg = document.getElementById('p_sig_cliente');
             const sigLabel = document.getElementById('p_sig_cliente_label');
             if (a.assinaturaCliente && sigImg) {
@@ -1880,6 +2353,7 @@
                 sigImg.style.display = 'none';
                 if (sigLabel) { sigLabel.style.display = 'block'; sigLabel.textContent = 'Assinatura do Cliente'; }
             }
+            aplicarLogoNoEspelhoImpressao();
             window.print();
         }
         async function comprimirImagem(file) {
@@ -1951,6 +2425,7 @@
                 km: document.getElementById('in_km').value,
                 estadoChegada: document.getElementById('in_estado').value.trim(),
                 servicosRealizados: document.getElementById('in_servicos').value.trim(),
+                orcamento: coletarOrcamento(),
                 fotos: fotosAtuais.map(f => ({ id: f.id, data: f.data || null, url: f.url || null })).filter(f => f.data || f.url),
                 dataRegistro: atendimentoEditandoId ? undefined : new Date().toISOString()
             };
@@ -2072,12 +2547,37 @@
             document.getElementById('in_estado').value = '';
             document.getElementById('in_servicos').value = '';
             limparTodasFotos();
+            limparOrcamentoForm();
             preencherDataHoje();
             updatePlate();
             cancelarEdicaoAtendimento();
         }
         function obterUrlLogoSalva() {
             return (localStorage.getItem(LOGO_STORAGE_KEY) || LOGO_EMPRESA_URL_PADRAO || '').trim();
+        }
+        function obterSrcLogoAtual() {
+            const imgApp = document.getElementById('logo_empresa');
+            if (imgApp && imgApp.src && !imgApp.classList.contains('oculto') && imgApp.src !== location.href) {
+                return imgApp.src;
+            }
+            const preview = document.getElementById('logo_preview_img');
+            if (preview && preview.src && preview.src !== location.href) return preview.src;
+            return obterUrlLogoSalva();
+        }
+        function aplicarLogoNoEspelhoImpressao() {
+            const img = document.getElementById('p_logo_empresa');
+            const wrap = document.getElementById('p_logo_wrap');
+            if (!img || !wrap) return;
+            const src = obterSrcLogoAtual();
+            if (src && /^https?:\/\//i.test(src)) {
+                img.src = src;
+                img.style.display = 'block';
+                wrap.style.display = 'block';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                wrap.style.display = 'none';
+            }
         }
         function mostrarLogoFallback(mostrar) {
             document.getElementById('logo_empresa_fallback').classList.toggle('oculto', !mostrar);
@@ -2122,6 +2622,7 @@
                 if (preview) { preview.src = alvo; previewWrap.style.display = 'block'; }
                 mostrarLogoFallback(false);
                 atualizarIconesNavegador(alvo);
+                aplicarLogoNoEspelhoImpressao();
             };
             teste.onerror = () => carregarLogoEmpresa(urls, idx + 1);
             teste.src = alvo + (alvo.includes('?') ? '&' : '?') + '_t=' + Date.now();
@@ -2168,8 +2669,16 @@
                 || window.matchMedia('(display-mode: window-controls-overlay)').matches
                 || window.navigator.standalone === true;
             const isDesktop = window.matchMedia('(pointer: fine)').matches && window.innerWidth >= 720;
+            function abrirConfigRodape() {
+                const cfg = document.getElementById('config_rodape');
+                if (cfg) cfg.open = true;
+            }
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
+                if (ehModoLocalDev()) {
+                    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+                } else {
+                    navigator.serviceWorker.register('./sw.js').catch(() => {});
+                }
             }
             if (isStandalone) {
                 if (bar) bar.hidden = true;
@@ -2179,14 +2688,16 @@
                 return;
             }
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            if (isIOS && iosHint) iosHint.classList.add('visivel');
+            if (isIOS && iosHint) { iosHint.classList.add('visivel'); abrirConfigRodape(); }
             function mostrarPassosInstalar() {
                 if (passos) passos.classList.add('visivel');
+                abrirConfigRodape();
                 passos.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
             function mostrarBarraInstall() {
                 if (!bar) return;
                 bar.hidden = false;
+                abrirConfigRodape();
                 if (isDesktop) bar.classList.add('pwa-desktop-visivel');
                 const texto = document.getElementById('pwa_install_texto');
                 if (texto) {
@@ -2262,6 +2773,7 @@
             updatePlate();
             atualizarStatusPastaUI();
             configurarPWA();
+            indicarModoLocalDev();
             aplicarLogoEmpresa();
             document.getElementById('btn_config_pasta').addEventListener('click', configurarPastaRaiz);
             document.getElementById('btn_salvar_logo').addEventListener('click', salvarLogoEmpresaUrl);
@@ -2281,25 +2793,27 @@
             ['in_cidade', 'in_placa'].forEach(id => {
                 document.getElementById(id).addEventListener('input', updatePlate);
             });
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    if (tab.dataset.panel === 'panelHistorico') renderHistoricoCliente();
-                    if (tab.dataset.panel === 'panelVeiculo' && !clienteSelecionadoId) {
-                        mostrarToast('Selecione um cliente na aba Clientes.', 'aviso');
-                        irParaAba('panelClientes');
+            document.querySelectorAll('.menu-item[data-secao]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const sec = btn.dataset.secao;
+                    if (SECOES_SERVICO.includes(sec) && !clienteSelecionadoId) {
+                        mostrarToast('Selecione um cliente na lista à esquerda.', 'aviso');
                         return;
                     }
-                    if (tab.dataset.panel === 'panelHistorico' && atendimentoEditandoId) {
+                    if (sec === 'sec_historico' && atendimentoEditandoId) {
                         voltarAoHistorico();
                         return;
                     }
-                    if (tab.dataset.panel !== 'panelVeiculo' && atendimentoEditandoId) {
-                        cancelarEdicaoAtendimento();
-                        limparFormVeiculo();
+                    if (sec !== 'sec_historico' && sec !== 'sec_cadastro' && atendimentoEditandoId && SECOES_SERVICO.includes(sec)) {
+                        /* permite editar outras seções do mesmo atendimento */
                     }
-                    irParaAba(tab.dataset.panel);
+                    if (sec === 'sec_historico') renderHistoricoCliente();
+                    abrirSecao(sec);
                 });
             });
+            document.getElementById('btn_exportar_pasta_menu').addEventListener('click', exportarPastaCliente);
+            document.getElementById('btn_pdf_menu').addEventListener('click', gerarEspelhoPDF);
+            document.getElementById('btn_backup_menu').addEventListener('click', gerarBackupLocal);
             document.getElementById('btn_novo_atendimento').addEventListener('click', iniciarNovoAtendimento);
             document.getElementById('btn_exportar_pasta_hist').addEventListener('click', exportarPastaCliente);
             document.getElementById('btn_excluir_cliente_hist').addEventListener('click', () => {
@@ -2371,6 +2885,8 @@
                     5000
                 );
             });
+            document.getElementById('btn_add_item_valor').addEventListener('click', () => adicionarItemValor('', 0));
+            document.getElementById('in_mao_obra').addEventListener('input', atualizarTotalValores);
             document.getElementById('btn_tirar_foto').addEventListener('click', () => {
                 document.getElementById('in_foto_camera').click();
             });
@@ -2422,7 +2938,7 @@
                     else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
                     mostrarToast(partes.join('\n'), nuvem.ok ? 'ok' : 'aviso', 6000);
                     limparFormVeiculo();
-                    irParaAba('panelHistorico');
+                    irParaAba('sec_historico');
                 } catch (err) {
                     console.error(err);
                     mostrarToast('Erro ao salvar. Tente de novo.', 'erro', 6000);
@@ -2600,6 +3116,7 @@
                     if (f.url && String(f.url).startsWith('http')) urls.push(f.url);
                 }
                 const fotosUrls = [...new Set(urls)];
+                const orc = atendimento.orcamento || null;
                 return {
                     responsavel: atendimento.responsavel || '',
                     carro: atendimento.carro || '',
@@ -2613,7 +3130,12 @@
                     servicosRealizados: atendimento.servicosRealizados || '',
                     dataRegistro: atendimento.dataRegistro || '',
                     fotoUrl: fotosUrls[0] || null,
-                    fotosUrls
+                    fotosUrls,
+                    orcamento: orc ? {
+                        itens: (orc.itens || []).map(i => ({ descricao: i.descricao || '', valor: Number(i.valor) || 0 })),
+                        valorMaoObra: Number(orc.valorMaoObra) || 0,
+                        valorTotal: Number(orc.valorTotal) || 0
+                    } : null
                 };
             }
 
