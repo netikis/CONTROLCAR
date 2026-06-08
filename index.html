@@ -552,10 +552,18 @@
         .mirror-print-section { display: none; }
         @media print {
             body { background: #f4f6f9 !important; color: #000000 !important; padding: 0; margin: 0; }
-            .nav-tabs, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config, .login-screen, .barra-usuario, .painel-usuarios { display: none !important; }
+            .nav-tabs, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config, .logo-config, .toast-salvar, .login-screen, .barra-usuario, .painel-usuarios, .pwa-desktop-passos { display: none !important; }
             .mirror-print-section {
                 display: block !important; width: 100%; max-width: 800px;
                 margin: 0 auto; padding: 30px; background: #ffffff;
+            }
+            .print-logo-wrap {
+                text-align: center; background: #ffffff; padding: 12px 20px 0;
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            }
+            .print-logo-empresa {
+                max-height: 90px; max-width: 320px; width: auto; height: auto;
+                object-fit: contain; display: block; margin: 0 auto 8px;
             }
             .print-header {
                 text-align: center; background: #111; color: #fff;
@@ -863,6 +871,9 @@
     </div>
     <div id="toast_salvar" class="toast-salvar" role="status" aria-live="polite"></div>
     <div class="mirror-print-section">
+        <div class="print-logo-wrap" id="p_logo_wrap">
+            <img id="p_logo_empresa" class="print-logo-empresa" alt="Paraná Peças">
+        </div>
         <div class="print-header">
             <h1>PARANÁ PEÇAS</h1>
             <p>ESPELHO DE ENTRADA E SERVIÇOS</p>
@@ -1880,6 +1891,7 @@
                 sigImg.style.display = 'none';
                 if (sigLabel) { sigLabel.style.display = 'block'; sigLabel.textContent = 'Assinatura do Cliente'; }
             }
+            aplicarLogoNoEspelhoImpressao();
             window.print();
         }
         async function comprimirImagem(file) {
@@ -2079,6 +2091,30 @@
         function obterUrlLogoSalva() {
             return (localStorage.getItem(LOGO_STORAGE_KEY) || LOGO_EMPRESA_URL_PADRAO || '').trim();
         }
+        function obterSrcLogoAtual() {
+            const imgApp = document.getElementById('logo_empresa');
+            if (imgApp && imgApp.src && !imgApp.classList.contains('oculto') && imgApp.src !== location.href) {
+                return imgApp.src;
+            }
+            const preview = document.getElementById('logo_preview_img');
+            if (preview && preview.src && preview.src !== location.href) return preview.src;
+            return obterUrlLogoSalva();
+        }
+        function aplicarLogoNoEspelhoImpressao() {
+            const img = document.getElementById('p_logo_empresa');
+            const wrap = document.getElementById('p_logo_wrap');
+            if (!img || !wrap) return;
+            const src = obterSrcLogoAtual();
+            if (src && /^https?:\/\//i.test(src)) {
+                img.src = src;
+                img.style.display = 'block';
+                wrap.style.display = 'block';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+                wrap.style.display = 'none';
+            }
+        }
         function mostrarLogoFallback(mostrar) {
             document.getElementById('logo_empresa_fallback').classList.toggle('oculto', !mostrar);
             document.getElementById('logo_empresa').classList.toggle('oculto', mostrar);
@@ -2122,6 +2158,7 @@
                 if (preview) { preview.src = alvo; previewWrap.style.display = 'block'; }
                 mostrarLogoFallback(false);
                 atualizarIconesNavegador(alvo);
+                aplicarLogoNoEspelhoImpressao();
             };
             teste.onerror = () => carregarLogoEmpresa(urls, idx + 1);
             teste.src = alvo + (alvo.includes('?') ? '&' : '?') + '_t=' + Date.now();
