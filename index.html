@@ -1197,7 +1197,7 @@
             <div id="sec_cadastro" class="secao-painel ativa">
                 <h2 class="secao-titulo">Paraná — Cadastro de Cliente</h2>
                 <div class="quadro quadro-verde">
-                    <form id="clienteForm">
+                    <form id="clienteForm" novalidate>
                         <div class="form-group">
                             <label>Nome do Cliente:</label>
                             <input type="text" id="novo_cliente_nome" placeholder="Ex: Carlos Souza" required>
@@ -1226,7 +1226,7 @@
                 </div>
             </div>
             <!-- ATENDIMENTO (formulário único — seções separadas no menu) -->
-            <form id="vehicleForm">
+            <form id="vehicleForm" novalidate>
                 <div id="alerta_sem_cliente" class="alerta-cliente visivel">
                     Selecione um cliente na lista à esquerda antes de preencher o atendimento.
                 </div>
@@ -2868,16 +2868,86 @@
                 dataRegistro: atendimentoEditandoId ? undefined : new Date().toISOString()
             };
         }
-        function gerarEspelhoPDF() {
-            const form = document.getElementById('vehicleForm');
+        function validarFormAtendimento(opts = {}) {
+            const irParaCampo = opts.irParaCampo !== false;
             if (!clienteSelecionadoId) {
-                alert('Selecione um cliente na aba Clientes primeiro.');
-                return;
+                mostrarToast('Selecione um cliente na lista à esquerda.', 'aviso');
+                return false;
             }
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
+            const resp = document.getElementById('in_responsavel').value.trim();
+            const carro = document.getElementById('in_carro').value.trim();
+            const placa = document.getElementById('in_placa').value.trim();
+            if (!resp) {
+                mostrarToast('Informe o responsável pelo conserto.', 'aviso');
+                if (irParaCampo) {
+                    abrirSecao('sec_cliente');
+                    document.getElementById('in_responsavel').focus();
+                }
+                return false;
             }
+            if (!carro) {
+                mostrarToast('Informe o modelo/marca do veículo.', 'aviso');
+                if (irParaCampo) {
+                    abrirSecao('sec_veiculo');
+                    document.getElementById('in_carro').focus();
+                }
+                return false;
+            }
+            if (!placa) {
+                mostrarToast('Informe a placa do veículo.', 'aviso');
+                if (irParaCampo) {
+                    abrirSecao('sec_veiculo');
+                    document.getElementById('in_placa').focus();
+                }
+                return false;
+            }
+            return true;
+        }
+        async function executarSalvarAtendimento() {
+            if (!validarFormAtendimento()) return;
+            const btnSalvar = document.getElementById('btn_salvar_atendimento');
+            const btnMenu = document.getElementById('btn_salvar_menu');
+            [btnSalvar, btnMenu].forEach(b => { if (b) b.disabled = true; });
+            const atendimento = coletarDadosVeiculo();
+            try {
+                const dados = carregarDados();
+                const cliente = dados.clientes.find(c => c.id === clienteSelecionadoId);
+                if (!cliente) {
+                    mostrarToast('Cliente não encontrado. Selecione novamente.', 'erro');
+                    return;
+                }
+                salvarAtendimentoNoCliente(cliente, atendimento);
+                salvarDados(dados);
+                const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
+                renderListaClientes();
+                renderHistoricoCliente();
+                limparFormVeiculo();
+                irParaAba('sec_historico');
+                if (ehMobileApp()) fecharPainelMobile();
+                mostrarToast('✓ Salvo no aparelho!', 'ok', 3000);
+                const partes = ['✓ Salvo no aparelho'];
+                try {
+                    const nuvem = await enviarClienteParaNuvemComTimeout(clienteAtualizado);
+                    if (nuvem.ok) partes.push('✓ Nuvem (celular + PC)');
+                    else partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
+                    const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
+                    if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
+                    else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
+                    mostrarToast(partes.join('\n'), nuvem.ok ? 'ok' : 'aviso', 6000);
+                } catch (syncErr) {
+                    console.error(syncErr);
+                    mostrarToast('Salvo no aparelho. Sincronização pendente.', 'aviso', 5000);
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarToast('Erro ao salvar. Tente de novo.', 'erro', 6000);
+            } finally {
+                [btnSalvar, btnMenu].forEach(b => { if (b) b.disabled = false; });
+                atualizarBannerModoForm();
+            }
+        }
+        function gerarEspelhoPDF() {
+            if (!validarFormAtendimento()) return;
             const dados = coletarDadosVeiculo();
             if (!dados.dataRegistro) dados.dataRegistro = new Date().toISOString();
             gerarEspelhoComDados(document.getElementById('in_cliente').value, dados);
@@ -3326,7 +3396,11 @@
                 e.preventDefault();
                 const nome = document.getElementById('novo_cliente_nome').value.trim();
                 const telefone = document.getElementById('novo_cliente_tel').value.trim();
-                if (!nome) return;
+                if (!nome) {
+                    mostrarToast('Informe o nome do cliente.', 'aviso');
+                    document.getElementById('novo_cliente_nome').focus();
+                    return;
+                }
                 const dados = carregarDados();
                 const novo = { id: gerarId(), nome, telefone, veiculos: [], criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() };
                 dados.clientes.push(novo);
@@ -3363,48 +3437,9 @@
             document.getElementById('btn_pdf').addEventListener('click', gerarEspelhoPDF);
             document.getElementById('btn_backup').addEventListener('click', gerarBackupLocal);
             document.getElementById('btn_exportar_pasta').addEventListener('click', exportarPastaCliente);
-            document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+            document.getElementById('vehicleForm').addEventListener('submit', (e) => {
                 e.preventDefault();
-                if (!clienteSelecionadoId) {
-                    mostrarToast('Selecione um cliente na aba Clientes.', 'aviso');
-                    return;
-                }
-                const atendimento = coletarDadosVeiculo();
-                if (!atendimento.placa) {
-                    mostrarToast('Informe a placa do veículo.', 'aviso');
-                    return;
-                }
-                const btnSalvar = document.getElementById('btn_salvar_atendimento');
-                btnSalvar.disabled = true;
-                const textoBtn = btnSalvar.textContent;
-                btnSalvar.textContent = 'Salvando…';
-                try {
-                    const dados = carregarDados();
-                    const cliente = dados.clientes.find(c => c.id === clienteSelecionadoId);
-                    salvarAtendimentoNoCliente(cliente, atendimento);
-                    salvarDados(dados);
-                    const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
-                    renderListaClientes();
-                    renderHistoricoCliente();
-                    mostrarToast('✓ Salvo no aparelho!\nSincronizando nuvem…', 'ok', 0);
-                    const partes = ['✓ Salvo no aparelho'];
-                    const nuvem = await enviarClienteParaNuvemComTimeout(clienteAtualizado);
-                    if (nuvem.ok) partes.push('✓ Nuvem (celular + PC)');
-                    else partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
-                    const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
-                    if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
-                    else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
-                    mostrarToast(partes.join('\n'), nuvem.ok ? 'ok' : 'aviso', 6000);
-                    limparFormVeiculo();
-                    irParaAba('sec_historico');
-                    if (ehMobileApp()) fecharPainelMobile();
-                } catch (err) {
-                    console.error(err);
-                    mostrarToast('Erro ao salvar. Tente de novo.', 'erro', 6000);
-                } finally {
-                    btnSalvar.disabled = false;
-                    atualizarBannerModoForm();
-                }
+                executarSalvarAtendimento();
             });
             document.getElementById('btn_sync_nuvem').addEventListener('click', () => executarSincronizacaoNuvem(false));
             document.addEventListener('visibilitychange', () => {
