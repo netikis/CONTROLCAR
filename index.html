@@ -928,9 +928,23 @@
             cursor: pointer; white-space: nowrap; flex-shrink: 0;
         }
         .btn-voltar-historico:hover { background: #444; border-color: #888; }
+        .veiculo-resumo-vistoria {
+            display: none; margin-bottom: 14px; padding: 12px 14px;
+            background: #1a1a2e; border: 1px solid #007bff; border-radius: 8px;
+            color: #fff; font-size: 0.9rem; line-height: 1.45;
+        }
+        .veiculo-resumo-vistoria strong { color: #5dd879; letter-spacing: 1px; }
+        #vehicleForm.modo-vistoria .campo-veiculo-cadastro { display: none !important; }
+        #vehicleForm.modo-vistoria .veiculo-resumo-vistoria { display: block; }
+        .menu-item.menu-so-vistoria { display: none; }
+        .menu-item.menu-oculto-vistoria { display: block; }
+        body.modo-vistoria-ativo .menu-item.menu-so-vistoria { display: block; }
+        body.modo-vistoria-ativo .menu-item.menu-oculto-vistoria { display: none; }
+        .assinatura-vistoria-info { color: #aaa; font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; }
+        .assinatura-vistoria-status { padding: 10px 12px; border-radius: 8px; background: #111; border: 1px solid #333; color: #ccc; font-size: 0.85rem; }
         .modal-overlay {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            z-index: 1000; align-items: center; justify-content: center; padding: 15px;
+            z-index: 4000; align-items: center; justify-content: center; padding: 15px;
         }
         .modal-overlay.aberto { display: flex; }
         .modal-box {
@@ -1168,10 +1182,12 @@
                 <button type="button" class="menu-item" data-secao="sec_historico">Histórico do Cliente</button>
                 <div class="menu-divisor">Serviço a Realizar</div>
                 <button type="button" class="menu-item menu-sub" data-secao="sec_cliente">Cliente e Responsável</button>
-                <button type="button" class="menu-item menu-sub" data-secao="sec_veiculo">Especificações do Veículo</button>
+                <button type="button" class="menu-item menu-sub menu-oculto-vistoria" data-secao="sec_veiculo" id="menu_sec_veiculo">Especificações do Veículo</button>
+                <button type="button" class="menu-item menu-sub menu-so-vistoria" data-secao="sec_veiculo" id="menu_sec_datas_km">Datas e Quilometragem</button>
                 <button type="button" class="menu-item menu-sub" data-secao="sec_chegada">Chegada do Veículo</button>
                 <button type="button" class="menu-item menu-sub" data-secao="sec_servicos">Serviços Realizados</button>
-                <button type="button" class="menu-item menu-sub" data-secao="sec_fotos">Fotos e Registro</button>
+                <button type="button" class="menu-item menu-sub menu-oculto-vistoria" data-secao="sec_fotos">Fotos e Registro</button>
+                <button type="button" class="menu-item menu-sub menu-so-vistoria" data-secao="sec_assinatura">Assinatura do Cliente</button>
                 <button type="button" class="menu-item menu-sub" data-secao="sec_valores">Valores — Peças e Mão de Obra</button>
             </nav>
             <div class="menu-acoes">
@@ -1248,8 +1264,10 @@
                     </div>
                 </div>
                 <div id="sec_veiculo" class="secao-painel">
-                    <h2 class="secao-titulo">Especificações do Veículo</h2>
+                    <h2 class="secao-titulo" id="titulo_sec_veiculo">Especificações do Veículo</h2>
+                    <div id="veiculo_resumo_vistoria" class="veiculo-resumo-vistoria"></div>
                     <div class="quadro quadro-vermelho">
+                        <div class="campo-veiculo-cadastro">
                         <div class="form-group">
                             <label>Carro (Modelo / Marca):</label>
                             <input type="text" id="in_carro" placeholder="Ex: Chevrolet Onix" required>
@@ -1275,6 +1293,7 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                         <div class="form-group">
                             <label>Data de Entrada:</label>
                             <div class="date-group">
@@ -1298,10 +1317,32 @@
                             </div>
                         </div>
                         <div class="form-group">
+                            <label>Data de Saída:</label>
+                            <div class="date-group">
+                                <input type="text" id="in_saida_dia" placeholder="Dia" maxlength="2">
+                                <select id="in_saida_mes">
+                                    <option value="">Mês</option>
+                                    <option value="01">Janeiro</option>
+                                    <option value="02">Fevereiro</option>
+                                    <option value="03">Março</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Maio</option>
+                                    <option value="06">Junho</option>
+                                    <option value="07">Julho</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                                <input type="text" id="in_saida_ano" placeholder="Ano" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="form-group campo-veiculo-cadastro">
                             <label>Chassi:</label>
                             <input type="text" id="in_chassi" placeholder="Número do Chassi">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group campo-veiculo-cadastro">
                             <label>Cor:</label>
                             <input type="text" id="in_cor" placeholder="Ex: Vermelho Metálico">
                         </div>
@@ -1327,6 +1368,13 @@
                             <label>Serviços Realizados (Ou a realizar):</label>
                             <textarea id="in_servicos" rows="8" placeholder="Descreva os serviços executados, peças trocadas, observações..."></textarea>
                         </div>
+                    </div>
+                </div>
+                <div id="sec_assinatura" class="secao-painel">
+                    <h2 class="secao-titulo">Assinatura do Cliente</h2>
+                    <div class="quadro quadro-branco">
+                        <p class="assinatura-vistoria-info">Após salvar a vistoria, use «Link Assinar» no histórico deste atendimento para o cliente assinar na tela do celular dele.</p>
+                        <div class="assinatura-vistoria-status">O link fica disponível no histórico, no botão «Link Assinar».</div>
                     </div>
                 </div>
                 <div id="sec_fotos" class="secao-painel">
@@ -1490,6 +1538,10 @@
                     <span class="print-label">Data de Entrada</span>
                     <span class="print-value" id="p_data">--</span>
                 </div>
+                <div class="print-field">
+                    <span class="print-label">Data de Saída</span>
+                    <span class="print-value" id="p_data_saida">--</span>
+                </div>
             </div>
         </div>
         <div class="print-block">
@@ -1587,6 +1639,7 @@
         let itensValorAtuais = [];
         let clienteSelecionadoId = null;
         let atendimentoEditandoId = null;
+        let modoNovaVistoriaPlaca = null;
         let modalAtendimentoAtual = null;
         let toastSalvarTimer = null;
         function mostrarToast(mensagem, tipo = 'ok', duracaoMs = 5000) {
@@ -1900,7 +1953,7 @@
             if (isNaN(d)) return iso;
             return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
-        const SECOES_SERVICO = ['sec_cliente', 'sec_veiculo', 'sec_chegada', 'sec_servicos', 'sec_fotos', 'sec_valores'];
+        const SECOES_SERVICO = ['sec_cliente', 'sec_veiculo', 'sec_chegada', 'sec_servicos', 'sec_fotos', 'sec_assinatura', 'sec_valores'];
         const MAPA_ABA_SECAO = {
             panelClientes: 'sec_cadastro',
             panelHistorico: 'sec_historico',
@@ -1914,6 +1967,7 @@
             sec_chegada: 'Chegada do Veículo',
             sec_servicos: 'Serviços Realizados',
             sec_fotos: 'Fotos e Registro',
+            sec_assinatura: 'Assinatura do Cliente',
             sec_valores: 'Valores — Peças e Mão de Obra'
         };
         function ehMobileApp() {
@@ -1925,7 +1979,9 @@
             if (!shell) return;
             shell.classList.add('mobile-painel-aberto');
             document.body.classList.add('mobile-overlay-aberto');
-            if (titulo) titulo.textContent = TITULOS_SECAO_MOBILE[secId] || 'Paraná Peças';
+            let tituloTexto = TITULOS_SECAO_MOBILE[secId] || 'Paraná Peças';
+            if (modoNovaVistoriaPlaca && secId === 'sec_veiculo') tituloTexto = 'Datas e Quilometragem';
+            if (titulo) titulo.textContent = tituloTexto;
             const painel = document.getElementById('painel_direito');
             if (painel) painel.scrollTop = 0;
         }
@@ -2440,6 +2496,7 @@
             salvarDados(dados);
             document.getElementById('in_cliente').value = cliente.nome;
             cancelarEdicaoAtendimento();
+            sairModoVistoria();
             atualizarAlertaCliente();
             const alerta = document.getElementById('alerta_sem_cliente');
             if (alerta) alerta.classList.remove('visivel');
@@ -2479,7 +2536,7 @@
                     const val = resumoOrcamento(a);
                     const sel = atendimentoEditandoId === a.id ? ' selecionado' : '';
                     return `<div class="atendimento-item${sel}" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">
-                        <div class="data-linha">${escapeHtml(a.dataEntrada || '—')} · ${formatarDataRegistro(a.dataRegistro)} ${badgeAssinatura(a)}</div>
+                        <div class="data-linha">${escapeHtml(a.dataEntrada || '—')}${a.dataSaida ? ' → ' + escapeHtml(a.dataSaida) : ''} · ${formatarDataRegistro(a.dataRegistro)} ${badgeAssinatura(a)}</div>
                         <div class="resumo"><strong>Resp:</strong> ${escapeHtml(a.responsavel || '—')}<br>${escapeHtml(resumo)}${val ? `<div class="valores-resumo-hist">Total: ${val}</div>` : ''}</div>
                         <div class="btn-row">
                             <button type="button" class="btn-sm btn-sm-ver" data-acao="ver" data-placa="${escapeHtml(vg.placa)}" data-id="${a.id}">Ver</button>
@@ -2499,7 +2556,7 @@
                         <span class="badge">${atendimentos.length} atend.</span>
                     </div>
                     <div class="atendimentos-lista">${itens}
-                        <button type="button" class="btn btn-sm-novo btn-sm" data-acao="nova-visita" data-placa="${escapeHtml(vg.placa)}" style="width:100%;margin-top:4px;">+ Nova visita deste veículo</button>
+                        <button type="button" class="btn btn-sm-novo btn-sm" data-acao="nova-visita" data-placa="${escapeHtml(vg.placa)}" style="width:100%;margin-top:4px;">+ Nova vistoria deste veículo</button>
                     </div>
                 </div>`;
             }).join('');
@@ -2568,6 +2625,7 @@
             const campos = [
                 ['Cliente', found.cliente.nome],
                 ['Data de Entrada', a.dataEntrada],
+                ['Data de Saída', a.dataSaida || '—'],
                 ['Registrado em', formatarDataRegistro(a.dataRegistro)],
                 ['Responsável', a.responsavel],
                 ['Veículo', a.carro],
@@ -2600,10 +2658,55 @@
             }
             document.getElementById('modal_corpo').innerHTML = html;
             document.getElementById('modal_visualizar').classList.add('aberto');
+            document.body.classList.add('modal-aberto');
         }
         function fecharModal() {
             document.getElementById('modal_visualizar').classList.remove('aberto');
+            document.body.classList.remove('modal-aberto');
             modalAtendimentoAtual = null;
+        }
+        function formatarDataCampos(dia, mes, ano) {
+            if (!dia || !mes || !ano) return '';
+            return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}`;
+        }
+        function obterUltimoAtendimentoVeiculo(vg) {
+            const ats = [...(vg.atendimentos || [])].sort(
+                (a, b) => new Date(b.dataRegistro || 0) - new Date(a.dataRegistro || 0)
+            );
+            return ats[0] || null;
+        }
+        function limparDatasSaida() {
+            document.getElementById('in_saida_dia').value = '';
+            document.getElementById('in_saida_mes').value = '';
+            document.getElementById('in_saida_ano').value = '';
+        }
+        function aplicarModoVistoriaUI() {
+            const form = document.getElementById('vehicleForm');
+            const emVistoria = !!modoNovaVistoriaPlaca;
+            if (form) form.classList.toggle('modo-vistoria', emVistoria);
+            document.body.classList.toggle('modo-vistoria-ativo', emVistoria);
+            const tituloSec = document.getElementById('titulo_sec_veiculo');
+            if (tituloSec) tituloSec.textContent = emVistoria ? 'Datas e Quilometragem' : 'Especificações do Veículo';
+            const resumo = document.getElementById('veiculo_resumo_vistoria');
+            if (emVistoria && resumo) {
+                const cliente = getClienteAtivo();
+                const vg = (cliente?.veiculos || []).find(v => v.placa === modoNovaVistoriaPlaca);
+                const ultimo = vg ? obterUltimoAtendimentoVeiculo(vg) : null;
+                const carro = vg?.carro || ultimo?.carro || '—';
+                resumo.innerHTML = `<strong>${escapeHtml(modoNovaVistoriaPlaca)}</strong> — ${escapeHtml(carro)}<br>
+                    <span style="color:#aaa;font-size:0.85rem;">${escapeHtml(ultimo?.cidade || '—')} · ${escapeHtml(ultimo?.cor || '—')} · Chassi: ${escapeHtml(ultimo?.chassi || '—')}</span>
+                    <div style="color:#5dd879;font-size:0.78rem;margin-top:6px;">Dados do veículo mantidos da vistoria anterior — preencha só o desta visita.</div>`;
+            } else if (resumo) {
+                resumo.innerHTML = '';
+            }
+            atualizarBannerModoForm();
+        }
+        function sairModoVistoria() {
+            modoNovaVistoriaPlaca = null;
+            document.getElementById('in_placa').readOnly = false;
+            const carroEl = document.getElementById('in_carro');
+            if (carroEl) carroEl.readOnly = false;
+            aplicarModoVistoriaUI();
         }
         function parseDataEntrada(dataEntrada) {
             const p = (dataEntrada || '').split('/');
@@ -2619,6 +2722,10 @@
             document.getElementById('in_dia').value = dt.dia;
             document.getElementById('in_mes').value = dt.mes;
             document.getElementById('in_ano').value = dt.ano;
+            const ds = parseDataEntrada(a.dataSaida);
+            document.getElementById('in_saida_dia').value = ds.dia;
+            document.getElementById('in_saida_mes').value = ds.mes;
+            document.getElementById('in_saida_ano').value = ds.ano;
             document.getElementById('in_chassi').value = a.chassi || '';
             document.getElementById('in_cor').value = a.cor || '';
             document.getElementById('in_km').value = a.km || '';
@@ -2679,6 +2786,13 @@
                 const btnMenu = document.getElementById('btn_salvar_menu');
                 if (btnMenu) btnMenu.textContent = 'Salvar Alterações';
                 btnCancelar.style.display = 'block';
+            } else if (modoNovaVistoriaPlaca) {
+                if (texto) texto.textContent = `Nova vistoria — ${modoNovaVistoriaPlaca}. Veículo já cadastrado; preencha só desta visita.`;
+                banner.classList.add('visivel');
+                btnSalvar.textContent = 'Salvar Vistoria';
+                const btnMenu = document.getElementById('btn_salvar_menu');
+                if (btnMenu) btnMenu.textContent = 'Salvar Vistoria';
+                btnCancelar.style.display = 'block';
             } else {
                 banner.classList.remove('visivel');
                 btnSalvar.textContent = 'Salvar Novo Atendimento';
@@ -2689,12 +2803,14 @@
         }
         function voltarAoHistorico() {
             cancelarEdicaoAtendimento();
+            sairModoVistoria();
             limparFormVeiculo();
             abrirSecao('sec_historico');
         }
         function carregarAtendimentoNoForm(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
             if (!found) return;
+            sairModoVistoria();
             atendimentoEditandoId = atendimentoId;
             preencherFormComAtendimento(found.atendimento, placa);
             document.getElementById('in_placa').readOnly = true;
@@ -2704,21 +2820,24 @@
         }
         function iniciarNovaVisita(placa) {
             const cliente = getClienteAtivo();
+            if (!cliente) return;
             const vg = (cliente.veiculos || []).find(v => v.placa === placa);
+            if (!vg) return;
             cancelarEdicaoAtendimento();
-            limparFormVeiculo();
-            if (vg) {
-                document.getElementById('in_placa').value = placa;
-                document.getElementById('in_carro').value = vg.carro || '';
-                if (vg.atendimentos && vg.atendimentos.length) {
-                    const ultimo = vg.atendimentos[vg.atendimentos.length - 1];
-                    document.getElementById('in_cidade').value = ultimo.cidade || '';
-                    document.getElementById('in_chassi').value = ultimo.chassi || '';
-                    document.getElementById('in_cor').value = ultimo.cor || '';
-                }
-            }
+            limparFormVeiculo(false);
+            modoNovaVistoriaPlaca = placa;
+            const ultimo = obterUltimoAtendimentoVeiculo(vg);
+            document.getElementById('in_placa').value = placa;
+            document.getElementById('in_carro').value = vg.carro || ultimo?.carro || '';
+            document.getElementById('in_cidade').value = ultimo?.cidade || '';
+            document.getElementById('in_chassi').value = ultimo?.chassi || '';
+            document.getElementById('in_cor').value = ultimo?.cor || '';
             document.getElementById('in_placa').readOnly = true;
+            document.getElementById('in_carro').readOnly = true;
+            preencherDataHoje();
+            limparDatasSaida();
             updatePlate();
+            aplicarModoVistoriaUI();
             abrirSecao('sec_cliente');
         }
         function iniciarNovoAtendimento() {
@@ -2733,7 +2852,11 @@
         }
         function cancelarEdicaoAtendimento() {
             atendimentoEditandoId = null;
-            document.getElementById('in_placa').readOnly = false;
+            if (!modoNovaVistoriaPlaca) {
+                document.getElementById('in_placa').readOnly = false;
+                const carroEl = document.getElementById('in_carro');
+                if (carroEl) carroEl.readOnly = false;
+            }
             atualizarBannerModoForm();
         }
         function reimprimirAtendimento(placa, atendimentoId) {
@@ -2753,6 +2876,8 @@
             document.getElementById('p_placa').textContent = (a.placa || '---').toUpperCase();
             document.getElementById('p_cidade').textContent = (a.cidade || 'Não Informada').toUpperCase();
             document.getElementById('p_data').textContent = a.dataEntrada || '—';
+            const pSaida = document.getElementById('p_data_saida');
+            if (pSaida) pSaida.textContent = a.dataSaida || '—';
             document.getElementById('p_registro_atendimento').textContent =
                 'Registro: ' + formatarDataRegistro(a.dataRegistro) + (a.id ? ' · ID: ' + a.id.slice(-6) : '');
             const wrapFotos = document.getElementById('p_fotos_wrap');
@@ -2857,7 +2982,16 @@
                 carro: document.getElementById('in_carro').value.trim(),
                 cidade: document.getElementById('in_cidade').value.trim(),
                 placa: document.getElementById('in_placa').value.trim().toUpperCase(),
-                dataEntrada: `${document.getElementById('in_dia').value}/${document.getElementById('in_mes').value}/${document.getElementById('in_ano').value}`,
+                dataEntrada: formatarDataCampos(
+                    document.getElementById('in_dia').value,
+                    document.getElementById('in_mes').value,
+                    document.getElementById('in_ano').value
+                ),
+                dataSaida: formatarDataCampos(
+                    document.getElementById('in_saida_dia').value,
+                    document.getElementById('in_saida_mes').value,
+                    document.getElementById('in_saida_ano').value
+                ),
                 chassi: document.getElementById('in_chassi').value.trim(),
                 cor: document.getElementById('in_cor').value.trim(),
                 km: document.getElementById('in_km').value,
@@ -2887,7 +3021,7 @@
             }
             if (!carro) {
                 mostrarToast('Informe o modelo/marca do veículo.', 'aviso');
-                if (irParaCampo) {
+                if (irParaCampo && !modoNovaVistoriaPlaca) {
                     abrirSecao('sec_veiculo');
                     document.getElementById('in_carro').focus();
                 }
@@ -2895,7 +3029,7 @@
             }
             if (!placa) {
                 mostrarToast('Informe a placa do veículo.', 'aviso');
-                if (irParaCampo) {
+                if (irParaCampo && !modoNovaVistoriaPlaca) {
                     abrirSecao('sec_veiculo');
                     document.getElementById('in_placa').focus();
                 }
@@ -2919,13 +3053,14 @@
                 salvarAtendimentoNoCliente(cliente, atendimento);
                 salvarDados(dados);
                 const clienteAtualizado = dados.clientes.find(c => c.id === clienteSelecionadoId);
+                const eraVistoria = !!modoNovaVistoriaPlaca;
                 renderListaClientes();
                 renderHistoricoCliente();
                 limparFormVeiculo();
                 irParaAba('sec_historico');
                 if (ehMobileApp()) fecharPainelMobile();
-                mostrarToast('✓ Salvo no aparelho!', 'ok', 3000);
-                const partes = ['✓ Salvo no aparelho'];
+                mostrarToast(eraVistoria ? '✓ Vistoria salva no aparelho!' : '✓ Salvo no aparelho!', 'ok', 3000);
+                const partes = [eraVistoria ? '✓ Vistoria salva' : '✓ Salvo no aparelho'];
                 try {
                     const nuvem = await enviarClienteParaNuvemComTimeout(clienteAtualizado);
                     if (nuvem.ok) partes.push('✓ Nuvem (celular + PC)');
@@ -3043,12 +3178,14 @@
             }
             alert(`Download iniciado com prefixo "${pastaNome}_". No PC use Chrome/Edge para pasta fixa.`);
         }
-        function limparFormVeiculo() {
+        function limparFormVeiculo(sairVistoria = true) {
             document.getElementById('in_responsavel').value = '';
             document.getElementById('in_carro').value = '';
             document.getElementById('in_cidade').value = '';
             document.getElementById('in_placa').value = '';
             document.getElementById('in_placa').readOnly = false;
+            const carroEl = document.getElementById('in_carro');
+            if (carroEl) carroEl.readOnly = false;
             document.getElementById('in_chassi').value = '';
             document.getElementById('in_cor').value = '';
             document.getElementById('in_km').value = '';
@@ -3056,9 +3193,11 @@
             document.getElementById('in_servicos').value = '';
             limparTodasFotos();
             limparOrcamentoForm();
+            limparDatasSaida();
             preencherDataHoje();
             updatePlate();
             cancelarEdicaoAtendimento();
+            if (sairVistoria) sairModoVistoria();
         }
         function obterUrlLogoSalva() {
             return (localStorage.getItem(LOGO_STORAGE_KEY) || LOGO_EMPRESA_URL_PADRAO || '').trim();
