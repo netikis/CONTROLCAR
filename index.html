@@ -704,6 +704,23 @@
             font-size: 0.65rem; color: #888; text-transform: uppercase;
             margin: 12px 0 6px; font-weight: bold;
         }
+        .busca-cliente-wrap { margin: 0 0 8px; }
+        .busca-cliente-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: #fff;
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: #000;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .busca-cliente-input::placeholder { color: #666; }
+        .busca-cliente-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
         .menu-lateral .cliente-lista { max-height: min(200px, 28vh); margin-top: 0; }
         .painel-direito {
             flex: 1; min-width: 0;
@@ -1164,6 +1181,9 @@
                 <button type="button" class="btn btn-backup" id="btn_backup_menu">Backup Desktop (.CSV)</button>
             </div>
             <p class="menu-lista-titulo">Clientes cadastrados</p>
+            <div class="busca-cliente-wrap">
+                <input type="search" id="busca_cliente" class="busca-cliente-input" placeholder="Buscar nome, telefone ou placa…" autocomplete="off" enterkeyhint="search">
+            </div>
             <div id="lista_clientes" class="cliente-lista">
                 <div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>
             </div>
@@ -2303,14 +2323,43 @@
             const temCliente = !!clienteSelecionadoId && !!document.getElementById('in_cliente').value;
             alerta.classList.toggle('visivel', !temCliente);
         }
+        function normalizarBuscaCliente(texto) {
+            return String(texto || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        }
+        function clienteMatchesBusca(cliente, termo) {
+            if (!termo) return true;
+            const t = normalizarBuscaCliente(termo);
+            const tPlaca = t.replace(/[\s-]/g, '');
+            if (normalizarBuscaCliente(cliente.nome).includes(t)) return true;
+            if (normalizarBuscaCliente(cliente.telefone).includes(t)) return true;
+            for (const v of cliente.veiculos || []) {
+                const placa = normalizarBuscaCliente(v.placa).replace(/[\s-]/g, '');
+                if (placa && placa.includes(tPlaca)) return true;
+                if (normalizarBuscaCliente(v.carro).includes(t)) return true;
+            }
+            return false;
+        }
         function renderListaClientes() {
             const dados = carregarDados();
             const lista = document.getElementById('lista_clientes');
+            const inputBusca = document.getElementById('busca_cliente');
+            const termo = inputBusca ? inputBusca.value.trim() : '';
             if (!dados.clientes.length) {
                 lista.innerHTML = '<div class="cliente-vazio">Nenhum cliente cadastrado ainda.</div>';
                 return;
             }
-            lista.innerHTML = dados.clientes.map(c => {
+            const clientes = dados.clientes
+                .filter(c => clienteMatchesBusca(c, termo))
+                .sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+            if (!clientes.length) {
+                lista.innerHTML = '<div class="cliente-vazio">Nenhum cliente encontrado.</div>';
+                return;
+            }
+            lista.innerHTML = clientes.map(c => {
                 const placas = contarPlacas(c);
                 const atend = contarAtendimentos(c);
                 const sel = c.id === clienteSelecionadoId ? ' selecionado' : '';
@@ -3194,6 +3243,8 @@
                 }
             }
             renderListaClientes();
+            const buscaCliente = document.getElementById('busca_cliente');
+            if (buscaCliente) buscaCliente.addEventListener('input', renderListaClientes);
             renderHistoricoCliente();
             atualizarAlertaCliente();
             ['in_cidade', 'in_placa'].forEach(id => {
