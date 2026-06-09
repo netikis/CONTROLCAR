@@ -52,11 +52,14 @@
             margin-bottom: 10px;
         }
         .app-header-compact {
+            display: flex;
             flex-direction: row;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
+            max-width: 1480px;
+            width: 100%;
             margin-bottom: 6px;
             padding-bottom: 8px;
             border-bottom: 1px solid #222;
@@ -65,24 +68,33 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            min-width: 0;
             flex: 1;
-            min-width: min(100%, 220px);
+        }
+        .header-logo-wrap {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
         }
         .app-header-compact .app-logo {
-            width: 52px;
-            height: 52px;
+            width: 56px;
+            height: 56px;
             border-radius: 12px;
         }
         .app-header-compact .app-logo-img {
-            height: 52px;
-            max-width: 160px;
+            height: 56px;
+            max-width: 140px;
             width: auto;
         }
         .app-header-compact .main-title {
             text-align: left;
-            font-size: clamp(0.85rem, 2.5vw, 1.15rem);
+            font-size: clamp(0.75rem, 2vw, 1.15rem);
             width: auto;
-            flex: 1;
+            max-width: none;
+            margin: 0;
+            white-space: nowrap;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
         }
         .header-acoes {
             display: flex;
@@ -90,6 +102,7 @@
             gap: 8px;
             flex-wrap: wrap;
             justify-content: flex-end;
+            flex-shrink: 0;
         }
         .barra-usuario.barra-compact {
             width: auto;
@@ -102,47 +115,264 @@
             max-width: 1480px;
             margin: 20px auto 16px;
             padding-top: 12px;
-            border-top: 2px solid #333;
+            border-top: 2px solid #555;
         }
         .config-rodape-wrap > summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
-            color: #888;
-            font-size: 0.78rem;
+            color: #fff;
+            font-size: 0.8rem;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 8px 4px;
+            padding: 10px 4px;
             list-style: none;
         }
         .config-rodape-wrap > summary::-webkit-details-marker { display: none; }
+        .config-gear-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+        .config-gear-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #fff;
+        }
         .config-rodape-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+            align-items: start;
         }
-        .config-rodape-grid .pasta-config,
-        .config-rodape-grid .logo-config,
-        .config-rodape-grid .painel-usuarios,
-        .config-rodape-grid .pwa-install-bar,
-        .config-rodape-grid .pwa-ios-hint {
+        .config-rodape-grid .config-card {
+            background: #fff !important;
+            color: #000 !important;
+            border: 1px solid #999 !important;
+            border-radius: 6px;
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: block !important;
+            overflow: hidden;
+            font-weight: bold;
+            font-size: 18px;
+            line-height: 1.25;
+            box-sizing: border-box;
+        }
+        .config-rodape-grid .config-card:not([open]) {
+            height: 72px;
+            max-height: 72px;
+        }
+        .config-rodape-grid .config-card[open] {
+            height: auto;
+            max-height: none;
+        }
+        body.perfil-atendente .config-rodape-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .config-rodape-grid .config-card > summary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
             width: 100%;
-            max-width: none;
-            margin-bottom: 0;
-            padding: 10px 12px;
+            height: 72px;
+            min-height: 72px;
+            max-height: 72px;
+            box-sizing: border-box;
+            padding: 6px 4px;
+            cursor: pointer;
+            list-style: none;
+            text-transform: uppercase;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000 !important;
+            user-select: none;
+            white-space: normal;
+            word-break: break-word;
+            overflow: hidden;
         }
-        .config-rodape-grid .pasta-config p { font-size: 0.72rem; min-width: 0; }
-        .config-rodape-grid .nuvem-config .btn-sync,
-        .config-rodape-grid .btn-pasta-config {
-            padding: 8px 10px;
-            font-size: 0.68rem;
+        .config-card > summary::-webkit-details-marker { display: none; }
+        .config-card > summary::before {
+            content: '▸';
+            margin-right: 6px;
+            font-size: 16px;
+            flex-shrink: 0;
         }
-        .config-rodape-grid .pwa-install-bar {
+        .config-card[open] > summary {
+            border-bottom: 1px solid #ccc;
+            background: #f5f5f5;
+        }
+        .config-card[open] > summary::before { content: '▾'; }
+        .config-card-conteudo {
+            padding: 10px;
+            display: flex;
             flex-direction: column;
-            align-items: stretch;
+            gap: 8px;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+            line-height: 1.35;
         }
-        .config-rodape-grid .pwa-install-bar .pwa-texto { min-width: 0; font-size: 0.72rem; }
-        .config-card-full { grid-column: 1 / -1; }
+        #nuvem_config_box.modo-local,
+        #nuvem_config_box.ok,
+        #nuvem_config_box.erro {
+            background: #fff !important;
+            border-color: #999 !important;
+        }
+        .config-rodape-grid .config-card-conteudo p,
+        .config-rodape-grid .config-card-conteudo p strong,
+        .config-rodape-grid .config-card-conteudo label,
+        .config-rodape-grid .config-card-conteudo .hint,
+        .config-rodape-grid .config-card-conteudo .pwa-texto,
+        .config-rodape-grid .config-card-conteudo .pwa-texto strong,
+        .config-rodape-grid .config-card-conteudo .pwa-passos-interno,
+        .config-rodape-grid .config-card-conteudo .pwa-passos-interno strong,
+        .config-rodape-grid .config-card-conteudo .pwa-ios-interno,
+        .config-rodape-grid .config-card-conteudo .pwa-ios-interno strong,
+        #nuvem_config_box p,
+        #nuvem_config_box p strong,
+        #pasta_status_texto,
+        #pasta_status_texto strong {
+            color: #000 !important;
+            font-weight: bold !important;
+            font-size: 18px !important;
+            line-height: 1.35 !important;
+            margin: 0 !important;
+            flex: none !important;
+            min-width: 0 !important;
+        }
+        .config-card .form-group {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .config-card .form-group label {
+            font-size: 18px !important;
+            font-weight: bold !important;
+            color: #000 !important;
+            text-transform: uppercase;
+        }
+        .config-card input,
+        .config-card select {
+            font-size: 18px !important;
+            font-weight: bold !important;
+            color: #000 !important;
+            background: #f5f5f5 !important;
+            border: 1px solid #ccc !important;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .config-card .btn,
+        .config-card .btn-sync,
+        .config-card .btn-pasta-config,
+        .config-card .btn-verde,
+        .config-card .btn-outline,
+        .config-card .btn-instalar {
+            width: 100%;
+            padding: 10px 8px;
+            font-size: 18px !important;
+            font-weight: bold !important;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-sizing: border-box;
+        }
+        .config-card .btn-sync {
+            background: #007bff !important;
+            color: #fff !important;
+            border: none !important;
+        }
+        .config-card .btn-pasta-config {
+            background: #333 !important;
+            color: #fff !important;
+            border: 1px solid #222 !important;
+        }
+        .config-card .btn-verde {
+            background: #28a745 !important;
+            color: #fff !important;
+            border: none !important;
+        }
+        .config-card .btn-outline {
+            background: #e8e8e8 !important;
+            color: #000 !important;
+            border: 2px solid #333 !important;
+        }
+        .config-card .btn-outline:hover {
+            background: #d0d0d0 !important;
+            border-color: #007bff !important;
+            color: #000 !important;
+        }
+        .config-card .logo-preview-wrap {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            margin-top: 4px;
+        }
+        .config-card-pwa .pwa-icon-wrap {
+            width: 36px;
+            height: 36px;
+            align-self: center;
+        }
+        .config-card-pwa .pwa-texto strong { display: block; margin-bottom: 4px; }
+        .config-card-pwa .pwa-acoes {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .config-card-pwa .pwa-passos-interno,
+        .config-card-pwa .pwa-ios-interno {
+            padding: 8px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .config-card-pwa .pwa-ios-interno { border-style: dashed; }
+        .config-card-pwa .pwa-ios-interno.oculto { display: none !important; }
+        @media (max-width: 1100px) {
+            .config-rodape-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .config-rodape-grid .config-card:not([open]) { height: 68px; max-height: 68px; }
+            .config-card > summary,
+            .config-card-conteudo,
+            .config-card-conteudo p,
+            .config-card-conteudo label,
+            .config-card-conteudo .hint,
+            .config-card .btn,
+            .config-card input,
+            .config-card select { font-size: 16px !important; }
+            .config-rodape-grid .config-card > summary { height: 68px; min-height: 68px; max-height: 68px; }
+        }
+        @media (max-width: 640px) {
+            .config-rodape-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .config-rodape-grid .config-card:not([open]) { height: 64px; max-height: 64px; }
+            .config-card > summary,
+            .config-card-conteudo,
+            .config-card-conteudo p,
+            .config-card-conteudo label,
+            .config-card-conteudo .hint,
+            .config-card .btn,
+            .config-card input,
+            .config-card select { font-size: 14px !important; }
+            .config-rodape-grid .config-card > summary { height: 64px; min-height: 64px; max-height: 64px; }
+        }
+        @media (max-width: 400px) {
+            .config-rodape-grid { grid-template-columns: minmax(0, 1fr); }
+            .config-rodape-grid .config-card:not([open]) { height: 56px; max-height: 56px; }
+            .config-rodape-grid .config-card > summary { height: 56px; min-height: 56px; max-height: 56px; }
+        }
         .app-logo {
             width: 72px;
             height: 72px;
@@ -493,14 +723,107 @@
         @media (min-width: 769px) {
             .painel-direito .button-zone { display: none; }
         }
+        .mobile-painel-header { display: none; }
         @media (max-width: 768px) {
-            .app-shell { flex-direction: column; }
-            .menu-lateral {
-                width: 100%; max-height: none; position: static;
-                max-height: 45vh;
+            .app-header-compact .app-logo,
+            .app-header-compact .app-logo-img { width: 48px; height: 48px; max-width: 48px; }
+            .app-header-compact .main-title {
+                font-size: clamp(0.62rem, 2.8vw, 0.85rem);
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
-            .painel-direito { max-height: none; min-height: 50vh; }
-            .menu-lateral .cliente-lista { max-height: 120px; }
+            .header-brand { gap: 8px; }
+            body.mobile-overlay-aberto { overflow: hidden; }
+            .app-shell { flex-direction: column; position: relative; }
+            .menu-lateral {
+                width: 100%;
+                max-height: none;
+                position: static;
+                flex: 1;
+                border-radius: 0;
+            }
+            .menu-lateral .cliente-lista {
+                max-height: none;
+                min-height: 120px;
+            }
+            .menu-item {
+                min-height: 48px;
+                padding: 14px 12px;
+                font-size: 0.85rem;
+                border-radius: 10px;
+            }
+            .menu-acoes .btn { min-height: 48px; font-size: 0.8rem; border-radius: 10px; }
+            .cliente-item {
+                min-height: 52px;
+                padding: 12px;
+                border-radius: 10px;
+            }
+            .mobile-painel-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: calc(6px + var(--safe-t)) 0 12px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid #333;
+                position: sticky;
+                top: 0;
+                background: #000;
+                z-index: 5;
+            }
+            .btn-mobile-voltar {
+                flex-shrink: 0;
+                padding: 10px 14px;
+                min-height: 44px;
+                min-width: 44px;
+                background: #1a1a1a;
+                border: 1px solid #444;
+                border-radius: 10px;
+                color: #007bff;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .mobile-painel-titulo {
+                flex: 1;
+                font-size: 0.95rem;
+                font-weight: bold;
+                color: #fff;
+                text-transform: uppercase;
+                text-align: center;
+                padding-right: 52px;
+                line-height: 1.2;
+            }
+            .painel-direito {
+                position: fixed;
+                inset: 0;
+                z-index: 2500;
+                background: #000;
+                padding: 0 calc(10px + var(--safe-r)) calc(16px + var(--safe-b)) calc(10px + var(--safe-l));
+                transform: translateX(100%);
+                transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                max-height: none;
+                min-height: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+            .app-shell.mobile-painel-aberto .painel-direito {
+                transform: translateX(0);
+                visibility: visible;
+                pointer-events: auto;
+            }
+            .painel-direito .secao-titulo { display: none; }
+            .painel-direito .form-group input,
+            .painel-direito .form-group select,
+            .painel-direito .form-group textarea {
+                font-size: 16px;
+                min-height: 48px;
+                border-radius: 10px;
+            }
+            .painel-direito .btn { border-radius: 10px; min-height: 50px; }
         }
         .photo-preview.visivel { display: block; }
         input[type="file"] { display: none; }
@@ -798,25 +1121,27 @@
     </div>
     <header class="app-header app-header-compact">
         <div class="header-brand">
-            <img id="logo_empresa" class="app-logo-img oculto" alt="Paraná Peças">
-            <div id="logo_empresa_fallback" class="app-logo" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Paraná Peças">
-                    <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#111"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
-                    <rect width="512" height="512" rx="96" fill="url(#lg)"/>
-                    <circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/>
-                    <circle cx="256" cy="230" r="58" fill="#007bff"/>
-                    <rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/>
-                    <text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text>
-                </svg>
+            <div class="header-logo-wrap">
+                <img id="logo_empresa" class="app-logo-img oculto" alt="Paraná Peças">
+                <div id="logo_empresa_fallback" class="app-logo" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Paraná Peças">
+                        <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#111"/><stop offset="100%" stop-color="#000"/></linearGradient></defs>
+                        <rect width="512" height="512" rx="96" fill="url(#lg)"/>
+                        <circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/>
+                        <circle cx="256" cy="230" r="58" fill="#007bff"/>
+                        <rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/>
+                        <text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text>
+                    </svg>
+                </div>
             </div>
-            <h1 class="main-title">PARANÁ PEÇAS - CONTROLE DE veículos</h1>
+            <h1 class="main-title">PARANÁ PEÇAS - CONTROLE</h1>
         </div>
         <div class="header-acoes">
+            <button type="button" class="btn-instalar-header" id="btn_instalar_header" hidden>Instalar app</button>
             <div id="barra_usuario" class="barra-usuario barra-compact" hidden>
                 <span id="usuario_nome_perfil">Usuário</span>
                 <button type="button" class="btn-logout" id="btn_logout">Sair</button>
             </div>
-            <button type="button" class="btn-instalar-header" id="btn_instalar_header" hidden>Instalar app</button>
         </div>
     </header>
     <div class="app-shell" id="app_shell">
@@ -844,6 +1169,10 @@
             </div>
         </aside>
         <main class="painel-direito" id="painel_direito">
+            <div class="mobile-painel-header" id="mobile_painel_header">
+                <button type="button" class="btn-mobile-voltar" id="btn_mobile_voltar" aria-label="Voltar">← Voltar</button>
+                <span class="mobile-painel-titulo" id="mobile_painel_titulo">Menu</span>
+            </div>
             <!-- CADASTRO -->
             <div id="sec_cadastro" class="secao-painel ativa">
                 <h2 class="secao-titulo">Paraná — Cadastro de Cliente</h2>
@@ -1024,78 +1353,96 @@
         </main>
     </div>
     <details class="config-rodape-wrap" id="config_rodape">
-        <summary>Configurações — nuvem, pasta, logo, usuários e instalação</summary>
+        <summary>
+            <span class="config-gear-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/></svg>
+            </span>
+            Configurações — nuvem, pasta, logo, usuários e instalação
+        </summary>
         <div class="config-rodape-grid">
-            <div class="pasta-config nuvem-config" id="nuvem_config_box">
-                <p id="nuvem_status_texto"><strong>Nuvem:</strong> conectando celular e PC…</p>
-                <button type="button" class="btn-sync" id="btn_sync_nuvem">Sincronizar agora</button>
-            </div>
-            <div class="pasta-config">
-                <p id="pasta_status_texto">Pasta no PC: não configurada</p>
-                <button type="button" class="btn-pasta-config" id="btn_config_pasta">Escolher pasta no PC</button>
-            </div>
-            <details class="logo-config">
-                <summary>Logo da empresa (link da imagem)</summary>
-                <p class="hint">Cole o link direto da sua logo (PNG/JPG/WebP, HTTPS). O app baixa e usa automaticamente — pode ser imagem grande.</p>
-                <div class="form-group">
-                    <label for="logo_url_input">Link da imagem:</label>
-                    <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png" value="https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png">
-                </div>
-                <button type="button" class="btn btn-verde" id="btn_salvar_logo" style="margin-top:4px;">Salvar logo</button>
-                <button type="button" class="btn btn-outline" id="btn_remover_logo" style="margin-top:8px;">Usar logo padrão</button>
-                <div class="logo-preview-wrap" id="logo_preview_wrap" style="display:none;">
-                    <img id="logo_preview_img" alt="Preview logo">
+            <details class="config-card" id="nuvem_config_box">
+                <summary>Nuvem</summary>
+                <div class="config-card-conteudo">
+                    <p id="nuvem_status_texto">Conectando celular e PC…</p>
+                    <button type="button" class="btn-sync" id="btn_sync_nuvem">Sincronizar agora</button>
                 </div>
             </details>
-            <details class="painel-usuarios so-gestor" id="painel_usuarios">
-                <summary>Usuários do sistema (Gestor)</summary>
-                <p class="hint">Cadastre atendentes ou outros gestores. O primeiro login vira gestor automaticamente se ainda não houver nenhum.</p>
-                <div class="form-group">
-                    <label for="novo_user_nome">Nome:</label>
-                    <input type="text" id="novo_user_nome" placeholder="Ex: Maria Atendente">
+            <details class="config-card" id="pasta_config_box">
+                <summary>Pasta no PC</summary>
+                <div class="config-card-conteudo">
+                    <p id="pasta_status_texto">Não configurada</p>
+                    <button type="button" class="btn-pasta-config" id="btn_config_pasta">Escolher pasta no PC</button>
                 </div>
-                <div class="form-group">
-                    <label for="novo_user_email">E-mail (login):</label>
-                    <input type="email" id="novo_user_email" placeholder="atendente@empresa.com">
-                </div>
-                <div class="form-group">
-                    <label for="novo_user_senha">Senha:</label>
-                    <input type="password" id="novo_user_senha" placeholder="Mínimo 6 caracteres" minlength="6">
-                </div>
-                <div class="form-group">
-                    <label for="novo_user_perfil">Perfil:</label>
-                    <select id="novo_user_perfil">
-                        <option value="atendente">Atendente (sem excluir)</option>
-                        <option value="gestor">Gestor (acesso total)</option>
-                    </select>
-                </div>
-                <button type="button" class="btn btn-verde" id="btn_criar_usuario">Cadastrar usuário</button>
             </details>
-            <div id="pwa_install_bar" class="pwa-install-bar" hidden>
-                <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
-                    <img id="pwa_logo_img" src="icons/icon-192.png" alt="Paraná Peças">
-                    <svg id="pwa_logo_fallback" class="oculto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
+            <details class="config-card" id="logo_config_box">
+                <summary>Logo da empresa</summary>
+                <div class="config-card-conteudo">
+                    <p class="hint">Link direto da logo (PNG/JPG/WebP, HTTPS).</p>
+                    <div class="form-group">
+                        <label for="logo_url_input">Link da imagem:</label>
+                        <input type="url" id="logo_url_input" placeholder="https://.../sua-logo.png" value="https://www.image2url.com/r2/default/images/1780521147054-d709a356-531e-480c-829c-543cd2fb5697.png">
+                    </div>
+                    <button type="button" class="btn btn-verde" id="btn_salvar_logo">Salvar logo</button>
+                    <button type="button" class="btn btn-outline" id="btn_remover_logo">Usar logo padrão</button>
+                    <div class="logo-preview-wrap" id="logo_preview_wrap" style="display:none;">
+                        <img id="logo_preview_img" alt="Preview logo">
+                    </div>
                 </div>
-                <div class="pwa-texto" id="pwa_install_texto">
-                    <strong>Instalar aplicativo</strong>
-                    Atalho com ícone da Paraná Peças na Área de Trabalho ou tela do celular
+            </details>
+            <details class="config-card so-gestor" id="painel_usuarios">
+                <summary>Usuários (Gestor)</summary>
+                <div class="config-card-conteudo">
+                    <p class="hint">Cadastre atendentes ou gestores.</p>
+                    <div class="form-group">
+                        <label for="novo_user_nome">Nome:</label>
+                        <input type="text" id="novo_user_nome" placeholder="Ex: Maria Atendente">
+                    </div>
+                    <div class="form-group">
+                        <label for="novo_user_email">E-mail (login):</label>
+                        <input type="email" id="novo_user_email" placeholder="atendente@empresa.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="novo_user_senha">Senha:</label>
+                        <input type="password" id="novo_user_senha" placeholder="Mínimo 6 caracteres" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="novo_user_perfil">Perfil:</label>
+                        <select id="novo_user_perfil">
+                            <option value="atendente">Atendente (sem excluir)</option>
+                            <option value="gestor">Gestor (acesso total)</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-verde" id="btn_criar_usuario">Cadastrar usuário</button>
                 </div>
-                <div class="pwa-acoes">
-                    <button type="button" class="btn btn-verde btn-instalar" id="btn_instalar_app">Instalar</button>
-                    <button type="button" class="btn btn-outline btn-instalar" id="btn_ver_como_instalar">Como instalar</button>
-                    <button type="button" class="btn btn-outline btn-instalar" id="btn_fechar_install">Depois</button>
+            </details>
+            <details class="config-card config-card-pwa" id="pwa_install_bar">
+                    <summary>Instalar app</summary>
+                    <div class="config-card-conteudo">
+                        <div class="pwa-icon-wrap" id="pwa_logo_wrap" aria-hidden="true">
+                            <img id="pwa_logo_img" src="icons/icon-192.png" alt="Paraná Peças">
+                            <svg id="pwa_logo_fallback" class="oculto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="230" r="150" fill="none" stroke="#007bff" stroke-width="22"/><circle cx="256" cy="230" r="58" fill="#007bff"/><rect x="236" y="330" width="40" height="90" rx="8" fill="#dc3545"/><text x="256" y="252" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#fff">PP</text></svg>
+                        </div>
+                        <div class="pwa-texto" id="pwa_install_texto">
+                            <strong>Instalar aplicativo</strong>
+                            Atalho na Área de Trabalho ou tela do celular
+                        </div>
+                        <div class="pwa-acoes">
+                            <button type="button" class="btn btn-verde btn-instalar" id="btn_instalar_app">Instalar</button>
+                            <button type="button" class="btn btn-outline btn-instalar" id="btn_ver_como_instalar">Como instalar</button>
+                            <button type="button" class="btn btn-outline btn-instalar" id="btn_fechar_install">Fechar</button>
+                        </div>
+                        <div id="pwa_desktop_passos" class="pwa-passos-interno">
+                            <strong>Como instalar COM A LOGO na Área de Trabalho:</strong><br>
+                            1. Apague o atalho antigo (ícone cinza/genérico) da Área de Trabalho.<br>
+                            2. <strong>Chrome:</strong> menu ⋮ → <strong>Instalar Paraná Peças…</strong> (ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong>).<br>
+                            3. <strong>Não use</strong> “Criar atalho…” — esse atalho fica sem a logo.<br>
+                            4. <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>.
+                        </div>
+                    <p id="pwa_ios_hint" class="pwa-ios-interno oculto">
+                        <strong>iPhone:</strong> toque em Compartilhar → <strong>Adicionar à Tela de Início</strong> para instalar o app com o ícone da Paraná Peças.
+                    </p>
                 </div>
-            </div>
-            <div id="pwa_desktop_passos" class="pwa-desktop-passos config-card-full">
-                <strong>Como instalar COM A LOGO na Área de Trabalho:</strong><br>
-                1. Apague o atalho antigo (ícone cinza/genérico) da Área de Trabalho.<br>
-                2. <strong>Chrome:</strong> menu ⋮ → <strong>Instalar Paraná Peças…</strong> (ou <strong>Salvar e compartilhar</strong> → <strong>Instalar página como app</strong>).<br>
-                3. <strong>Não use</strong> “Criar atalho…” — esse atalho fica sem a logo.<br>
-                4. <strong>Edge:</strong> menu ⋯ → <strong>Aplicativos</strong> → <strong>Instalar este site como um aplicativo</strong>.
-            </div>
-            <p id="pwa_ios_hint" class="pwa-ios-hint config-card-full">
-                <strong>iPhone:</strong> toque em Compartilhar → <strong>Adicionar à Tela de Início</strong> para instalar o app com o ícone da Paraná Peças.
-            </p>
+            </details>
         </div>
     </details>
     <div id="toast_salvar" class="toast-salvar" role="status" aria-live="polite"></div>
@@ -1539,7 +1886,47 @@
             panelHistorico: 'sec_historico',
             panelVeiculo: 'sec_cliente'
         };
-        function abrirSecao(secId) {
+        const TITULOS_SECAO_MOBILE = {
+            sec_cadastro: 'Cadastro de Cliente',
+            sec_historico: 'Histórico do Cliente',
+            sec_cliente: 'Cliente e Responsável',
+            sec_veiculo: 'Especificações do Veículo',
+            sec_chegada: 'Chegada do Veículo',
+            sec_servicos: 'Serviços Realizados',
+            sec_fotos: 'Fotos e Registro',
+            sec_valores: 'Valores — Peças e Mão de Obra'
+        };
+        function ehMobileApp() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+        function abrirPainelMobile(secId) {
+            const shell = document.getElementById('app_shell');
+            const titulo = document.getElementById('mobile_painel_titulo');
+            if (!shell) return;
+            shell.classList.add('mobile-painel-aberto');
+            document.body.classList.add('mobile-overlay-aberto');
+            if (titulo) titulo.textContent = TITULOS_SECAO_MOBILE[secId] || 'Paraná Peças';
+            const painel = document.getElementById('painel_direito');
+            if (painel) painel.scrollTop = 0;
+        }
+        function fecharPainelMobile() {
+            const shell = document.getElementById('app_shell');
+            if (!shell) return;
+            shell.classList.remove('mobile-painel-aberto');
+            document.body.classList.remove('mobile-overlay-aberto');
+            document.querySelectorAll('.menu-item[data-secao]').forEach(m => m.classList.remove('ativo'));
+        }
+        function mobileVoltar() {
+            const ativa = document.querySelector('.secao-painel.ativa');
+            const secId = ativa ? ativa.id : '';
+            if (SECOES_SERVICO.includes(secId)) {
+                voltarAoHistorico();
+                return;
+            }
+            fecharPainelMobile();
+        }
+        function abrirSecao(secId, opts = {}) {
+            const abrirOverlay = opts.abrirOverlay !== false;
             document.querySelectorAll('.secao-painel').forEach(s => s.classList.remove('ativa'));
             const el = document.getElementById(secId);
             if (el) el.classList.add('ativa');
@@ -1550,9 +1937,11 @@
                 const alerta = document.getElementById('alerta_sem_cliente');
                 if (alerta) alerta.classList.toggle('visivel', !clienteSelecionadoId);
             }
-            const painel = document.getElementById('painel_direito');
-            if (painel && window.innerWidth < 769) {
-                painel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (ehMobileApp() && abrirOverlay) {
+                abrirPainelMobile(secId);
+            } else if (!ehMobileApp()) {
+                const painel = document.getElementById('painel_direito');
+                if (painel) painel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
         function irParaAba(panelId) {
@@ -1993,7 +2382,7 @@
             d.textContent = text;
             return d.innerHTML;
         }
-        function selecionarCliente(id) {
+        function selecionarCliente(id, opts = {}) {
             const dados = carregarDados();
             const cliente = dados.clientes.find(c => c.id === id);
             if (!cliente) return;
@@ -2007,7 +2396,7 @@
             if (alerta) alerta.classList.remove('visivel');
             renderListaClientes();
             renderHistoricoCliente();
-            abrirSecao('sec_historico');
+            abrirSecao('sec_historico', { abrirOverlay: opts.abrirPainel !== false });
         }
         function renderHistoricoCliente() {
             const semCliente = document.getElementById('historico_sem_cliente');
@@ -2681,24 +3070,28 @@
                 }
             }
             if (isStandalone) {
-                if (bar) bar.hidden = true;
-                if (passos) passos.classList.remove('visivel');
+                if (bar) bar.classList.add('oculto');
                 if (btnHeader) btnHeader.hidden = true;
-                if (iosHint) iosHint.classList.remove('visivel');
                 return;
             }
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            if (isIOS && iosHint) { iosHint.classList.add('visivel'); abrirConfigRodape(); }
-            function mostrarPassosInstalar() {
-                if (passos) passos.classList.add('visivel');
+            if (isIOS && iosHint) iosHint.classList.remove('oculto');
+            function abrirPainelInstalar() {
+                if (!bar) return;
+                document.querySelectorAll('.config-rodape-grid .config-card').forEach(c => {
+                    if (c !== bar) c.open = false;
+                });
+                bar.classList.remove('oculto');
+                bar.open = true;
                 abrirConfigRodape();
-                passos.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            function mostrarPassosInstalar() {
+                abrirPainelInstalar();
+                if (passos) passos.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
             function mostrarBarraInstall() {
                 if (!bar) return;
-                bar.hidden = false;
-                abrirConfigRodape();
-                if (isDesktop) bar.classList.add('pwa-desktop-visivel');
+                bar.classList.remove('oculto');
                 const texto = document.getElementById('pwa_install_texto');
                 if (texto) {
                     texto.innerHTML = isDesktop
@@ -2707,18 +3100,19 @@
                 }
             }
             async function tentarInstalar() {
+                abrirPainelInstalar();
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
                     deferredPrompt = null;
-                    if (outcome === 'accepted' && bar) bar.hidden = true;
+                    if (outcome === 'accepted' && bar) bar.classList.add('oculto');
                     if (outcome === 'accepted' && btnHeader) btnHeader.hidden = true;
                     return;
                 }
                 mostrarPassosInstalar();
                 mostrarToast(
                     isDesktop
-                        ? 'Veja as instruções acima ou use o menu ⋮ do Chrome → Instalar Paraná Peças'
+                        ? 'Veja as instruções no painel Instalar app ou use o menu ⋮ do Chrome → Instalar Paraná Peças'
                         : 'iPhone: Compartilhar → Adicionar à Tela de Início',
                     'aviso',
                     7000
@@ -2729,17 +3123,15 @@
                 deferredPrompt = e;
                 mostrarBarraInstall();
             });
-            if (isDesktop) {
-                mostrarBarraInstall();
-                if (btnHeader) btnHeader.hidden = false;
-            }
+            mostrarBarraInstall();
+            if (btnHeader) btnHeader.hidden = false;
             const btnInstalar = document.getElementById('btn_instalar_app');
             const btnFechar = document.getElementById('btn_fechar_install');
             const btnComo = document.getElementById('btn_ver_como_instalar');
             if (btnInstalar) btnInstalar.addEventListener('click', tentarInstalar);
             if (btnHeader) btnHeader.addEventListener('click', tentarInstalar);
             if (btnComo) btnComo.addEventListener('click', mostrarPassosInstalar);
-            if (btnFechar) btnFechar.addEventListener('click', () => { if (bar) bar.hidden = true; });
+            if (btnFechar) btnFechar.addEventListener('click', () => { if (bar) bar.open = false; });
         }
         function salvarAtendimentoNoCliente(cliente, atendimento) {
             if (!cliente.veiculos) cliente.veiculos = [];
@@ -2773,6 +3165,20 @@
             updatePlate();
             atualizarStatusPastaUI();
             configurarPWA();
+            if (ehMobileApp()) fecharPainelMobile();
+            document.getElementById('btn_mobile_voltar').addEventListener('click', mobileVoltar);
+            window.addEventListener('resize', () => {
+                if (!ehMobileApp()) fecharPainelMobile();
+            });
+            document.querySelectorAll('.config-rodape-grid .config-card').forEach(card => {
+                card.open = false;
+                card.addEventListener('toggle', () => {
+                    if (!card.open) return;
+                    document.querySelectorAll('.config-rodape-grid .config-card').forEach(outro => {
+                        if (outro !== card) outro.open = false;
+                    });
+                });
+            });
             indicarModoLocalDev();
             aplicarLogoEmpresa();
             document.getElementById('btn_config_pasta').addEventListener('click', configurarPastaRaiz);
@@ -2877,7 +3283,8 @@
                 document.getElementById('novo_cliente_nome').value = '';
                 document.getElementById('novo_cliente_tel').value = '';
                 renderListaClientes();
-                selecionarCliente(novo.id);
+                selecionarCliente(novo.id, { abrirPainel: false });
+                if (ehMobileApp()) fecharPainelMobile();
                 const nuvem = await enviarClienteParaNuvemComTimeout(novo);
                 mostrarToast(
                     nuvem.ok ? `Cliente "${nome}" salvo (aparelho + nuvem).` : `Cliente salvo no aparelho.\nNuvem: ${nuvem.motivo || 'indisponível'}`,
@@ -2939,6 +3346,7 @@
                     mostrarToast(partes.join('\n'), nuvem.ok ? 'ok' : 'aviso', 6000);
                     limparFormVeiculo();
                     irParaAba('sec_historico');
+                    if (ehMobileApp()) fecharPainelMobile();
                 } catch (err) {
                     console.error(err);
                     mostrarToast('Erro ao salvar. Tente de novo.', 'erro', 6000);
