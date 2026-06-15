@@ -1164,11 +1164,30 @@
         }
         .mirror-print-section { display: none; }
         @media print {
-            body { background: #f4f6f9 !important; color: #000000 !important; padding: 0; margin: 0; }
-            .nav-tabs, .menu-lateral, .menu-acoes, .panel, .app-header, .pwa-install-bar, .pwa-ios-hint, h1.main-title, .button-zone, .mini-plate-wrapper, .modal-overlay, .pasta-config, .logo-config, .toast-salvar, .login-screen, .barra-usuario, .painel-usuarios, .pwa-desktop-passos, .config-rodape-wrap { display: none !important; }
+            @page { margin: 12mm; }
+            body {
+                background: #f4f6f9 !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            .mirror-print-section,
+            .mirror-print-section * {
+                visibility: visible;
+            }
             .mirror-print-section {
-                display: block !important; width: 100%; max-width: 800px;
-                margin: 0 auto; padding: 30px; background: #ffffff;
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 30px;
+                background: #ffffff;
             }
             .print-logo-wrap {
                 text-align: center; background: #ffffff; padding: 12px 20px 0;
