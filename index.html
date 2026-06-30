@@ -1215,7 +1215,24 @@
             .print-label { font-size: 0.75rem; color: #666666; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; }
             .print-value { font-size: 1.1rem; color: #111111; font-weight: 500; border-bottom: 1px solid #eeeeee; padding-bottom: 5px; min-height: 28px; }
             .full-width { grid-column: span 2; }
-            .print-foto { max-width: 100%; max-height: 280px; border-radius: 6px; margin-top: 8px; }
+            .print-foto {
+                max-width: 100% !important;
+                max-height: 280px !important;
+                width: auto !important;
+                height: auto !important;
+                object-fit: contain !important;
+                display: block !important;
+                background: #ffffff !important;
+                border-radius: 6px;
+                margin-top: 8px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            #p_fotos_galeria {
+                display: flex !important;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
             .print-signatures { margin-top: 50px; display: flex; justify-content: space-around; padding: 0 20px; gap: 20px; }
             .sig-box {
                 width: 42%; text-align: center; border-top: 1px solid #000000; padding-top: 8px;
@@ -1837,6 +1854,70 @@
             if (!a) return [];
             normalizarFotosAtendimento(a);
             return (a.fotos || []).map(f => f.url || f.data).filter(Boolean);
+        }
+        function aguardarCarregarImagem(img) {
+            return new Promise(resolve => {
+                if (!img) { resolve(null); return; }
+                if (img.complete && img.naturalWidth > 0) { resolve(img); return; }
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+            });
+        }
+        async function desenharImagemEmJpegDataUrl(origem) {
+            let bitmap = null;
+            let img = null;
+            try {
+                const max = 960;
+                let w, h, draw;
+                if (origem instanceof Blob && window.createImageBitmap) {
+                    bitmap = await createImageBitmap(origem, { imageOrientation: 'from-image' });
+                    w = bitmap.width;
+                    h = bitmap.height;
+                    draw = (ctx, dw, dh) => ctx.drawImage(bitmap, 0, 0, dw, dh);
+                } else {
+                    img = new Image();
+                    if (typeof origem === 'string' && origem.startsWith('http')) img.crossOrigin = 'anonymous';
+                    await new Promise((res, rej) => {
+                        img.onload = () => res();
+                        img.onerror = rej;
+                        img.src = typeof origem === 'string' ? origem : URL.createObjectURL(origem);
+                    });
+                    w = img.naturalWidth || img.width;
+                    h = img.naturalHeight || img.height;
+                    draw = (ctx, dw, dh) => ctx.drawImage(img, 0, 0, dw, dh);
+                }
+                if (!w || !h) return null;
+                if (w > max || h > max) {
+                    if (w > h) { h = (h * max) / w; w = max; }
+                    else { w = (w * max) / h; h = max; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(w);
+                canvas.height = Math.round(h);
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                draw(ctx, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', 0.82);
+            } catch (e) {
+                console.warn('Imagem para impressão:', e);
+                return typeof origem === 'string' ? origem : null;
+            } finally {
+                if (bitmap && bitmap.close) bitmap.close();
+                if (img && img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+            }
+        }
+        async function prepararSrcFotoParaPrint(src) {
+            if (!src) return null;
+            if (String(src).startsWith('data:')) return desenharImagemEmJpegDataUrl(src);
+            try {
+                const resp = await fetch(src, { mode: 'cors', cache: 'no-cache' });
+                if (!resp.ok) return src;
+                const blob = await resp.blob();
+                return await desenharImagemEmJpegDataUrl(blob) || src;
+            } catch {
+                return src;
+            }
         }
         function fotoAtendimento(a) {
             const lista = listarFotosAtendimento(a);
@@ -2761,9 +2842,15 @@
             );
         }
         function abrirVisualizacaoAtendimento(placa, atendimentoId) {
+            void abrirVisualizacaoAtendimentoAsync(placa, atendimentoId);
+        }
+        async function abrirVisualizacaoAtendimentoAsync(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
             if (!found) return;
-            modalAtendimentoAtual = { placa, atendimentoId };
+            if (window.hidratarFotosCliente) {
+                await window.hidratarFotosCliente(found.cliente);
+                salvarDados(carregarDados());
+            }
             const a = found.atendimento;
             const campos = [
                 ['Cliente', found.cliente.nome],
@@ -2802,6 +2889,7 @@
             document.getElementById('modal_corpo').innerHTML = html;
             document.getElementById('modal_visualizar').classList.add('aberto');
             document.body.classList.add('modal-aberto');
+            modalAtendimentoAtual = { placa, atendimentoId };
         }
         function fecharModal() {
             document.getElementById('modal_visualizar').classList.remove('aberto');
@@ -2953,13 +3041,19 @@
         function carregarAtendimentoNoForm(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
             if (!found) return;
-            sairModoVistoria();
-            atendimentoEditandoId = atendimentoId;
-            preencherFormComAtendimento(found.atendimento, placa);
-            document.getElementById('in_placa').readOnly = true;
-            atualizarBannerModoForm();
-            renderHistoricoCliente();
-            abrirSecao('sec_cliente');
+            void (async () => {
+                if (window.hidratarFotosCliente) {
+                    await window.hidratarFotosCliente(found.cliente);
+                    salvarDados(carregarDados());
+                }
+                sairModoVistoria();
+                atendimentoEditandoId = atendimentoId;
+                preencherFormComAtendimento(found.atendimento, placa);
+                document.getElementById('in_placa').readOnly = true;
+                atualizarBannerModoForm();
+                renderHistoricoCliente();
+                abrirSecao('sec_cliente');
+            })();
         }
         function iniciarNovaVisita(placa) {
             const cliente = getClienteAtivo();
@@ -3008,9 +3102,12 @@
         function reimprimirAtendimento(placa, atendimentoId) {
             const found = buscarAtendimento(placa, atendimentoId);
             if (!found) return;
-            gerarEspelhoComDados(found.cliente.nome, found.atendimento);
+            void gerarEspelhoComDados(found.cliente.nome, found.atendimento, found.cliente);
         }
-        function gerarEspelhoComDados(nomeCliente, a) {
+        async function gerarEspelhoComDados(nomeCliente, a, clienteRef) {
+            if (clienteRef && window.hidratarFotosCliente) {
+                await window.hidratarFotosCliente(clienteRef);
+            }
             document.getElementById('p_cliente').textContent = nomeCliente;
             document.getElementById('p_responsavel').textContent = a.responsavel || '—';
             document.getElementById('p_carro').textContent = a.carro || '—';
@@ -3031,14 +3128,15 @@
             const fotos = listarFotosAtendimento(a);
             if (galeriaPrint) galeriaPrint.innerHTML = '';
             if (fotos.length && wrapFotos && galeriaPrint) {
-                fotos.forEach(src => {
+                for (const src of fotos) {
+                    const printSrc = await prepararSrcFotoParaPrint(src) || src;
                     const img = document.createElement('img');
-                    img.src = src;
+                    img.src = printSrc;
                     img.className = 'print-foto';
-                    img.style.cssText = 'width:140px;height:105px;object-fit:cover;border-radius:4px;border:1px solid #ccc;';
                     img.alt = 'Foto do veículo';
                     galeriaPrint.appendChild(img);
-                });
+                    await aguardarCarregarImagem(img);
+                }
                 wrapFotos.style.display = 'block';
             } else if (wrapFotos) {
                 wrapFotos.style.display = 'none';
@@ -3063,32 +3161,23 @@
                 if (sigLabel) { sigLabel.style.display = 'block'; sigLabel.textContent = 'Assinatura do Cliente'; }
             }
             aplicarLogoNoEspelhoImpressao();
-            window.print();
+            await aguardarCarregarImagem(document.getElementById('p_logo_empresa'));
+            requestAnimationFrame(() => setTimeout(() => window.print(), 200));
         }
         async function comprimirImagem(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const max = 960;
-                        let w = img.width, h = img.height;
-                        if (w > max || h > max) {
-                            if (w > h) { h = (h * max) / w; w = max; }
-                            else { w = (w * max) / h; h = max; }
-                        }
-                        const canvas = document.createElement('canvas');
-                        canvas.width = w;
-                        canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.62));
+            if (!file) throw new Error('arquivo vazio');
+            try {
+                return await desenharImagemEmJpegDataUrl(file);
+            } catch {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        desenharImagemEmJpegDataUrl(e.target.result).then(resolve).catch(reject);
                     };
-                    img.onerror = reject;
-                    img.src = e.target.result;
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
         }
         function adicionarFoto(base64) {
             fotosAtuais.push({ id: gerarIdFoto(), data: base64, url: null });
@@ -3111,15 +3200,18 @@
             if (!files.length) return;
             let erros = 0;
             for (const file of files) {
-                if (!file || !file.type.startsWith('image/')) continue;
+                if (!file) continue;
+                const tipo = (file.type || '').toLowerCase();
+                if (!tipo.startsWith('image/') && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name || '')) continue;
                 try {
                     const base64 = await comprimirImagem(file);
-                    adicionarFoto(base64);
+                    if (base64) adicionarFoto(base64);
+                    else erros++;
                 } catch {
                     erros++;
                 }
             }
-            if (erros) mostrarToast('Algumas imagens não puderam ser processadas.', 'aviso', 4000);
+            if (erros) mostrarToast('Algumas imagens não puderam ser processadas. Tente de novo ou use Galeria.', 'aviso', 5000);
         }
         function coletarDadosVeiculo() {
             return {
@@ -3234,7 +3326,8 @@
             if (!validarFormAtendimento()) return;
             const dados = coletarDadosVeiculo();
             if (!dados.dataRegistro) dados.dataRegistro = new Date().toISOString();
-            gerarEspelhoComDados(document.getElementById('in_cliente').value, dados);
+            const cliente = getClienteAtivo();
+            void gerarEspelhoComDados(document.getElementById('in_cliente').value, dados, cliente);
         }
         function gerarBackupLocal() {
             const placa = document.getElementById('in_placa').value.toUpperCase();
@@ -3791,21 +3884,49 @@
 
             async function hidratarFotosMidia(clientes) {
                 for (const cliente of clientes || []) {
+                    const pendentes = [];
                     for (const vg of cliente.veiculos || []) {
                         for (const a of vg.atendimentos || []) {
                             for (const f of a.fotos || []) {
-                                if (f.data || f.url || !f.id || !a.id) continue;
-                                try {
-                                    const snap = await getDoc(doc(db, COLECAO_MIDIA, idDocMidia(cliente.id, a.id, f.id)));
-                                    if (snap.exists() && snap.data().data) f.data = snap.data().data;
-                                } catch (e) {
-                                    console.warn('Baixar foto:', e);
+                                if (!f.data && !f.url && f.id && a.id) {
+                                    pendentes.push({ f, atendimentoId: a.id });
                                 }
                             }
                         }
                     }
+                    if (!pendentes.length) continue;
+                    const mapMidia = new Map();
+                    try {
+                        const midiaSnap = await getDocs(query(collection(db, COLECAO_MIDIA), where('clienteId', '==', cliente.id)));
+                        midiaSnap.forEach(d => {
+                            const x = d.data();
+                            if (x.atendimentoId && x.fotoId && x.data) {
+                                mapMidia.set(`${x.atendimentoId}_${x.fotoId}`, x.data);
+                            }
+                        });
+                    } catch (e) {
+                        console.warn('Baixar fotos (lote):', e);
+                    }
+                    for (const { f, atendimentoId } of pendentes) {
+                        const data = mapMidia.get(`${atendimentoId}_${f.id}`);
+                        if (data) {
+                            f.data = data;
+                            continue;
+                        }
+                        try {
+                            const snap = await getDoc(doc(db, COLECAO_MIDIA, idDocMidia(cliente.id, atendimentoId, f.id)));
+                            if (snap.exists() && snap.data().data) f.data = snap.data().data;
+                        } catch (e) {
+                            console.warn('Baixar foto:', e);
+                        }
+                    }
                 }
             }
+
+            window.hidratarFotosCliente = async function(cliente) {
+                if (!cliente) return;
+                await hidratarFotosMidia([cliente]);
+            };
 
             async function apagarMidiaCliente(clienteId) {
                 try {
@@ -3853,27 +3974,44 @@
                         delete a.fotoUrl;
                     }
                 }
-                if (!storage) {
-                    await enviarFotosParaMidia(cliente, copia);
-                    return copia;
-                }
                 const pastaSlug = slugCliente(cliente.nome);
                 for (const vg of copia.veiculos || []) {
                     for (const a of vg.atendimentos || []) {
                         const basePath = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${a.placa}/${a.id}`;
+                        const origAt = (cliente.veiculos || []).flatMap(v => v.atendimentos || []).find(x => x.id === a.id);
                         for (const f of a.fotos || []) {
                             if (!f.data || !String(f.data).startsWith('data:')) continue;
-                            try {
-                                const fotoRef = ref(storage, `${basePath}/foto_${f.id || 'x'}.jpg`);
-                                await uploadString(fotoRef, f.data, 'data_url');
-                                f.url = await getDownloadURL(fotoRef);
-                                const origAt = (cliente.veiculos || []).flatMap(v => v.atendimentos || []).find(x => x.id === a.id);
-                                const origF = origAt && (origAt.fotos || []).find(x => x.id === f.id);
-                                if (origF) { origF.url = f.url; delete origF.data; }
-                            } catch (fotoErr) {
-                                console.warn('Foto não enviada (Storage):', fotoErr.code || fotoErr.message);
+                            let enviada = false;
+                            if (storage) {
+                                try {
+                                    const fotoRef = ref(storage, `${basePath}/foto_${f.id || 'x'}.jpg`);
+                                    await uploadString(fotoRef, f.data, 'data_url');
+                                    f.url = await getDownloadURL(fotoRef);
+                                    const origF = origAt && (origAt.fotos || []).find(x => x.id === f.id);
+                                    if (origF) {
+                                        origF.url = f.url;
+                                        delete origF.data;
+                                    }
+                                    enviada = true;
+                                } catch (fotoErr) {
+                                    console.warn('Foto não enviada (Storage):', fotoErr.code || fotoErr.message);
+                                }
                             }
-                            delete f.data;
+                            if (!enviada && f.id && a.id) {
+                                try {
+                                    await setDoc(doc(db, COLECAO_MIDIA, idDocMidia(cliente.id, a.id, f.id)), {
+                                        clienteId: cliente.id,
+                                        atendimentoId: a.id,
+                                        fotoId: f.id,
+                                        data: f.data,
+                                        atualizadoEm: new Date().toISOString()
+                                    });
+                                    enviada = true;
+                                } catch (midiaErr) {
+                                    console.warn('Foto na nuvem (midia):', midiaErr.code || midiaErr.message);
+                                }
+                            }
+                            if (enviada) delete f.data;
                         }
                     }
                 }
