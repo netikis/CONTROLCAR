@@ -1166,23 +1166,17 @@
         @media print {
             @page { margin: 12mm; }
             body {
-                background: #f4f6f9 !important;
+                background: #ffffff !important;
                 color: #000000 !important;
                 padding: 0 !important;
                 margin: 0 !important;
             }
-            body * {
-                visibility: hidden;
-            }
-            .mirror-print-section,
-            .mirror-print-section * {
-                visibility: visible;
+            body > *:not(.mirror-print-section) {
+                display: none !important;
             }
             .mirror-print-section {
                 display: block !important;
-                position: absolute;
-                left: 0;
-                top: 0;
+                position: static;
                 width: 100%;
                 max-width: 800px;
                 margin: 0 auto;
@@ -1215,7 +1209,8 @@
             .print-label { font-size: 0.75rem; color: #666666; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; }
             .print-value { font-size: 1.1rem; color: #111111; font-weight: 500; border-bottom: 1px solid #eeeeee; padding-bottom: 5px; min-height: 28px; }
             .full-width { grid-column: span 2; }
-            .print-foto {
+            .print-foto,
+            .mirror-print-section img {
                 max-width: 100% !important;
                 max-height: 280px !important;
                 width: auto !important;
@@ -1223,8 +1218,11 @@
                 object-fit: contain !important;
                 display: block !important;
                 background: #ffffff !important;
+                border: 1px solid #dddddd;
                 border-radius: 6px;
                 margin-top: 8px;
+                filter: none !important;
+                opacity: 1 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -1858,29 +1856,55 @@
         function aguardarCarregarImagem(img) {
             return new Promise(resolve => {
                 if (!img) { resolve(null); return; }
-                if (img.complete && img.naturalWidth > 0) { resolve(img); return; }
-                img.onload = () => resolve(img);
+                const ok = () => {
+                    if (img.decode) {
+                        img.decode().then(() => resolve(img)).catch(() => resolve(img));
+                    } else {
+                        resolve(img);
+                    }
+                };
+                if (img.complete && img.naturalWidth > 0) { ok(); return; }
+                img.onload = () => ok();
                 img.onerror = () => resolve(null);
             });
         }
+        async function origemComoBlob(origem) {
+            if (origem instanceof Blob) return origem;
+            if (typeof origem !== 'string') return null;
+            if (origem.startsWith('data:') || origem.startsWith('blob:') || origem.startsWith('http')) {
+                const resp = await fetch(origem, origem.startsWith('http') ? { mode: 'cors', cache: 'no-cache' } : undefined);
+                if (!resp.ok) return null;
+                return await resp.blob();
+            }
+            return null;
+        }
         async function desenharImagemEmJpegDataUrl(origem) {
             let bitmap = null;
-            let img = null;
+            let blobUrl = null;
             try {
                 const max = 960;
                 let w, h, draw;
-                if (origem instanceof Blob && window.createImageBitmap) {
-                    bitmap = await createImageBitmap(origem, { imageOrientation: 'from-image' });
+                const blob = await origemComoBlob(origem);
+                if (blob && window.createImageBitmap) {
+                    try {
+                        bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+                    } catch {
+                        bitmap = await createImageBitmap(blob);
+                    }
                     w = bitmap.width;
                     h = bitmap.height;
                     draw = (ctx, dw, dh) => ctx.drawImage(bitmap, 0, 0, dw, dh);
                 } else {
-                    img = new Image();
+                    const img = new Image();
                     if (typeof origem === 'string' && origem.startsWith('http')) img.crossOrigin = 'anonymous';
                     await new Promise((res, rej) => {
                         img.onload = () => res();
                         img.onerror = rej;
-                        img.src = typeof origem === 'string' ? origem : URL.createObjectURL(origem);
+                        if (typeof origem === 'string') img.src = origem;
+                        else if (origem instanceof Blob) {
+                            blobUrl = URL.createObjectURL(origem);
+                            img.src = blobUrl;
+                        } else rej(new Error('origem inválida'));
                     });
                     w = img.naturalWidth || img.width;
                     h = img.naturalHeight || img.height;
@@ -1894,30 +1918,23 @@
                 const canvas = document.createElement('canvas');
                 canvas.width = Math.round(w);
                 canvas.height = Math.round(h);
-                const ctx = canvas.getContext('2d');
+                const ctx = canvas.getContext('2d', { alpha: false });
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 draw(ctx, canvas.width, canvas.height);
-                return canvas.toDataURL('image/jpeg', 0.82);
+                return canvas.toDataURL('image/jpeg', 0.88);
             } catch (e) {
                 console.warn('Imagem para impressão:', e);
-                return typeof origem === 'string' ? origem : null;
+                return typeof origem === 'string' && origem.startsWith('data:image/jpeg') ? origem : null;
             } finally {
                 if (bitmap && bitmap.close) bitmap.close();
-                if (img && img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+                if (blobUrl) URL.revokeObjectURL(blobUrl);
             }
         }
         async function prepararSrcFotoParaPrint(src) {
             if (!src) return null;
-            if (String(src).startsWith('data:')) return desenharImagemEmJpegDataUrl(src);
-            try {
-                const resp = await fetch(src, { mode: 'cors', cache: 'no-cache' });
-                if (!resp.ok) return src;
-                const blob = await resp.blob();
-                return await desenharImagemEmJpegDataUrl(blob) || src;
-            } catch {
-                return src;
-            }
+            const jpeg = await desenharImagemEmJpegDataUrl(src);
+            return jpeg || (String(src).startsWith('data:') ? src : null);
         }
         function fotoAtendimento(a) {
             const lista = listarFotosAtendimento(a);
@@ -3129,7 +3146,8 @@
             if (galeriaPrint) galeriaPrint.innerHTML = '';
             if (fotos.length && wrapFotos && galeriaPrint) {
                 for (const src of fotos) {
-                    const printSrc = await prepararSrcFotoParaPrint(src) || src;
+                    const printSrc = await prepararSrcFotoParaPrint(src);
+                    if (!printSrc) continue;
                     const img = document.createElement('img');
                     img.src = printSrc;
                     img.className = 'print-foto';
@@ -3137,7 +3155,7 @@
                     galeriaPrint.appendChild(img);
                     await aguardarCarregarImagem(img);
                 }
-                wrapFotos.style.display = 'block';
+                wrapFotos.style.display = galeriaPrint.children.length ? 'block' : 'none';
             } else if (wrapFotos) {
                 wrapFotos.style.display = 'none';
             }
@@ -3153,16 +3171,20 @@
             const sigImg = document.getElementById('p_sig_cliente');
             const sigLabel = document.getElementById('p_sig_cliente_label');
             if (a.assinaturaCliente && sigImg) {
-                sigImg.src = a.assinaturaCliente;
+                const sigSrc = await prepararSrcFotoParaPrint(a.assinaturaCliente) || a.assinaturaCliente;
+                sigImg.src = sigSrc;
                 sigImg.style.display = 'block';
                 if (sigLabel) sigLabel.style.display = 'none';
+                await aguardarCarregarImagem(sigImg);
             } else if (sigImg) {
                 sigImg.style.display = 'none';
                 if (sigLabel) { sigLabel.style.display = 'block'; sigLabel.textContent = 'Assinatura do Cliente'; }
             }
-            aplicarLogoNoEspelhoImpressao();
-            await aguardarCarregarImagem(document.getElementById('p_logo_empresa'));
-            requestAnimationFrame(() => setTimeout(() => window.print(), 200));
+            await aplicarLogoNoEspelhoImpressaoAsync();
+            document.body.classList.add('imprimindo-espelho');
+            const fecharImpressao = () => document.body.classList.remove('imprimindo-espelho');
+            window.addEventListener('afterprint', fecharImpressao, { once: true });
+            requestAnimationFrame(() => setTimeout(() => window.print(), 450));
         }
         async function comprimirImagem(file) {
             if (!file) throw new Error('arquivo vazio');
@@ -3453,20 +3475,25 @@
             if (preview && preview.src && preview.src !== location.href) return preview.src;
             return obterUrlLogoSalva();
         }
-        function aplicarLogoNoEspelhoImpressao() {
+        async function aplicarLogoNoEspelhoImpressaoAsync() {
             const img = document.getElementById('p_logo_empresa');
             const wrap = document.getElementById('p_logo_wrap');
             if (!img || !wrap) return;
             const src = obterSrcLogoAtual();
-            if (src && /^https?:\/\//i.test(src)) {
-                img.src = src;
+            if (src && (/^https?:\/\//i.test(src) || src.startsWith('data:'))) {
+                const prepared = await prepararSrcFotoParaPrint(src);
+                img.src = prepared || src;
                 img.style.display = 'block';
                 wrap.style.display = 'block';
+                await aguardarCarregarImagem(img);
             } else {
                 img.removeAttribute('src');
                 img.style.display = 'none';
                 wrap.style.display = 'none';
             }
+        }
+        function aplicarLogoNoEspelhoImpressao() {
+            void aplicarLogoNoEspelhoImpressaoAsync();
         }
         function mostrarLogoFallback(mostrar) {
             document.getElementById('logo_empresa_fallback').classList.toggle('oculto', !mostrar);
