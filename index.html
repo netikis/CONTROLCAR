@@ -1843,17 +1843,19 @@
                 renderHistoricoCliente();
                 if (r.jaAssinado) {
                     mostrarToast('Cliente já assinou — link reenviado.', 'ok', 5000);
-                } else if (r.fotosPendentes) {
+                } else if ((found.atendimento.fotos || []).length && !r.fotosIncluidas) {
                     mostrarToast('Link pronto — já pode copiar e enviar.\nFotos ainda subindo no fundo.', 'ok', 6000);
                 } else if (r.fotosIncluidas) {
                     mostrarToast('Link pronto com ' + r.fotosIncluidas + ' foto' + (r.fotosIncluidas > 1 ? 's' : '') + ' — envie ao cliente.', 'ok', 5000);
                 } else {
                     mostrarToast('Link pronto — envie ao cliente.', 'ok', 5000);
                 }
-                if (r.fotosPendentes && window.enviarFotosDoLinkAssinatura) {
+                if ((found.atendimento.fotos || []).length && window.enviarFotosDoLinkAssinatura) {
                     window.enviarFotosDoLinkAssinatura(found.cliente, found.atendimento, r.token).then((fotos) => {
                         if (fotos && fotos.ok && fotos.fotosIncluidas) {
                             mostrarToast('Fotos do link atualizadas (' + fotos.fotosIncluidas + ').', 'ok', 4000);
+                        } else if (fotos && !fotos.fotosIncluidas) {
+                            mostrarToast('Link enviado, mas as fotos não subiram. Toque Sincronizar e gere o link de novo.', 'aviso', 7000);
                         }
                     }).catch((e) => console.warn('Fotos do link:', e));
                 }
@@ -4233,7 +4235,9 @@
                 return [...new Set(urls)];
             }
             function atendimentoTemFotoPendente(atendimento) {
-                return (atendimento.fotos || []).some(f => !urlHttpFoto(f.url) && !urlHttpFoto(f.data) && (f.data || f.id));
+                const fotos = atendimento.fotos || [];
+                if (!fotos.length) return false;
+                return coletarUrlsFotosAtendimento(atendimento).length === 0;
             }
             async function comTempoLimite(promessa, ms) {
                 let timer;
@@ -4244,6 +4248,53 @@
                     ]);
                 } finally {
                     clearTimeout(timer);
+                }
+            }
+            function carregarImagemDataUrl(dataUrl) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => reject(new Error('imagem'));
+                    img.src = dataUrl;
+                });
+            }
+            function desenharJpeg(img, maxLado, qualidade) {
+                let w = img.naturalWidth || img.width;
+                let h = img.naturalHeight || img.height;
+                if (!w || !h) return null;
+                if (w > maxLado || h > maxLado) {
+                    const r = maxLado / Math.max(w, h);
+                    w = Math.max(1, Math.round(w * r));
+                    h = Math.max(1, Math.round(h * r));
+                }
+                const c = document.createElement('canvas');
+                c.width = w;
+                c.height = h;
+                const ctx = c.getContext('2d', { alpha: false });
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                return c.toDataURL('image/jpeg', qualidade);
+            }
+            async function comprimirDataUrlParaLink(dataUrl) {
+                if (!dataUrl || !String(dataUrl).startsWith('data:')) return dataUrl;
+                if (String(dataUrl).length <= 220000) return dataUrl;
+                try {
+                    const img = await carregarImagemDataUrl(dataUrl);
+                    let max = 700;
+                    let q = 0.7;
+                    let out = dataUrl;
+                    for (let i = 0; i < 7; i++) {
+                        const gerada = desenharJpeg(img, max, q);
+                        if (!gerada) break;
+                        out = gerada;
+                        if (out.length <= 220000) return out;
+                        max = Math.round(max * 0.82);
+                        q = Math.max(0.42, q - 0.08);
+                    }
+                    return out.length > 700000 ? null : out;
+                } catch {
+                    return String(dataUrl).length > 700000 ? null : dataUrl;
                 }
             }
             async function enviarUmaFotoStorage(cliente, atendimento, f) {
@@ -4263,58 +4314,73 @@
                 }
             }
             async function hidratarFotosDesteAtendimento(cliente, atendimento) {
-                const mini = {
-                    id: cliente.id,
-                    nome: cliente.nome,
-                    veiculos: [{ placa: atendimento.placa, atendimentos: [atendimento] }]
-                };
-                await hidratarTodasFotos([mini]);
-            }
-            async function garantirUrlsFotosAtendimento(cliente, atendimento) {
-                if (!cliente || !atendimento) return atendimento;
-                try {
-                    await comTempoLimite(hidratarFotosDesteAtendimento(cliente, atendimento), 12000);
-                } catch (e) {
-                    console.warn('Hidratação fotos (link):', e.message || e);
+                if (!cliente || !atendimento) return;
+                const pastaSlug = slugCliente(cliente.nome);
+                const falta = () => (atendimento.fotos || []).some(f => !urlHttpFoto(f.url) && !(f.data && String(f.data).startsWith('data:')));
+                for (const f of atendimento.fotos || []) {
+                    if (urlHttpFoto(f.url) || (f.data && String(f.data).startsWith('data:'))) continue;
+                    if (!f.id) continue;
+                    try {
+                        const snap = await comTempoLimite(
+                            getDoc(doc(db, COLECAO_MIDIA, idDocMidia(cliente.id, atendimento.id, f.id))),
+                            8000
+                        );
+                        if (snap.exists() && snap.data().data) f.data = snap.data().data;
+                    } catch (_) {}
                 }
-                let at = null;
-                for (const vg of cliente.veiculos || []) {
-                    const encontrado = (vg.atendimentos || []).find(x => x.id === atendimento.id);
-                    if (encontrado) { at = encontrado; break; }
-                }
-                if (!at) at = atendimento;
-                for (const f of at.fotos || []) {
-                    if (urlHttpFoto(f.url) || urlHttpFoto(f.data)) continue;
-                    if (f.data && String(f.data).startsWith('data:')) {
-                        await enviarUmaFotoStorage(cliente, at, f);
+                if (falta()) {
+                    try {
+                        const midiaSnap = await comTempoLimite(
+                            getDocs(query(collection(db, COLECAO_MIDIA), where('atendimentoId', '==', atendimento.id))),
+                            15000
+                        );
+                        const mapa = new Map();
+                        midiaSnap.forEach(d => {
+                            const x = d.data();
+                            if (x.fotoId && x.data) mapa.set(x.fotoId, x.data);
+                        });
+                        for (const f of atendimento.fotos || []) {
+                            if (!f.data && mapa.has(f.id)) f.data = mapa.get(f.id);
+                        }
+                    } catch (e) {
+                        console.warn('Busca fotos midia:', e.code || e.message);
                     }
                 }
-                if (at !== atendimento) {
-                    atendimento.fotos = at.fotos;
-                    if (at.fotoUrl) atendimento.fotoUrl = at.fotoUrl;
-                }
-                return at;
-            }
-            async function gravarFotosFallbackNoLink(token, atendimento) {
-                const fotosDocs = [];
                 for (const f of atendimento.fotos || []) {
-                    if (urlHttpFoto(f.url) || urlHttpFoto(f.data)) continue;
-                    if (!f.data || !String(f.data).startsWith('data:')) continue;
-                    if (String(f.data).length > 400000) continue;
-                    const docId = token + '_f_' + (f.id || String(fotosDocs.length));
+                    if (urlHttpFoto(f.url) || (f.data && String(f.data).startsWith('data:'))) continue;
+                    if (!storage || !f.id || !atendimento.placa || !atendimento.id) continue;
                     try {
+                        const path = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${atendimento.placa}/${atendimento.id}/foto_${f.id}.jpg`;
+                        f.url = await comTempoLimite(getDownloadURL(ref(storage, path)), 5000);
+                    } catch (_) {}
+                }
+            }
+            async function publicarDocumentoFotos(token, cliente, atendimento, fotosDocs, pendente) {
+                const documento = documentoParaAssinatura(cliente, atendimento);
+                documento.fotosDocs = fotosDocs;
+                documento.fotosPendentes = pendente;
+                await setDoc(doc(db, COLECAO_ASSINATURAS, token), {
+                    documento,
+                    atualizadoEm: new Date().toISOString()
+                }, { merge: true });
+            }
+            async function gravarUmaFotoNoLink(token, f, indice) {
+                if (f.data && String(f.data).startsWith('data:')) {
+                    const pequena = await comprimirDataUrlParaLink(f.data);
+                    if (pequena) {
+                        f.data = pequena;
+                        const docId = token + '_f_' + (f.id || String(indice));
                         await comTempoLimite(setDoc(doc(db, COLECAO_ASSINATURAS, docId), {
                             tipo: 'foto',
                             token,
-                            data: f.data,
+                            data: pequena,
                             atualizadoEm: new Date().toISOString()
-                        }), 8000);
-                        fotosDocs.push(docId);
-                    } catch (e) {
-                        console.warn('Foto fallback (link):', e.code || e.message);
+                        }), 10000);
+                        return { tipo: 'doc', valor: docId };
                     }
                 }
-                return fotosDocs;
+                if (urlHttpFoto(f.url)) return { tipo: 'url', valor: f.url };
+                return null;
             }
             function documentoParaAssinatura(cliente, atendimento) {
                 const fotosUrls = coletarUrlsFotosAtendimento(atendimento);
@@ -4371,8 +4437,8 @@
                     const token = atendimento.tokenAssinatura;
                     const documento = documentoParaAssinatura(cliente, atendimento);
                     documento.fotosDocs = [];
-                    documento.fotosPendentes = atendimentoTemFotoPendente(atendimento);
                     const fotosIncluidas = (documento.fotosUrls || []).length;
+                    documento.fotosPendentes = (atendimento.fotos || []).length > 0 && fotosIncluidas === 0;
                     const refDoc = doc(db, COLECAO_ASSINATURAS, token);
                     const existente = await getDoc(refDoc);
                     const prev = existente.exists() ? existente.data() : {};
@@ -4410,20 +4476,34 @@
             window.enviarFotosDoLinkAssinatura = async function(cliente, atendimento, token) {
                 try {
                     if (!token || !atendimento) return { ok: false };
-                    const at = await garantirUrlsFotosAtendimento(cliente, atendimento);
-                    const fotosDocs = await gravarFotosFallbackNoLink(token, at);
-                    const documento = documentoParaAssinatura(cliente, at);
-                    documento.fotosDocs = fotosDocs;
-                    documento.fotosPendentes = false;
-                    const refDoc = doc(db, COLECAO_ASSINATURAS, token);
-                    await setDoc(refDoc, {
-                        documento,
-                        atualizadoEm: new Date().toISOString()
-                    }, { merge: true });
-                    atendimento.fotos = at.fotos;
-                    return { ok: true, fotosIncluidas: (documento.fotosUrls || []).length + fotosDocs.length };
+                    await hidratarFotosDesteAtendimento(cliente, atendimento);
+                    const fotosDocs = [];
+                    const lista = atendimento.fotos || [];
+                    for (let i = 0; i < lista.length; i++) {
+                        const f = lista[i];
+                        try {
+                            if (!urlHttpFoto(f.url) && f.data && String(f.data).startsWith('data:')) {
+                                await enviarUmaFotoStorage(cliente, atendimento, f);
+                            }
+                            const pub = await gravarUmaFotoNoLink(token, f, i);
+                            if (pub && pub.tipo === 'doc') fotosDocs.push(pub.valor);
+                        } catch (e) {
+                            console.warn('Foto do link:', e.code || e.message);
+                        }
+                        try {
+                            await publicarDocumentoFotos(token, cliente, atendimento, fotosDocs, i < lista.length - 1);
+                        } catch (e) {
+                            console.warn('Progresso fotos:', e);
+                        }
+                    }
+                    await publicarDocumentoFotos(token, cliente, atendimento, fotosDocs, false);
+                    const incluidas = coletarUrlsFotosAtendimento(atendimento).length + fotosDocs.length;
+                    return { ok: true, fotosIncluidas: incluidas };
                 } catch (erro) {
                     console.warn('Atualizar fotos do link:', erro);
+                    try {
+                        await publicarDocumentoFotos(token, cliente, atendimento, [], false);
+                    } catch (_) {}
                     return { ok: false, motivo: mensagemErroFirebase(erro) };
                 }
             };
