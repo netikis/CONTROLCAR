@@ -38,9 +38,37 @@
         .field label { font-size: 0.68rem; color: #666; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; }
         .field p { font-size: 0.95rem; color: #111; border-bottom: 1px solid #eee; padding-bottom: 4px; min-height: 22px; white-space: pre-wrap; line-height: 1.4; }
         .field.servicos p { color: #0056b3; font-weight: 600; }
-        .doc-foto { max-width: 100%; max-height: 260px; object-fit: contain; border-radius: 6px; margin-top: 6px; background: #f3f3f3; }
+        .doc-foto { max-width: 100%; max-height: 260px; object-fit: contain; border-radius: 6px; margin-top: 6px; background: #f3f3f3; pointer-events: none; }
         .doc-fotos { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn-foto-doc {
+            display: block; border: none; background: transparent; padding: 0; cursor: zoom-in;
+            width: calc(50% - 4px); max-width: 100%;
+        }
+        .btn-foto-doc img { width: 100%; }
         .fotos-aguardando { color: #666; font-size: 0.85rem; border: none !important; min-height: 0 !important; }
+        .hint-fotos { font-size: 0.72rem; color: #888; font-weight: normal; text-transform: none; margin-top: 4px; }
+        .lightbox {
+            display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.92);
+            align-items: center; justify-content: center; flex-direction: column; padding: 16px; gap: 12px;
+        }
+        .lightbox.aberto { display: flex; }
+        .lightbox img {
+            max-width: 100%; max-height: calc(100vh - 120px); object-fit: contain; border-radius: 8px;
+            background: #111;
+        }
+        .lightbox-acoes { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 420px; }
+        .lightbox-acoes .btn { width: auto; flex: 1; }
+        .lightbox-nav {
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15);
+            color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.4rem;
+            cursor: pointer;
+        }
+        .lightbox-nav.esq { left: 10px; }
+        .lightbox-nav.dir { right: 10px; }
+        .lightbox-fechar-x {
+            position: absolute; top: 10px; right: 12px; background: transparent; border: none;
+            color: #fff; font-size: 2rem; cursor: pointer; line-height: 1;
+        }
         .assinatura-area {
             background: #1a1a1a; border: 2px solid #28a745; border-radius: 10px;
             padding: 16px; margin-bottom: 16px;
@@ -112,6 +140,16 @@
             Obrigado. A oficina já pode visualizar sua assinatura no sistema.
         </div>
     </div>
+    <div id="lightbox_foto" class="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+        <button type="button" class="lightbox-fechar-x" id="lightbox_fechar_x" aria-label="Fechar">×</button>
+        <button type="button" class="lightbox-nav esq" id="lightbox_prev" aria-label="Foto anterior">‹</button>
+        <img id="lightbox_img" alt="Foto do veículo">
+        <button type="button" class="lightbox-nav dir" id="lightbox_next" aria-label="Próxima foto">›</button>
+        <div class="lightbox-acoes">
+            <button type="button" class="btn btn-verde" id="lightbox_baixar">Baixar foto</button>
+            <button type="button" class="btn btn-outline" id="lightbox_fechar">Fechar</button>
+        </div>
+    </div>
     <script type="module">
         const params = new URLSearchParams(location.search);
         const token = params.get('t');
@@ -154,11 +192,59 @@
             }
             return [...new Set(urls)];
         }
+        let lightboxLista = [];
+        let lightboxIdx = 0;
+        function htmlFotosGaleria(lista) {
+            return lista.map((u, i) =>
+                `<button type="button" class="btn-foto-doc" data-foto-idx="${i}" aria-label="Ampliar foto ${i + 1}">
+                    <img src="${escapeHtml(u)}" class="doc-foto" alt="Foto ${i + 1}" referrerpolicy="no-referrer">
+                </button>`
+            ).join('');
+        }
+        function mostrarLightbox(idx) {
+            if (!lightboxLista.length) return;
+            lightboxIdx = (idx + lightboxLista.length) % lightboxLista.length;
+            const el = document.getElementById('lightbox_foto');
+            const img = document.getElementById('lightbox_img');
+            img.src = lightboxLista[lightboxIdx];
+            el.classList.add('aberto');
+            const varias = lightboxLista.length > 1;
+            document.getElementById('lightbox_prev').hidden = !varias;
+            document.getElementById('lightbox_next').hidden = !varias;
+        }
+        function fecharLightbox() {
+            document.getElementById('lightbox_foto').classList.remove('aberto');
+        }
+        async function baixarFotoAtual() {
+            const src = lightboxLista[lightboxIdx];
+            if (!src) return;
+            const nome = 'foto-veiculo-' + (lightboxIdx + 1) + '.jpg';
+            try {
+                let href = src;
+                let rev = null;
+                if (String(src).startsWith('http')) {
+                    const resp = await fetch(src, { mode: 'cors' });
+                    const blob = await resp.blob();
+                    href = URL.createObjectURL(blob);
+                    rev = href;
+                }
+                const a = document.createElement('a');
+                a.href = href;
+                a.download = nome;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                if (rev) setTimeout(() => URL.revokeObjectURL(rev), 2500);
+            } catch {
+                window.open(src, '_blank');
+            }
+        }
         function pintarFotos(lista, pendente) {
             const wrap = document.getElementById('campo_fotos');
             const galeria = document.getElementById('doc_fotos');
             if (!wrap || !galeria) return;
             const tem = lista && lista.length;
+            lightboxLista = tem ? lista.slice() : [];
             if (!tem && !pendente) {
                 wrap.hidden = true;
                 galeria.innerHTML = '';
@@ -166,13 +252,14 @@
             }
             wrap.hidden = false;
             galeria.innerHTML = tem
-                ? lista.map(u => `<img src="${escapeHtml(u)}" class="doc-foto" alt="Foto" referrerpolicy="no-referrer">`).join('')
+                ? htmlFotosGaleria(lista)
                 : '<p class="fotos-aguardando">Carregando fotos do veículo…</p>';
         }
         function renderDoc(data, fotosUrls) {
             const d = data.documento || {};
             const lista = (fotosUrls && fotosUrls.length) ? fotosUrls : urlsFotosDoDocumento(d);
-            const fotosHtml = lista.map(u => `<img src="${escapeHtml(u)}" class="doc-foto" alt="Foto" referrerpolicy="no-referrer">`).join('');
+            lightboxLista = lista.slice();
+            const fotosHtml = htmlFotosGaleria(lista);
             const pendente = !!(d.fotosPendentes && !lista.length);
             let orcHtml = '';
             const o = d.orcamento;
@@ -217,7 +304,7 @@
                     <div class="block-grid">
                         <div class="field full"><label>Estado de chegada</label><p>${escapeHtml(d.estadoChegada || 'Sem observações.')}</p></div>
                         <div class="field full servicos"><label>Serviços</label><p>${escapeHtml(d.servicosRealizados || '—')}</p></div>
-                        ${`<div class="field full" id="campo_fotos"${(!lista.length && !pendente) ? ' hidden' : ''}><label>Fotos do veículo</label><div class="doc-fotos" id="doc_fotos">${fotosHtml || (pendente ? '<p class="fotos-aguardando">Carregando fotos do veículo…</p>' : '')}</div></div>`}
+                        ${`<div class="field full" id="campo_fotos"${(!lista.length && !pendente) ? ' hidden' : ''}><label>Fotos do veículo</label><p class="hint-fotos">Toque na foto para ampliar. Você também pode baixar.</p><div class="doc-fotos" id="doc_fotos">${fotosHtml || (pendente ? '<p class="fotos-aguardando">Carregando fotos do veículo…</p>' : '')}</div></div>`}
                     </div>
                 </div>${orcHtml}`;
         }
@@ -379,6 +466,26 @@
                 }
             };
         }
+        document.getElementById('doc_espelho').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-foto-idx]');
+            if (!btn) return;
+            mostrarLightbox(Number(btn.dataset.fotoIdx) || 0);
+        });
+        document.getElementById('lightbox_fechar').addEventListener('click', fecharLightbox);
+        document.getElementById('lightbox_fechar_x').addEventListener('click', fecharLightbox);
+        document.getElementById('lightbox_baixar').addEventListener('click', () => { void baixarFotoAtual(); });
+        document.getElementById('lightbox_prev').addEventListener('click', (e) => { e.stopPropagation(); mostrarLightbox(lightboxIdx - 1); });
+        document.getElementById('lightbox_next').addEventListener('click', (e) => { e.stopPropagation(); mostrarLightbox(lightboxIdx + 1); });
+        document.getElementById('lightbox_foto').addEventListener('click', (e) => {
+            if (e.target.id === 'lightbox_foto') fecharLightbox();
+        });
+        document.addEventListener('keydown', (e) => {
+            const aberto = document.getElementById('lightbox_foto').classList.contains('aberto');
+            if (!aberto) return;
+            if (e.key === 'Escape') fecharLightbox();
+            if (e.key === 'ArrowLeft') mostrarLightbox(lightboxIdx - 1);
+            if (e.key === 'ArrowRight') mostrarLightbox(lightboxIdx + 1);
+        });
         main();
     </script>
 </body>

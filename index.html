@@ -1030,7 +1030,29 @@
         .modal-campo { margin-bottom: 12px; }
         .modal-campo label { color: #888; font-size: 0.7rem; text-transform: uppercase; display: block; margin-bottom: 4px; }
         .modal-campo p { color: #fff; font-size: 0.95rem; white-space: pre-wrap; line-height: 1.4; }
-        .modal-foto { max-width: 100%; border-radius: 6px; margin-top: 8px; }
+        .modal-foto { max-width: 100%; border-radius: 6px; margin-top: 8px; cursor: zoom-in; }
+        .modal-foto.sem-zoom { cursor: default; }
+        .foto-thumb img { cursor: zoom-in; }
+        .lightbox {
+            display: none; position: fixed; inset: 0; z-index: 6000; background: rgba(0,0,0,0.92);
+            align-items: center; justify-content: center; flex-direction: column; padding: 16px; gap: 12px;
+        }
+        .lightbox.aberto { display: flex; }
+        .lightbox img {
+            max-width: 100%; max-height: calc(100vh - 120px); object-fit: contain; border-radius: 8px; background: #111;
+        }
+        .lightbox-acoes { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 420px; }
+        .lightbox-acoes .btn { width: auto; flex: 1; }
+        .lightbox-nav {
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15);
+            color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.4rem; cursor: pointer;
+        }
+        .lightbox-nav.esq { left: 10px; }
+        .lightbox-nav.dir { right: 10px; }
+        .lightbox-fechar-x {
+            position: absolute; top: 10px; right: 12px; background: transparent; border: none;
+            color: #fff; font-size: 2rem; cursor: pointer; line-height: 1;
+        }
         .modal-acoes { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
         .pasta-config {
             width: 100%; max-width: var(--app-max); margin-bottom: 15px;
@@ -1741,6 +1763,16 @@
                 <button type="button" class="btn btn-sm-assinar btn-sm" id="btn_whatsapp_link">WhatsApp</button>
                 <button type="button" class="btn btn-outline btn-sm" id="btn_fechar_link">Fechar</button>
             </div>
+        </div>
+    </div>
+    <div id="lightbox_foto" class="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+        <button type="button" class="lightbox-fechar-x" id="lightbox_fechar_x" aria-label="Fechar">×</button>
+        <button type="button" class="lightbox-nav esq" id="lightbox_prev" aria-label="Foto anterior">‹</button>
+        <img id="lightbox_img" alt="Foto do veículo">
+        <button type="button" class="lightbox-nav dir" id="lightbox_next" aria-label="Próxima foto">›</button>
+        <div class="lightbox-acoes">
+            <button type="button" class="btn btn-verde" id="lightbox_baixar">Baixar foto</button>
+            <button type="button" class="btn btn-outline" id="lightbox_fechar">Fechar</button>
         </div>
     </div>
     <script>
@@ -2585,6 +2617,35 @@
             renderHistoricoCliente();
             atualizarAlertaCliente();
         }
+        function aplicarAssinaturaRecebida(token, dadosNuvem) {
+            if (!token || !dadosNuvem || !dadosNuvem.assinaturaCliente) return false;
+            const dados = carregarDados();
+            let alterou = false;
+            let placa = '';
+            let atendimentoId = '';
+            for (const c of dados.clientes || []) {
+                for (const vg of c.veiculos || []) {
+                    for (const a of vg.atendimentos || []) {
+                        if (a.tokenAssinatura !== token) continue;
+                        if (a.assinaturaCliente === dadosNuvem.assinaturaCliente) return false;
+                        a.assinaturaCliente = dadosNuvem.assinaturaCliente;
+                        a.assinadoEm = dadosNuvem.assinadoEm || new Date().toISOString();
+                        c.atualizadoEm = new Date().toISOString();
+                        placa = a.placa || vg.placa || '';
+                        atendimentoId = a.id;
+                        alterou = true;
+                    }
+                }
+            }
+            if (!alterou) return false;
+            salvarDados(dados);
+            atualizarTelaAposSync();
+            if (modalAtendimentoAtual && modalAtendimentoAtual.atendimentoId === atendimentoId) {
+                abrirVisualizacaoAtendimento(placa, atendimentoId);
+            }
+            return true;
+        }
+        window.aplicarAssinaturaRecebida = aplicarAssinaturaRecebida;
         let syncEmAndamento = false;
         let syncPendenteApos = false;
         let timerSyncAgendado = null;
@@ -2996,10 +3057,10 @@
             if (orcHtml) html += `<div class="modal-campo"><label>Detalhamento</label>${orcHtml}</div>`;
             const fotos = listarFotosAtendimento(a);
             if (fotos.length) {
-                html += `<div class="modal-campo"><label>Fotos (${fotos.length})</label><div class="fotos-galeria">${fotos.map(src => `<img src="${src}" class="modal-foto" alt="Foto">`).join('')}</div></div>`;
+                html += `<div class="modal-campo"><label>Fotos (${fotos.length}) — toque para ampliar</label><div class="fotos-galeria">${fotos.map((src, i) => `<img src="${src}" class="modal-foto" alt="Foto" data-foto-idx="${i}">`).join('')}</div></div>`;
             }
             if (a.assinaturaCliente) {
-                html += `<div class="modal-campo"><label>Assinatura do cliente</label><img src="${a.assinaturaCliente}" class="modal-foto" alt="Assinatura" style="background:#fff;max-height:100px;"><p style="color:#5dd879;font-size:0.8rem;margin-top:6px;">Assinado em ${escapeHtml(formatarDataRegistro(a.assinadoEm))}</p></div>`;
+                html += `<div class="modal-campo"><label>Assinatura do cliente</label><img src="${a.assinaturaCliente}" class="modal-foto sem-zoom" alt="Assinatura" style="background:#fff;max-height:100px;"><p style="color:#5dd879;font-size:0.8rem;margin-top:6px;">Assinado em ${escapeHtml(formatarDataRegistro(a.assinadoEm))}</p></div>`;
             } else if (a.tokenAssinatura) {
                 html += `<div class="modal-campo"><label>Assinatura</label><p style="color:#ffc107;">Aguardando assinatura do cliente</p></div>`;
             }
@@ -3012,6 +3073,54 @@
             document.getElementById('modal_visualizar').classList.remove('aberto');
             document.body.classList.remove('modal-aberto');
             modalAtendimentoAtual = null;
+        }
+        let lightboxLista = [];
+        let lightboxIdx = 0;
+        function mostrarLightbox(lista, idx) {
+            if (!lista || !lista.length) return;
+            lightboxLista = lista;
+            lightboxIdx = (idx + lista.length) % lista.length;
+            const el = document.getElementById('lightbox_foto');
+            const img = document.getElementById('lightbox_img');
+            if (!el || !img) return;
+            img.src = lightboxLista[lightboxIdx];
+            el.classList.add('aberto');
+            const varias = lightboxLista.length > 1;
+            const prev = document.getElementById('lightbox_prev');
+            const next = document.getElementById('lightbox_next');
+            if (prev) prev.hidden = !varias;
+            if (next) next.hidden = !varias;
+        }
+        function fecharLightbox() {
+            const el = document.getElementById('lightbox_foto');
+            if (el) el.classList.remove('aberto');
+        }
+        async function baixarFotoAtual() {
+            const src = lightboxLista[lightboxIdx];
+            if (!src) return;
+            const nome = 'foto-veiculo-' + (lightboxIdx + 1) + '.jpg';
+            try {
+                let href = src;
+                let rev = null;
+                if (String(src).startsWith('http')) {
+                    const resp = await fetch(src, { mode: 'cors' });
+                    const blob = await resp.blob();
+                    href = URL.createObjectURL(blob);
+                    rev = href;
+                }
+                const a = document.createElement('a');
+                a.href = href;
+                a.download = nome;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                if (rev) setTimeout(() => URL.revokeObjectURL(rev), 2500);
+            } catch {
+                window.open(src, '_blank');
+            }
+        }
+        function fotosDaGaleriaAtual() {
+            return fotosAtuais.map(f => f.data || f.url).filter(Boolean);
         }
         function formatarDataCampos(dia, mes, ano) {
             if (!dia || !mes || !ano) return '';
@@ -3102,6 +3211,7 @@
                 const img = document.createElement('img');
                 img.src = src;
                 img.alt = 'Foto ' + (idx + 1);
+                img.addEventListener('click', () => mostrarLightbox(fotosDaGaleriaAtual(), idx));
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.textContent = '×';
@@ -3872,6 +3982,34 @@
             });
             document.getElementById('btn_voltar_historico').addEventListener('click', voltarAoHistorico);
             document.getElementById('btn_cancelar_edicao').addEventListener('click', voltarAoHistorico);
+            document.getElementById('modal_corpo').addEventListener('click', (e) => {
+                const img = e.target.closest('img[data-foto-idx]');
+                if (!img || img.classList.contains('sem-zoom')) return;
+                const galeria = img.closest('.fotos-galeria');
+                const lista = galeria
+                    ? [...galeria.querySelectorAll('img[data-foto-idx]')].map(i => i.src)
+                    : [img.src];
+                mostrarLightbox(lista, Number(img.dataset.fotoIdx) || 0);
+            });
+            const lbFechar = document.getElementById('lightbox_fechar');
+            const lbFecharX = document.getElementById('lightbox_fechar_x');
+            const lbBaixar = document.getElementById('lightbox_baixar');
+            const lbPrev = document.getElementById('lightbox_prev');
+            const lbNext = document.getElementById('lightbox_next');
+            const lbBox = document.getElementById('lightbox_foto');
+            if (lbFechar) lbFechar.addEventListener('click', fecharLightbox);
+            if (lbFecharX) lbFecharX.addEventListener('click', fecharLightbox);
+            if (lbBaixar) lbBaixar.addEventListener('click', () => { void baixarFotoAtual(); });
+            if (lbPrev) lbPrev.addEventListener('click', (e) => { e.stopPropagation(); mostrarLightbox(lightboxLista, lightboxIdx - 1); });
+            if (lbNext) lbNext.addEventListener('click', (e) => { e.stopPropagation(); mostrarLightbox(lightboxLista, lightboxIdx + 1); });
+            if (lbBox) lbBox.addEventListener('click', (e) => { if (e.target.id === 'lightbox_foto') fecharLightbox(); });
+            document.addEventListener('keydown', (e) => {
+                const aberto = document.getElementById('lightbox_foto')?.classList.contains('aberto');
+                if (!aberto) return;
+                if (e.key === 'Escape') fecharLightbox();
+                if (e.key === 'ArrowLeft') mostrarLightbox(lightboxLista, lightboxIdx - 1);
+                if (e.key === 'ArrowRight') mostrarLightbox(lightboxLista, lightboxIdx + 1);
+            });
             document.getElementById('modal_btn_fechar').addEventListener('click', fecharModal);
             document.getElementById('modal_visualizar').addEventListener('click', (e) => {
                 if (e.target.id === 'modal_visualizar') fecharModal();
@@ -4668,10 +4806,31 @@
                     if (snap.metadata.hasPendingWrites) return;
                     pedirSyncPorSnapshot();
                 }, aoErro('exclusões'));
+                let primeiraEscutaAssinaturas = true;
                 unsubAssinaturas = onSnapshot(collection(db, COLECAO_ASSINATURAS), (snap) => {
                     if (snap.metadata.hasPendingWrites) return;
-                    const relevante = snap.docChanges().some(ch => (ch.doc.data() || {}).tipo !== 'foto');
-                    if (relevante) pedirSyncPorSnapshot();
+                    let novas = 0;
+                    let nomeCliente = '';
+                    snap.docChanges().forEach(ch => {
+                        const d = ch.doc.data() || {};
+                        if (d.tipo === 'foto') return;
+                        if (!d.assinaturaCliente || ch.type === 'removed') return;
+                        if (window.aplicarAssinaturaRecebida && window.aplicarAssinaturaRecebida(ch.doc.id, d)) {
+                            novas++;
+                            nomeCliente = d.nomeCliente || nomeCliente;
+                        }
+                    });
+                    if (novas && !primeiraEscutaAssinaturas && window.mostrarToast) {
+                        const quem = nomeCliente ? ' de ' + nomeCliente : '';
+                        window.mostrarToast('Assinatura' + quem + ' recebida no sistema.', 'ok', 7000);
+                    } else if (!novas) {
+                        const relevante = snap.docChanges().some(ch => {
+                            const d = ch.doc.data() || {};
+                            return d.tipo !== 'foto' && !d.assinaturaCliente;
+                        });
+                        if (relevante) pedirSyncPorSnapshot();
+                    }
+                    primeiraEscutaAssinaturas = false;
                 }, aoErro('assinaturas'));
             }
 
