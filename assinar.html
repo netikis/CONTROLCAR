@@ -299,14 +299,36 @@
                 elErro.textContent = 'Documento não encontrado ou link expirado.';
                 return;
             }
-            const data = snap.data();
-            let fotosUrls = [];
-            try {
-                fotosUrls = await carregarFotosDoLink(db, doc, getDoc, data);
-            } catch (e) {
-                console.warn('Fotos do documento:', e);
-                fotosUrls = urlsFotosDoDocumento(data.documento || {});
+            const dataInicial = snap.data();
+            async function carregarDocumentoComFotos(inicial) {
+                let data = inicial;
+                let fotosUrls = [];
+                try {
+                    fotosUrls = await carregarFotosDoLink(db, doc, getDoc, data);
+                } catch (e) {
+                    console.warn('Fotos do documento:', e);
+                    fotosUrls = urlsFotosDoDocumento(data.documento || {});
+                }
+                const pendente = !!(data.documento && data.documento.fotosPendentes);
+                if (fotosUrls.length || !pendente) return { data, fotosUrls };
+                for (let i = 0; i < 8; i++) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    try {
+                        const novo = await getDoc(doc(db, COLECAO, token));
+                        if (!novo.exists()) break;
+                        data = novo.data();
+                        fotosUrls = await carregarFotosDoLink(db, doc, getDoc, data);
+                        if (fotosUrls.length || !(data.documento && data.documento.fotosPendentes)) break;
+                    } catch (e) {
+                        console.warn('Aguardando fotos:', e);
+                        break;
+                    }
+                }
+                return { data, fotosUrls };
             }
+            const carregado = await carregarDocumentoComFotos(dataInicial);
+            const data = carregado.data;
+            const fotosUrls = carregado.fotosUrls;
             elCarregando.hidden = true;
             elConteudo.hidden = false;
             renderDoc(data, fotosUrls);

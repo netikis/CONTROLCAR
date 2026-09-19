@@ -1545,7 +1545,8 @@
             <details class="config-card" id="nuvem_config_box">
                 <summary>Nuvem</summary>
                 <div class="config-card-conteudo">
-                    <p id="nuvem_status_texto">Conectando celular e PC…</p>
+                    <p id="nuvem_status_texto">Sincronização automática entre celular e PC…</p>
+                    <p class="hint">O que você lançar no celular aparece no computador na hora, e o contrário também. O botão abaixo é só se a internet falhar.</p>
                     <button type="button" class="btn-sync" id="btn_sync_nuvem">Sincronizar agora</button>
                 </div>
             </details>
@@ -1801,22 +1802,27 @@
             if (a.tokenAssinatura) return '<span class="badge-pendente">Aguardando assinatura</span>';
             return '';
         }
+        let gerandoLinkAssinatura = false;
         async function abrirLinkAssinatura(placa, atendimentoId) {
+            if (gerandoLinkAssinatura) return;
             const found = buscarAtendimento(placa, atendimentoId);
             if (!found) return;
             if (!window.criarLinkAssinatura) {
                 mostrarToast('Nuvem offline — sincronize antes de gerar o link.', 'aviso', 6000);
                 return;
             }
+            gerandoLinkAssinatura = true;
             const btns = document.querySelectorAll('[data-acao="link"]');
-            btns.forEach(b => { b.disabled = true; b.textContent = 'Gerando…'; });
-            const nFotos = (found.atendimento.fotos || []).length;
-            const timeoutMs = nFotos ? 180000 : 45000;
-            mostrarToast(nFotos ? 'Enviando fotos e gerando o link…\nPode demorar no celular.' : 'Gerando link…', 'ok', 0);
+            const textos = [];
+            btns.forEach(b => { textos.push(b.textContent); b.disabled = true; b.textContent = 'Gerando…'; });
+            mostrarToast('Gerando link…', 'ok', 0);
+            const restaurarBotoes = () => {
+                btns.forEach((b, i) => { b.disabled = false; b.textContent = textos[i] || 'Link Assinar'; });
+            };
             try {
                 const r = await Promise.race([
                     window.criarLinkAssinatura(found.cliente, found.atendimento),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('Demorou demais — tente de novo')), timeoutMs))
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('Demorou demais — tente de novo')), 15000))
                 ]);
                 if (!r.ok) {
                     mostrarToast('Erro: ' + (r.motivo || 'falha'), 'erro', 6000);
@@ -1831,22 +1837,31 @@
                     if (at) at.tokenAssinatura = r.token;
                 }
                 salvarDados(dados);
-                renderHistoricoCliente();
                 document.getElementById('input_link_assinatura').value = r.link;
                 document.getElementById('modal_link_assinatura').classList.add('aberto');
-                if (r.avisoFotos) {
-                    mostrarToast('Link pronto, mas as fotos não subiram.\nToque Sincronizar e gere o link de novo.', 'aviso', 8000);
-                } else if (r.jaAssinado) {
+                restaurarBotoes();
+                renderHistoricoCliente();
+                if (r.jaAssinado) {
                     mostrarToast('Cliente já assinou — link reenviado.', 'ok', 5000);
+                } else if (r.fotosPendentes) {
+                    mostrarToast('Link pronto — já pode copiar e enviar.\nFotos ainda subindo no fundo.', 'ok', 6000);
                 } else if (r.fotosIncluidas) {
                     mostrarToast('Link pronto com ' + r.fotosIncluidas + ' foto' + (r.fotosIncluidas > 1 ? 's' : '') + ' — envie ao cliente.', 'ok', 5000);
                 } else {
                     mostrarToast('Link pronto — envie ao cliente.', 'ok', 5000);
                 }
+                if (r.fotosPendentes && window.enviarFotosDoLinkAssinatura) {
+                    window.enviarFotosDoLinkAssinatura(found.cliente, found.atendimento, r.token).then((fotos) => {
+                        if (fotos && fotos.ok && fotos.fotosIncluidas) {
+                            mostrarToast('Fotos do link atualizadas (' + fotos.fotosIncluidas + ').', 'ok', 4000);
+                        }
+                    }).catch((e) => console.warn('Fotos do link:', e));
+                }
             } catch (e) {
                 mostrarToast(e.message || 'Falha ao gerar link', 'erro', 6000);
             } finally {
-                btns.forEach(b => { b.disabled = false; b.textContent = 'Link Assinar'; });
+                gerandoLinkAssinatura = false;
+                restaurarBotoes();
             }
         }
         function fecharModalLink() {
@@ -2568,19 +2583,49 @@
             renderHistoricoCliente();
             atualizarAlertaCliente();
         }
+        let syncEmAndamento = false;
+        let syncPendenteApos = false;
+        let timerSyncAgendado = null;
+        function assinaturaDadosLocais() {
+            const dados = carregarDados();
+            return (dados.clientes || []).map(c => {
+                let sig = 0;
+                for (const vg of c.veiculos || []) {
+                    for (const a of vg.atendimentos || []) {
+                        if (a.assinaturaCliente) sig++;
+                    }
+                }
+                return [c.id, c.atualizadoEm || '', contarAtendimentos(c), sig].join(':');
+            }).sort().join('|');
+        }
+        function agendarSincronizacaoNuvem(delayMs) {
+            if (timerSyncAgendado) clearTimeout(timerSyncAgendado);
+            timerSyncAgendado = setTimeout(() => {
+                timerSyncAgendado = null;
+                if (window.usuarioLogado) executarSincronizacaoNuvem(true);
+            }, delayMs == null ? 1200 : delayMs);
+        }
+        window.agendarSincronizacaoNuvem = agendarSincronizacaoNuvem;
         async function executarSincronizacaoNuvem(silencioso) {
+            if (silencioso && !window.usuarioLogado) return { ok: false };
+            if (syncEmAndamento) {
+                syncPendenteApos = true;
+                return { ok: false, adiado: true };
+            }
             const btn = document.getElementById('btn_sync_nuvem');
             if (!window.sincronizarComNuvem) {
                 atualizarStatusNuvem('<strong>Nuvem:</strong> conectando…', true);
                 return { ok: false };
             }
-            if (btn) btn.disabled = true;
-            atualizarStatusNuvem('<strong>Nuvem:</strong> sincronizando…', null);
+            syncEmAndamento = true;
+            if (btn && !silencioso) btn.disabled = true;
+            if (!silencioso) atualizarStatusNuvem('<strong>Nuvem automática:</strong> sincronizando…', null);
+            const antes = assinaturaDadosLocais();
             try {
                 const r = await window.sincronizarComNuvem();
-                atualizarTelaAposSync();
+                if (antes !== assinaturaDadosLocais()) atualizarTelaAposSync();
                 const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                atualizarStatusNuvem(`<strong>Nuvem:</strong> OK — ${r.total} cliente(s) · ${hora}`, true);
+                atualizarStatusNuvem(`<strong>Nuvem automática:</strong> celular ↔ PC · ${r.total} cliente(s) · ${hora}`, true);
                 if (!silencioso && r.subiu > 0) {
                     console.info('Enviados ao Firebase:', r.subiu);
                 }
@@ -2588,10 +2633,31 @@
             } catch (e) {
                 console.error(e);
                 atualizarStatusNuvem('<strong>Nuvem:</strong> erro — ' + (e.message || 'falha na sync'), false);
+                if (silencioso) agendarSincronizacaoNuvem(8000);
                 return { ok: false };
             } finally {
+                syncEmAndamento = false;
                 if (btn) btn.disabled = false;
+                if (syncPendenteApos) {
+                    syncPendenteApos = false;
+                    agendarSincronizacaoNuvem(400);
+                }
             }
+        }
+        function iniciarSincronizacaoAutomatica() {
+            if (window.__syncAutoIniciada) return;
+            window.__syncAutoIniciada = true;
+            setInterval(() => {
+                if (document.visibilityState !== 'visible') return;
+                if (!window.usuarioLogado) return;
+                executarSincronizacaoNuvem(true);
+            }, 25000);
+            window.addEventListener('online', () => {
+                if (window.usuarioLogado) executarSincronizacaoNuvem(true);
+            });
+            window.addEventListener('focus', () => {
+                if (window.usuarioLogado) executarSincronizacaoNuvem(true);
+            });
         }
         async function enviarClienteParaNuvem(cliente) {
             if (!window.salvarClienteNuvem || !cliente) return { ok: false, motivo: 'Nuvem indisponível' };
@@ -2746,7 +2812,8 @@
                     limparExclusaoLocal(id);
                     mostrarToast(`Cliente "${cliente.nome}" excluído (aparelho e nuvem).`, 'ok', 5000);
                 } else {
-                    mostrarToast(`Excluído no aparelho.\nNuvem: ${nuvem.motivo || 'tente Sincronizar'}`, 'aviso', 6000);
+                    mostrarToast(`Excluído no aparelho.\nNuvem: tentando de novo automaticamente.`, 'aviso', 6000);
+                    agendarSincronizacaoNuvem(4000);
                 }
             } else {
                 mostrarToast(`Cliente "${cliente.nome}" excluído no aparelho.`, 'ok', 4000);
@@ -2882,8 +2949,9 @@
             renderHistoricoCliente();
             mostrarToast('Excluindo… sincronizando nuvem', 'ok', 0);
             const nuvem = await enviarClienteParaNuvemComTimeout(cliente);
+            if (!nuvem.ok) agendarSincronizacaoNuvem(4000);
             mostrarToast(
-                nuvem.ok ? 'Atendimento excluído (aparelho + nuvem).' : `Excluído no aparelho.\nNuvem: ${nuvem.motivo || 'toque em Sincronizar'}`,
+                nuvem.ok ? 'Atendimento excluído (aparelho + nuvem).' : `Excluído no aparelho.\nNuvem: tentando de novo automaticamente.`,
                 nuvem.ok ? 'ok' : 'aviso',
                 5000
             );
@@ -3360,16 +3428,23 @@
                     const nuvem = await enviarClienteParaNuvemComTimeout(clienteAtualizado);
                     if (nuvem.ok) {
                         partes.push('✓ Nuvem (celular + PC)');
-                        if (nuvem.fotosPendentes) partes.push('⚠ Algumas fotos ainda enviando — toque Sincronizar');
+                        if (nuvem.fotosPendentes) {
+                            partes.push('⚠ Algumas fotos ainda enviando — aguarde a sincronização automática');
+                            agendarSincronizacaoNuvem(4000);
+                        }
                         renderHistoricoCliente();
-                    } else partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
+                    } else {
+                        partes.push('⚠ Nuvem: ' + (nuvem.motivo || 'indisponível'));
+                        agendarSincronizacaoNuvem(4000);
+                    }
                     const pc = await salvarAtendimentoNaPastaPC(clienteAtualizado, atendimento);
                     if (pc.ok) partes.push(`✓ Pasta PC: ${pc.caminho}`);
                     else if (pc.motivo && !pc.motivo.includes('Chrome')) partes.push('⚠ ' + pc.motivo);
                     mostrarToast(partes.join('\n'), nuvem.ok ? 'ok' : 'aviso', 6000);
                 } catch (syncErr) {
                     console.error(syncErr);
-                    mostrarToast('Salvo no aparelho. Sincronização pendente.', 'aviso', 5000);
+                    mostrarToast('Salvo no aparelho. Sincronização automática em instantes.', 'aviso', 5000);
+                    agendarSincronizacaoNuvem(4000);
                 }
             } catch (err) {
                 console.error(err);
@@ -3854,8 +3929,9 @@
                 selecionarCliente(novo.id, { abrirPainel: false });
                 if (ehMobileApp()) fecharPainelMobile();
                 const nuvem = await enviarClienteParaNuvemComTimeout(novo);
+                if (!nuvem.ok) agendarSincronizacaoNuvem(4000);
                 mostrarToast(
-                    nuvem.ok ? `Cliente "${nome}" salvo (aparelho + nuvem).` : `Cliente salvo no aparelho.\nNuvem: ${nuvem.motivo || 'indisponível'}`,
+                    nuvem.ok ? `Cliente "${nome}" salvo (aparelho + nuvem).` : `Cliente salvo no aparelho.\nNuvem: tentando de novo automaticamente.`,
                     nuvem.ok ? 'ok' : 'aviso',
                     5000
                 );
@@ -3885,6 +3961,7 @@
                 executarSalvarAtendimento();
             });
             document.getElementById('btn_sync_nuvem').addEventListener('click', () => executarSincronizacaoNuvem(false));
+            iniciarSincronizacaoAutomatica();
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' && window.usuarioLogado) executarSincronizacaoNuvem(true);
             });
@@ -3909,11 +3986,11 @@
                 appId: '1:1094763260816:web:628adb8b5d167469236115'
             };
             const { initializeApp, deleteApp } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js');
-            const { getFirestore, doc, setDoc, deleteDoc, collection, getDocs, getDoc, query, where, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
+            const { getFirestore, doc, setDoc, deleteDoc, collection, getDocs, getDoc, query, where, updateDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
             const { ref, uploadBytes, getDownloadURL, listAll, deleteObject, getStorage } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js');
             const {
                 getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-                createUserWithEmailAndPassword, setPersistence, browserSessionPersistence
+                createUserWithEmailAndPassword, setPersistence, browserLocalPersistence
             } = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
@@ -4155,6 +4232,20 @@
                 }
                 return [...new Set(urls)];
             }
+            function atendimentoTemFotoPendente(atendimento) {
+                return (atendimento.fotos || []).some(f => !urlHttpFoto(f.url) && !urlHttpFoto(f.data) && (f.data || f.id));
+            }
+            async function comTempoLimite(promessa, ms) {
+                let timer;
+                try {
+                    return await Promise.race([
+                        promessa,
+                        new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('timeout')), ms); })
+                    ]);
+                } finally {
+                    clearTimeout(timer);
+                }
+            }
             async function enviarUmaFotoStorage(cliente, atendimento, f) {
                 if (!storage || !f || !f.data || !String(f.data).startsWith('data:')) return false;
                 if (!atendimento || !atendimento.id || !atendimento.placa) return false;
@@ -4163,17 +4254,29 @@
                     const basePath = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${atendimento.placa}/${atendimento.id}`;
                     const fotoRef = ref(storage, `${basePath}/foto_${f.id || 'x'}.jpg`);
                     const bytes = dataUrlParaBytes(f.data);
-                    await uploadBytes(fotoRef, bytes, { contentType: 'image/jpeg' });
-                    f.url = await getDownloadURL(fotoRef);
+                    await comTempoLimite(uploadBytes(fotoRef, bytes, { contentType: 'image/jpeg' }), 15000);
+                    f.url = await comTempoLimite(getDownloadURL(fotoRef), 8000);
                     return true;
                 } catch (e) {
                     console.warn('Foto Storage (link):', e.code || e.message);
                     return false;
                 }
             }
+            async function hidratarFotosDesteAtendimento(cliente, atendimento) {
+                const mini = {
+                    id: cliente.id,
+                    nome: cliente.nome,
+                    veiculos: [{ placa: atendimento.placa, atendimentos: [atendimento] }]
+                };
+                await hidratarTodasFotos([mini]);
+            }
             async function garantirUrlsFotosAtendimento(cliente, atendimento) {
                 if (!cliente || !atendimento) return atendimento;
-                await hidratarTodasFotos([cliente]);
+                try {
+                    await comTempoLimite(hidratarFotosDesteAtendimento(cliente, atendimento), 12000);
+                } catch (e) {
+                    console.warn('Hidratação fotos (link):', e.message || e);
+                }
                 let at = null;
                 for (const vg of cliente.veiculos || []) {
                     const encontrado = (vg.atendimentos || []).find(x => x.id === atendimento.id);
@@ -4183,8 +4286,7 @@
                 for (const f of at.fotos || []) {
                     if (urlHttpFoto(f.url) || urlHttpFoto(f.data)) continue;
                     if (f.data && String(f.data).startsWith('data:')) {
-                        const ok = await enviarUmaFotoStorage(cliente, at, f);
-                        if (!ok) await enviarFotoParaMidia(cliente.id, at.id, f);
+                        await enviarUmaFotoStorage(cliente, at, f);
                     }
                 }
                 if (at !== atendimento) {
@@ -4198,14 +4300,15 @@
                 for (const f of atendimento.fotos || []) {
                     if (urlHttpFoto(f.url) || urlHttpFoto(f.data)) continue;
                     if (!f.data || !String(f.data).startsWith('data:')) continue;
+                    if (String(f.data).length > 400000) continue;
                     const docId = token + '_f_' + (f.id || String(fotosDocs.length));
                     try {
-                        await setDoc(doc(db, COLECAO_ASSINATURAS, docId), {
+                        await comTempoLimite(setDoc(doc(db, COLECAO_ASSINATURAS, docId), {
                             tipo: 'foto',
                             token,
                             data: f.data,
                             atualizadoEm: new Date().toISOString()
-                        });
+                        }), 8000);
                         fotosDocs.push(docId);
                     } catch (e) {
                         console.warn('Foto fallback (link):', e.code || e.message);
@@ -4266,12 +4369,10 @@
                         atendimento.tokenAssinatura = 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
                     }
                     const token = atendimento.tokenAssinatura;
-                    const at = await garantirUrlsFotosAtendimento(cliente, atendimento);
-                    const fotosDocs = await gravarFotosFallbackNoLink(token, at);
-                    const documento = documentoParaAssinatura(cliente, at);
-                    documento.fotosDocs = fotosDocs;
-                    const nFotosOriginais = (at.fotos || []).filter(f => f.data || f.url).length;
-                    const fotosIncluidas = (documento.fotosUrls || []).length + fotosDocs.length;
+                    const documento = documentoParaAssinatura(cliente, atendimento);
+                    documento.fotosDocs = [];
+                    documento.fotosPendentes = atendimentoTemFotoPendente(atendimento);
+                    const fotosIncluidas = (documento.fotosUrls || []).length;
                     const refDoc = doc(db, COLECAO_ASSINATURAS, token);
                     const existente = await getDoc(refDoc);
                     const prev = existente.exists() ? existente.data() : {};
@@ -4290,7 +4391,6 @@
                     }
                     await setDoc(refDoc, payload, { merge: true });
                     atendimento.tokenAssinatura = token;
-                    atendimento.fotos = at.fotos;
                     const base = location.href.replace(/[^/]*$/, '');
                     const link = base + 'assinar.html?t=' + encodeURIComponent(token);
                     return {
@@ -4299,10 +4399,31 @@
                         token,
                         jaAssinado: !!prev.assinaturaCliente,
                         fotosIncluidas,
-                        avisoFotos: nFotosOriginais > 0 && fotosIncluidas === 0
+                        fotosPendentes: !!documento.fotosPendentes
                     };
                 } catch (erro) {
                     console.error(erro);
+                    return { ok: false, motivo: mensagemErroFirebase(erro) };
+                }
+            };
+
+            window.enviarFotosDoLinkAssinatura = async function(cliente, atendimento, token) {
+                try {
+                    if (!token || !atendimento) return { ok: false };
+                    const at = await garantirUrlsFotosAtendimento(cliente, atendimento);
+                    const fotosDocs = await gravarFotosFallbackNoLink(token, at);
+                    const documento = documentoParaAssinatura(cliente, at);
+                    documento.fotosDocs = fotosDocs;
+                    documento.fotosPendentes = false;
+                    const refDoc = doc(db, COLECAO_ASSINATURAS, token);
+                    await setDoc(refDoc, {
+                        documento,
+                        atualizadoEm: new Date().toISOString()
+                    }, { merge: true });
+                    atendimento.fotos = at.fotos;
+                    return { ok: true, fotosIncluidas: (documento.fotosUrls || []).length + fotosDocs.length };
+                } catch (erro) {
+                    console.warn('Atualizar fotos do link:', erro);
                     return { ok: false, motivo: mensagemErroFirebase(erro) };
                 }
             };
@@ -4443,6 +4564,37 @@
                 if (tela) tela.classList.toggle('oculto', !mostrar);
             }
 
+            let unsubNuvem = null;
+            let unsubExcluidos = null;
+            let unsubAssinaturas = null;
+            function pararEscutaTempoReal() {
+                if (unsubNuvem) { unsubNuvem(); unsubNuvem = null; }
+                if (unsubExcluidos) { unsubExcluidos(); unsubExcluidos = null; }
+                if (unsubAssinaturas) { unsubAssinaturas(); unsubAssinaturas = null; }
+            }
+            function pedirSyncPorSnapshot() {
+                if (!window.usuarioLogado) return;
+                if (window.agendarSincronizacaoNuvem) window.agendarSincronizacaoNuvem(900);
+                else if (window.executarSincronizacaoNuvem) window.executarSincronizacaoNuvem(true);
+            }
+            function iniciarEscutaTempoReal() {
+                if (unsubNuvem || !window.usuarioLogado) return;
+                const aoErro = (onde) => (err) => console.warn('Escuta ' + onde + ':', err.code || err.message);
+                unsubNuvem = onSnapshot(collection(db, COLECAO_NUVEM), (snap) => {
+                    if (snap.metadata.hasPendingWrites) return;
+                    pedirSyncPorSnapshot();
+                }, aoErro('nuvem'));
+                unsubExcluidos = onSnapshot(collection(db, COLECAO_EXCLUIDOS), (snap) => {
+                    if (snap.metadata.hasPendingWrites) return;
+                    pedirSyncPorSnapshot();
+                }, aoErro('exclusões'));
+                unsubAssinaturas = onSnapshot(collection(db, COLECAO_ASSINATURAS), (snap) => {
+                    if (snap.metadata.hasPendingWrites) return;
+                    const relevante = snap.docChanges().some(ch => (ch.doc.data() || {}).tipo !== 'foto');
+                    if (relevante) pedirSyncPorSnapshot();
+                }, aoErro('assinaturas'));
+            }
+
             async function definirSessaoUsuario(user) {
                 let perfil = await carregarPerfilUsuario(user.uid);
                 if (!perfil) {
@@ -4466,9 +4618,10 @@
                 atualizarBarraUsuario(perfil);
                 if (window.aplicarPermissoesUI) window.aplicarPermissoesUI();
                 window.dispatchEvent(new Event('auth-pronta'));
+                iniciarEscutaTempoReal();
             }
 
-            await setPersistence(auth, browserSessionPersistence);
+            await setPersistence(auth, browserLocalPersistence);
 
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -4549,6 +4702,7 @@
                 } else {
                     window.usuarioLogado = null;
                     window.usuarioPerfil = null;
+                    pararEscutaTempoReal();
                     document.getElementById('barra_usuario').hidden = true;
                     mostrarLogin(true);
                 }

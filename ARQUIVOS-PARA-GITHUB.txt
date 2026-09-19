@@ -48,4 +48,4 @@ SITE APOS DEPLOY:
   https://netikis.github.io/CONTROLCAR/
 
 VERSAO CACHE ATUAL (sw.js):
-  parana-pecas-v24
+  parana-pecas-v26
