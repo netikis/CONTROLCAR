@@ -1810,20 +1810,23 @@
             }
             const btns = document.querySelectorAll('[data-acao="link"]');
             btns.forEach(b => { b.disabled = true; b.textContent = 'Gerando…'; });
-            mostrarToast('Gerando link…', 'ok', 0);
+            const nFotos = (found.atendimento.fotos || []).length;
+            const timeoutMs = nFotos ? 180000 : 45000;
+            mostrarToast(nFotos ? 'Enviando fotos e gerando o link…\nPode demorar no celular.' : 'Gerando link…', 'ok', 0);
             try {
                 const r = await Promise.race([
                     window.criarLinkAssinatura(found.cliente, found.atendimento),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('Demorou demais — tente de novo')), 20000))
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('Demorou demais — tente de novo')), timeoutMs))
                 ]);
                 if (!r.ok) {
                     mostrarToast('Erro: ' + (r.motivo || 'falha'), 'erro', 6000);
                     return;
                 }
                 const dados = carregarDados();
-                const cli = dados.clientes.find(c => c.id === found.cliente.id);
-                if (cli) {
-                    const vg = (cli.veiculos || []).find(v => v.placa === placa);
+                const idx = dados.clientes.findIndex(c => c.id === found.cliente.id);
+                if (idx >= 0) {
+                    dados.clientes[idx] = mesclarClienteProfundo(dados.clientes[idx], found.cliente);
+                    const vg = (dados.clientes[idx].veiculos || []).find(v => v.placa === placa);
                     const at = vg && (vg.atendimentos || []).find(x => x.id === atendimentoId);
                     if (at) at.tokenAssinatura = r.token;
                 }
@@ -1831,7 +1834,15 @@
                 renderHistoricoCliente();
                 document.getElementById('input_link_assinatura').value = r.link;
                 document.getElementById('modal_link_assinatura').classList.add('aberto');
-                mostrarToast(r.jaAssinado ? 'Cliente já assinou — link reenviado.' : 'Link pronto — envie ao cliente.', 'ok', 5000);
+                if (r.avisoFotos) {
+                    mostrarToast('Link pronto, mas as fotos não subiram.\nToque Sincronizar e gere o link de novo.', 'aviso', 8000);
+                } else if (r.jaAssinado) {
+                    mostrarToast('Cliente já assinou — link reenviado.', 'ok', 5000);
+                } else if (r.fotosIncluidas) {
+                    mostrarToast('Link pronto com ' + r.fotosIncluidas + ' foto' + (r.fotosIncluidas > 1 ? 's' : '') + ' — envie ao cliente.', 'ok', 5000);
+                } else {
+                    mostrarToast('Link pronto — envie ao cliente.', 'ok', 5000);
+                }
             } catch (e) {
                 mostrarToast(e.message || 'Falha ao gerar link', 'erro', 6000);
             } finally {
@@ -4129,14 +4140,81 @@
                 return erro.message || String(erro);
             }
 
-            function documentoParaAssinatura(cliente, atendimento) {
+            function urlHttpFoto(valor) {
+                return valor && String(valor).startsWith('http') ? String(valor) : null;
+            }
+            function coletarUrlsFotosAtendimento(atendimento) {
                 const urls = [];
-                if (atendimento.fotoUrl && String(atendimento.fotoUrl).startsWith('http')) urls.push(atendimento.fotoUrl);
-                if (atendimento.foto && String(atendimento.foto).startsWith('http')) urls.push(atendimento.foto);
+                const httpFotoUrl = urlHttpFoto(atendimento.fotoUrl);
+                const httpFoto = urlHttpFoto(atendimento.foto);
+                if (httpFotoUrl) urls.push(httpFotoUrl);
+                if (httpFoto) urls.push(httpFoto);
                 for (const f of atendimento.fotos || []) {
-                    if (f.url && String(f.url).startsWith('http')) urls.push(f.url);
+                    const u = urlHttpFoto(f.url) || urlHttpFoto(f.data);
+                    if (u) urls.push(u);
                 }
-                const fotosUrls = [...new Set(urls)];
+                return [...new Set(urls)];
+            }
+            async function enviarUmaFotoStorage(cliente, atendimento, f) {
+                if (!storage || !f || !f.data || !String(f.data).startsWith('data:')) return false;
+                if (!atendimento || !atendimento.id || !atendimento.placa) return false;
+                try {
+                    const pastaSlug = slugCliente(cliente.nome);
+                    const basePath = `${STORAGE_PREFIX}/${cliente.id}/${pastaSlug}/${atendimento.placa}/${atendimento.id}`;
+                    const fotoRef = ref(storage, `${basePath}/foto_${f.id || 'x'}.jpg`);
+                    const bytes = dataUrlParaBytes(f.data);
+                    await uploadBytes(fotoRef, bytes, { contentType: 'image/jpeg' });
+                    f.url = await getDownloadURL(fotoRef);
+                    return true;
+                } catch (e) {
+                    console.warn('Foto Storage (link):', e.code || e.message);
+                    return false;
+                }
+            }
+            async function garantirUrlsFotosAtendimento(cliente, atendimento) {
+                if (!cliente || !atendimento) return atendimento;
+                await hidratarTodasFotos([cliente]);
+                let at = null;
+                for (const vg of cliente.veiculos || []) {
+                    const encontrado = (vg.atendimentos || []).find(x => x.id === atendimento.id);
+                    if (encontrado) { at = encontrado; break; }
+                }
+                if (!at) at = atendimento;
+                for (const f of at.fotos || []) {
+                    if (urlHttpFoto(f.url) || urlHttpFoto(f.data)) continue;
+                    if (f.data && String(f.data).startsWith('data:')) {
+                        const ok = await enviarUmaFotoStorage(cliente, at, f);
+                        if (!ok) await enviarFotoParaMidia(cliente.id, at.id, f);
+                    }
+                }
+                if (at !== atendimento) {
+                    atendimento.fotos = at.fotos;
+                    if (at.fotoUrl) atendimento.fotoUrl = at.fotoUrl;
+                }
+                return at;
+            }
+            async function gravarFotosFallbackNoLink(token, atendimento) {
+                const fotosDocs = [];
+                for (const f of atendimento.fotos || []) {
+                    if (urlHttpFoto(f.url) || urlHttpFoto(f.data)) continue;
+                    if (!f.data || !String(f.data).startsWith('data:')) continue;
+                    const docId = token + '_f_' + (f.id || String(fotosDocs.length));
+                    try {
+                        await setDoc(doc(db, COLECAO_ASSINATURAS, docId), {
+                            tipo: 'foto',
+                            token,
+                            data: f.data,
+                            atualizadoEm: new Date().toISOString()
+                        });
+                        fotosDocs.push(docId);
+                    } catch (e) {
+                        console.warn('Foto fallback (link):', e.code || e.message);
+                    }
+                }
+                return fotosDocs;
+            }
+            function documentoParaAssinatura(cliente, atendimento) {
+                const fotosUrls = coletarUrlsFotosAtendimento(atendimento);
                 const orc = atendimento.orcamento || null;
                 return {
                     responsavel: atendimento.responsavel || '',
@@ -4188,6 +4266,12 @@
                         atendimento.tokenAssinatura = 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 14);
                     }
                     const token = atendimento.tokenAssinatura;
+                    const at = await garantirUrlsFotosAtendimento(cliente, atendimento);
+                    const fotosDocs = await gravarFotosFallbackNoLink(token, at);
+                    const documento = documentoParaAssinatura(cliente, at);
+                    documento.fotosDocs = fotosDocs;
+                    const nFotosOriginais = (at.fotos || []).filter(f => f.data || f.url).length;
+                    const fotosIncluidas = (documento.fotosUrls || []).length + fotosDocs.length;
                     const refDoc = doc(db, COLECAO_ASSINATURAS, token);
                     const existente = await getDoc(refDoc);
                     const prev = existente.exists() ? existente.data() : {};
@@ -4196,7 +4280,7 @@
                         atendimentoId: atendimento.id,
                         placa: atendimento.placa,
                         nomeCliente: cliente.nome,
-                        documento: documentoParaAssinatura(cliente, atendimento),
+                        documento,
                         atualizadoEm: new Date().toISOString(),
                         criadoEm: prev.criadoEm || new Date().toISOString()
                     };
@@ -4206,9 +4290,17 @@
                     }
                     await setDoc(refDoc, payload, { merge: true });
                     atendimento.tokenAssinatura = token;
+                    atendimento.fotos = at.fotos;
                     const base = location.href.replace(/[^/]*$/, '');
                     const link = base + 'assinar.html?t=' + encodeURIComponent(token);
-                    return { ok: true, link, token, jaAssinado: !!prev.assinaturaCliente };
+                    return {
+                        ok: true,
+                        link,
+                        token,
+                        jaAssinado: !!prev.assinaturaCliente,
+                        fotosIncluidas,
+                        avisoFotos: nFotosOriginais > 0 && fotosIncluidas === 0
+                    };
                 } catch (erro) {
                     console.error(erro);
                     return { ok: false, motivo: mensagemErroFirebase(erro) };

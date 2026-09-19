@@ -1,0 +1,51 @@
+PARANA PECAS - LISTA DE ARQUIVOS PARA O GITHUB (CONTROLCAR)
+=========================================================
+
+OBRIGATORIOS (enviar sempre que atualizar):
+  index.html               (Firebase já está dentro — não depende de outro arquivo)
+  assinar.html
+  sw.js
+  manifest.webmanifest
+  manifest.template.webmanifest
+  firebase-env.template.js
+  firebase-config.js       (opcional — backup; o site usa o Firebase dentro do index.html)
+  firebase-regras-exemplo.txt
+  favicon.ico
+  icons\icon.svg
+  icons\icon-192.png
+  icons\icon-256.png
+  icons\icon-512.png
+  icons\logo-empresa.png
+  scripts\gerar-icones.sh
+  scripts\gerar-icones.ps1
+  scripts\servidor-local.ps1
+  .github\workflows\pages.yml
+  .nojekyll
+
+IMPORTANTE — APAGAR NO GITHUB (se existir):
+  .github\workflows\deploy.yml   (duplicado; causa falha no deploy e 404)
+
+OPCIONAIS (util local, pode subir):
+  TESTAR LOCAL.bat
+  SUBIR GITHUB.bat
+  tools\gerar-icones.html
+  scripts\criar-atalho-desktop.ps1
+
+NUNCA ENVIAR:
+  firebase-env.js          (opcional local — use firebase-config.js no site)
+  PASTA DOS CLIENTES\      (dados dos clientes)
+  SISTEMA ANTIGO*\         (backup)
+  controle de veículos.html (versao antiga)
+
+SECRETS NO GITHUB (opcional — o site funciona sem eles):
+  FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID
+
+GITHUB PAGES (Settings > Pages):
+  Source = GitHub Actions
+
+SITE APOS DEPLOY:
+  https://netikis.github.io/CONTROLCAR/
+
+VERSAO CACHE ATUAL (sw.js):
+  parana-pecas-v24

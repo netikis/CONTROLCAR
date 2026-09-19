@@ -1,4 +1,4 @@
-const CACHE = 'parana-pecas-v23';
+const CACHE = 'parana-pecas-v24';
 const ASSETS = [
   './',
   './index.html',

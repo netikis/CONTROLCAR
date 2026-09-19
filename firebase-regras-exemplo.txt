@@ -48,6 +48,12 @@ service cloud.firestore {
 
     }
 
+    match /controle_veiculos_midia/{midiaId} {
+
+      allow read, write: if true;
+
+    }
+
   }
 
 }
